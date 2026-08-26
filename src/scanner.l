@@ -1,3 +1,9 @@
+/* FGA0003 - Compiladores 1
+* Curso de Engenharia de Software
+* Universidade de Brasilia (UnB)
+* Analisador léxico incial desenvolvido com Flex
+*/
+
 %{
 #include "scanner.tab.h"
 #include <stdio.h>

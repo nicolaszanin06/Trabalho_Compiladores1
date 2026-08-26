@@ -94,7 +94,3 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
 }
 
-int main(int argc, char **argv) {
-    yyparse();
-    return 0;
-}

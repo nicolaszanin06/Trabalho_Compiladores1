@@ -62,8 +62,8 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 
     /* Modificadores e Literais Fixos */
 "final"     { return FINAL; }
-"true"      { return BOOL_LITERAL; }
-"false"     { return BOOL_LITERAL; }
+"true"      { return TOKEN_TRUE; }
+"false"     { return TOKEN_FALSE; }
 "null"      { return NULL_LITERAL; }
 
     /* Operadores */

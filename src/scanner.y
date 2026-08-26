@@ -12,7 +12,7 @@ void yyerror(const char *s);
 %token PUBLIC CLASS STATIC VOID
 %token BOOLEAN BYTE CHAR DOUBLE FLOAT INT LONG SHORT
 %token IF ELSE SWITCH CASE DEFAULT WHILE DO FOR BREAK CONTINUE RETURN
-%token FINAL BOOL_LITERAL NULL_LITERAL
+%token FINAL TOKEN_TRUE TOKEN_FALSE NULL_LITERAL
 
 /* Tokens de Operadores e Delimitadores */
 %token PLUS MINUS MULT DIV MOD
@@ -55,7 +55,8 @@ token:
     | CONTINUE { printf("CONTINUE "); }
     | RETURN { printf("RETURN "); }
     | FINAL { printf("FINAL "); }
-    | BOOL_LITERAL { printf("BOOL_LITERAL "); }
+    | TOKEN_TRUE   { printf("TOKEN_TRUE "); }
+    | TOKEN_FALSE  { printf("TOKEN_FALSE "); }
     | NULL_LITERAL { printf("NULL_LITERAL "); }
     | PLUS { printf("PLUS "); }
     | MINUS { printf("MINUS "); }

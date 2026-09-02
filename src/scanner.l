@@ -7,6 +7,7 @@
 %{
 #include "scanner.tab.h"
 #include <stdio.h>
+#include <stdlib.h>
 %}
 
 %option noyywrap
@@ -95,7 +96,10 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 
     /* Regras com Macros */
 {FLOAT_LITERAL}   { return FLOAT_LITERAL; }
-{INT_LITERAL}     { return INT_LITERAL; }
+{INT_LITERAL} {
+    yylval.intValue = atoi(yytext);
+    return INT_LITERAL;
+}
 {CHAR_LITERAL}    { return CHAR_LITERAL; }
 {STRING_LITERAL}  { return STRING_LITERAL; }
 {IDENTIFIER}      { return IDENTIFIER; }

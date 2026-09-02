@@ -14,7 +14,7 @@ void yyerror(const char *s);
 }
 
 %token <intValue>  INT_LITERAL
-
+%type <intValue> expr
 
 
 /* Tokens do Java Procedural */
@@ -40,7 +40,12 @@ void yyerror(const char *s);
 
 program:
     /* regra temporaria para o scanner */
-    | program token
+    | program statement
+    ;
+
+statement:
+      token
+    | expr SEMI { printf("RESULTADO(%d)\n", $1); }
     ;
 
 token:
@@ -71,10 +76,6 @@ token:
     | TOKEN_TRUE   { printf("TOKEN_TRUE "); }
     | TOKEN_FALSE  { printf("TOKEN_FALSE "); }
     | NULL_LITERAL { printf("NULL_LITERAL "); }
-    | PLUS { printf("PLUS "); }
-    | MINUS { printf("MINUS "); }
-    | MULT { printf("MULT "); }
-    | DIV { printf("DIV "); }
     | MOD { printf("MOD "); }
     | EQ { printf("EQ "); }
     | NEQ { printf("NEQ "); }
@@ -92,25 +93,22 @@ token:
     | RPAREN { printf("RPAREN "); }
     | LBRACKET { printf("LBRACKET "); }
     | RBRACKET { printf("RBRACKET "); }
-    | SEMI { printf("SEMI\n"); }
     | COMMA { printf("COMMA "); }
     | FLOAT_LITERAL { printf("FLOAT_LITERAL(%s) ", yytext); }
-    | INT_LITERAL { printf("NUM(%s) ", yytext); }
     | CHAR_LITERAL   { printf("CHAR_LITERAL(%s) ", yytext); }
     | STRING_LITERAL { printf("STRING_LITERAL(%s) ", yytext); }
     | IDENTIFIER { printf("ID(%s) ", yytext); }
     ;
 
-    %type <intValue> expr
+
 
     expr:
-          expr PLUS expr    { $$ = $1 + $3; }
-        | expr MINUS expr   { $$ = $1 - $3; }
-        | expr MULT expr   { $$ = $1 * $3; }
-        | expr DIV expr  { $$ = $1 / $3; }
-        | expr MOD expr { $$ = $1 % $3;}
-        | LPAREN expr RPAREN{ $$ = $2; }
-        | NUM               { $$ = $1; }
+          expr PLUS expr     { $$ = $1 + $3; }
+        | expr MINUS expr    { $$ = $1 - $3; }
+        | expr MULT expr     { $$ = $1 * $3; }
+        | expr DIV expr      { $$ = $1 / $3; }
+        | LPAREN expr RPAREN { $$ = $2; }
+        | INT_LITERAL        { $$ = $1; }
         ;
 
 %%

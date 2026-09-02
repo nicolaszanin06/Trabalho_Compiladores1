@@ -8,6 +8,15 @@ extern char* yytext;
 void yyerror(const char *s);
 %}
 
+
+%union {
+    int intValue;
+}
+
+%token <intValue>  INT_LITERAL
+
+
+
 /* Tokens do Java Procedural */
 %token PUBLIC CLASS STATIC VOID
 %token BOOLEAN BYTE CHAR DOUBLE FLOAT INT LONG SHORT
@@ -19,8 +28,12 @@ void yyerror(const char *s);
 %token EQ NEQ LT LE GT GE AND OR NOT ASSIGN
 %token LBRACE RBRACE LPAREN RPAREN LBRACKET RBRACKET SEMI COMMA
 
+
+%left PLUS MINUS
+%left MULT DIV
+
 /* Identificadores e Valoração */
-%token INT_LITERAL FLOAT_LITERAL IDENTIFIER
+%token FLOAT_LITERAL IDENTIFIER
 %token STRING_LITERAL CHAR_LITERAL
 
 %%
@@ -87,6 +100,17 @@ token:
     | STRING_LITERAL { printf("STRING_LITERAL(%s) ", yytext); }
     | IDENTIFIER { printf("ID(%s) ", yytext); }
     ;
+
+    %type <intValue> expr
+
+    expr:
+          expr PLUS expr    { $$ = $1 + $3; }
+        | expr MINUS expr   { $$ = $1 - $3; }
+        | expr TIMES expr   { $$ = $1 * $3; }
+        | expr DIVIDE expr  { $$ = $1 / $3; }
+        | LPAREN expr RPAREN{ $$ = $2; }
+        | NUM               { $$ = $1; }
+        ;
 
 %%
 

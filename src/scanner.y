@@ -106,8 +106,9 @@ token:
     expr:
           expr PLUS expr    { $$ = $1 + $3; }
         | expr MINUS expr   { $$ = $1 - $3; }
-        | expr TIMES expr   { $$ = $1 * $3; }
-        | expr DIVIDE expr  { $$ = $1 / $3; }
+        | expr MULT expr   { $$ = $1 * $3; }
+        | expr DIV expr  { $$ = $1 / $3; }
+        | expr MOD expr { $$ = $1 % $3;}
         | LPAREN expr RPAREN{ $$ = $2; }
         | NUM               { $$ = $1; }
         ;

@@ -46,6 +46,11 @@ program:
 statement:
       token
     | expr SEMI { printf("RESULTADO(%d)\n", $1); }
+    | input error SEMI     {
+              fprintf(stderr, "[ERRO SINTATICO] Erro recuperado ate ';'\n");
+              yyerrok; /* reset de erro */
+              yyclearin; /* limpamos o token de lookahead */
+          }
     ;
 
 token:
@@ -108,7 +113,16 @@ token:
         | expr MULT expr     { $$ = $1 * $3; }
         | expr DIV expr      { $$ = $1 / $3; }
         | LPAREN expr RPAREN { $$ = $2; }
+        if ($3 == 0) {
+            fprintf(stderr, "[ERRO SEMANTICO] Divisao por zero!\n");
+            $$ = 0;
+        } else {
+            $$ = $1 / $3;
+        }
+       }
         | INT_LITERAL        { $$ = $1; }
+        | LPAREN expr RPAREN { $$ = $2; }
+        | NUM                { $$ = $1; }
         ;
 
 %%

@@ -54,57 +54,57 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    PUBLIC = 258,                  /* PUBLIC  */
-    CLASS = 259,                   /* CLASS  */
-    STATIC = 260,                  /* STATIC  */
-    VOID = 261,                    /* VOID  */
-    BOOLEAN = 262,                 /* BOOLEAN  */
-    BYTE = 263,                    /* BYTE  */
-    CHAR = 264,                    /* CHAR  */
-    DOUBLE = 265,                  /* DOUBLE  */
-    FLOAT = 266,                   /* FLOAT  */
-    INT = 267,                     /* INT  */
-    LONG = 268,                    /* LONG  */
-    SHORT = 269,                   /* SHORT  */
-    IF = 270,                      /* IF  */
-    ELSE = 271,                    /* ELSE  */
-    SWITCH = 272,                  /* SWITCH  */
-    CASE = 273,                    /* CASE  */
-    DEFAULT = 274,                 /* DEFAULT  */
-    WHILE = 275,                   /* WHILE  */
-    DO = 276,                      /* DO  */
-    FOR = 277,                     /* FOR  */
-    BREAK = 278,                   /* BREAK  */
-    CONTINUE = 279,                /* CONTINUE  */
-    RETURN = 280,                  /* RETURN  */
-    FINAL = 281,                   /* FINAL  */
-    TOKEN_TRUE = 282,              /* TOKEN_TRUE  */
-    TOKEN_FALSE = 283,             /* TOKEN_FALSE  */
-    NULL_LITERAL = 284,            /* NULL_LITERAL  */
-    PLUS = 285,                    /* PLUS  */
-    MINUS = 286,                   /* MINUS  */
-    MULT = 287,                    /* MULT  */
-    DIV = 288,                     /* DIV  */
-    MOD = 289,                     /* MOD  */
-    EQ = 290,                      /* EQ  */
-    NEQ = 291,                     /* NEQ  */
-    LT = 292,                      /* LT  */
-    LE = 293,                      /* LE  */
-    GT = 294,                      /* GT  */
-    GE = 295,                      /* GE  */
-    AND = 296,                     /* AND  */
-    OR = 297,                      /* OR  */
-    NOT = 298,                     /* NOT  */
-    ASSIGN = 299,                  /* ASSIGN  */
-    LBRACE = 300,                  /* LBRACE  */
-    RBRACE = 301,                  /* RBRACE  */
-    LPAREN = 302,                  /* LPAREN  */
-    RPAREN = 303,                  /* RPAREN  */
-    LBRACKET = 304,                /* LBRACKET  */
-    RBRACKET = 305,                /* RBRACKET  */
-    SEMI = 306,                    /* SEMI  */
-    COMMA = 307,                   /* COMMA  */
-    INT_LITERAL = 308,             /* INT_LITERAL  */
+    INT_LITERAL = 258,             /* INT_LITERAL  */
+    PUBLIC = 259,                  /* PUBLIC  */
+    CLASS = 260,                   /* CLASS  */
+    STATIC = 261,                  /* STATIC  */
+    VOID = 262,                    /* VOID  */
+    BOOLEAN = 263,                 /* BOOLEAN  */
+    BYTE = 264,                    /* BYTE  */
+    CHAR = 265,                    /* CHAR  */
+    DOUBLE = 266,                  /* DOUBLE  */
+    FLOAT = 267,                   /* FLOAT  */
+    INT = 268,                     /* INT  */
+    LONG = 269,                    /* LONG  */
+    SHORT = 270,                   /* SHORT  */
+    IF = 271,                      /* IF  */
+    ELSE = 272,                    /* ELSE  */
+    SWITCH = 273,                  /* SWITCH  */
+    CASE = 274,                    /* CASE  */
+    DEFAULT = 275,                 /* DEFAULT  */
+    WHILE = 276,                   /* WHILE  */
+    DO = 277,                      /* DO  */
+    FOR = 278,                     /* FOR  */
+    BREAK = 279,                   /* BREAK  */
+    CONTINUE = 280,                /* CONTINUE  */
+    RETURN = 281,                  /* RETURN  */
+    FINAL = 282,                   /* FINAL  */
+    TOKEN_TRUE = 283,              /* TOKEN_TRUE  */
+    TOKEN_FALSE = 284,             /* TOKEN_FALSE  */
+    NULL_LITERAL = 285,            /* NULL_LITERAL  */
+    PLUS = 286,                    /* PLUS  */
+    MINUS = 287,                   /* MINUS  */
+    MULT = 288,                    /* MULT  */
+    DIV = 289,                     /* DIV  */
+    MOD = 290,                     /* MOD  */
+    EQ = 291,                      /* EQ  */
+    NEQ = 292,                     /* NEQ  */
+    LT = 293,                      /* LT  */
+    LE = 294,                      /* LE  */
+    GT = 295,                      /* GT  */
+    GE = 296,                      /* GE  */
+    AND = 297,                     /* AND  */
+    OR = 298,                      /* OR  */
+    NOT = 299,                     /* NOT  */
+    ASSIGN = 300,                  /* ASSIGN  */
+    LBRACE = 301,                  /* LBRACE  */
+    RBRACE = 302,                  /* RBRACE  */
+    LPAREN = 303,                  /* LPAREN  */
+    RPAREN = 304,                  /* RPAREN  */
+    LBRACKET = 305,                /* LBRACKET  */
+    RBRACKET = 306,                /* RBRACKET  */
+    SEMI = 307,                    /* SEMI  */
+    COMMA = 308,                   /* COMMA  */
     FLOAT_LITERAL = 309,           /* FLOAT_LITERAL  */
     IDENTIFIER = 310,              /* IDENTIFIER  */
     STRING_LITERAL = 311,          /* STRING_LITERAL  */
@@ -115,7 +115,16 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 12 "scanner.y"
+
+    int intValue;
+
+#line 125 "scanner.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

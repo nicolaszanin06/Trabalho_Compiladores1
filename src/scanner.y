@@ -14,7 +14,6 @@ void yyerror(const char *s);
 }
 
 %token <intValue>  INT_LITERAL
-%type <intValue> expr
 
 
 /* Tokens do Java Procedural */
@@ -40,90 +39,24 @@ void yyerror(const char *s);
 
 program:
     /* regra temporaria para o scanner */
-    | program statement
+    | program command
     ;
 
-statement:
-      token
-    | expr SEMI { printf("RESULTADO(%d)\n", $1); }
-    | input error SEMI     {
-              fprintf(stderr, "[ERRO SINTATICO] Erro recuperado ate ';'\n");
-              yyerrok; /* reset de erro */
-              yyclearin; /* limpamos o token de lookahead */
-          }
+command:
+        tipo IDENTIFIER SEMI {}
+    |   IF LPAREN condicional RPAREN LBRACE program RBRACE {}
     ;
 
-token:
-    PUBLIC { printf("PUBLIC "); }
-    | CLASS { printf("CLASS "); }
-    | STATIC { printf("STATIC "); }
-    | VOID { printf("VOID "); }
-    | BOOLEAN { printf("BOOLEAN "); }
-    | BYTE { printf("BYTE "); }
-    | CHAR { printf("CHAR "); }
-    | DOUBLE { printf("DOUBLE "); }
-    | FLOAT { printf("FLOAT "); }
-    | INT { printf("INT "); }
-    | LONG { printf("LONG "); }
-    | SHORT { printf("SHORT "); }
-    | IF { printf("IF "); }
-    | ELSE { printf("ELSE "); }
-    | SWITCH { printf ("SWITCH "); }
-    | CASE { printf("CASE "); }
-    | DEFAULT { printf("DEFAULT "); }
-    | WHILE { printf("WHILE "); }
-    | DO { printf("DO "); }
-    | FOR { printf("FOR "); }
-    | BREAK { printf("BREAK "); }
-    | CONTINUE { printf("CONTINUE "); }
-    | RETURN { printf("RETURN "); }
-    | FINAL { printf("FINAL "); }
-    | TOKEN_TRUE   { printf("TOKEN_TRUE "); }
-    | TOKEN_FALSE  { printf("TOKEN_FALSE "); }
-    | NULL_LITERAL { printf("NULL_LITERAL "); }
-    | MOD { printf("MOD "); }
-    | EQ { printf("EQ "); }
-    | NEQ { printf("NEQ "); }
-    | LT { printf("LT "); }
-    | LE { printf("LE "); }
-    | GT { printf("GT "); }
-    | GE { printf("GE "); }
-    | AND { printf("AND "); }
-    | OR { printf("OR "); }
-    | NOT { printf("NOT "); }
-    | ASSIGN { printf("ASSIGN "); }
-    | LBRACE { printf("LBRACE\n"); }
-    | RBRACE { printf("RBRACE\n"); }
-    | LPAREN { printf("LPAREN "); }
-    | RPAREN { printf("RPAREN "); }
-    | LBRACKET { printf("LBRACKET "); }
-    | RBRACKET { printf("RBRACKET "); }
-    | COMMA { printf("COMMA "); }
-    | FLOAT_LITERAL { printf("FLOAT_LITERAL(%s) ", yytext); }
-    | CHAR_LITERAL   { printf("CHAR_LITERAL(%s) ", yytext); }
-    | STRING_LITERAL { printf("STRING_LITERAL(%s) ", yytext); }
-    | IDENTIFIER { printf("ID(%s) ", yytext); }
+condicional:
+        TOKEN_TRUE {}
+    |   TOKEN_FALSE {}
+    ; 
+
+tipo:
+        INT {}
+    |   FLOAT {}
+    |   CHAR {}
     ;
-
-
-
-    expr:
-          expr PLUS expr     { $$ = $1 + $3; }
-        | expr MINUS expr    { $$ = $1 - $3; }
-        | expr MULT expr     { $$ = $1 * $3; }
-        | expr DIV expr      { $$ = $1 / $3; }
-        | LPAREN expr RPAREN { $$ = $2; }
-        if ($3 == 0) {
-            fprintf(stderr, "[ERRO SEMANTICO] Divisao por zero!\n");
-            $$ = 0;
-        } else {
-            $$ = $1 / $3;
-        }
-       }
-        | INT_LITERAL        { $$ = $1; }
-        | LPAREN expr RPAREN { $$ = $2; }
-        | NUM                { $$ = $1; }
-        ;
 
 %%
 

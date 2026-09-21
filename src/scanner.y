@@ -5,6 +5,7 @@
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
+extern FILE *yyin;
 void yyerror(const char *s);
 %}
 
@@ -39,23 +40,23 @@ void yyerror(const char *s);
 
 program:
     /* regra temporaria para o scanner */
-    | program command
+    | program command {}
     ;
 
 command:
-        tipo IDENTIFIER SEMI {}
-    |   IF LPAREN condicional RPAREN LBRACE program RBRACE {}
+      tipo IDENTIFIER SEMI {}
+    | IF LPAREN condicional RPAREN LBRACE program RBRACE {}
     ;
 
 condicional:
-        TOKEN_TRUE {}
-    |   TOKEN_FALSE {}
+      TOKEN_TRUE {}
+    | TOKEN_FALSE {}
     ; 
 
 tipo:
-        INT {}
-    |   FLOAT {}
-    |   CHAR {}
+      INT {}
+    | FLOAT {}
+    | CHAR {}
     ;
 
 %%
@@ -64,3 +65,20 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
 }
 
+int main(int argc, char **argv) {
+    if (argc > 1) {
+        FILE *f = fopen(argv[1], "r");
+        if (!f) {
+            perror("Erro ao abrir o arquivo");
+            return 1;
+        }
+        yyin = f;
+    }
+
+    if (yyparse() == 0) {
+        printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
+    }
+    
+    if (yyin) fclose(yyin);
+    return 0;
+}

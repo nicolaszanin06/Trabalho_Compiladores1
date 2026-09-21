@@ -2218,15 +2218,3 @@ void yyfree (void * ptr )
 #line 118 "scanner.l"
 
 
-/* Função principal: chamará o parser ao ser executado */
-int main(int argc, char **argv) {
-    /* Se houver arquivo de entrada como parâmetro, redireciona o yyin */
-    if (argc > 1) {
-        FILE *f = fopen(argv[1], "r");
-        if (f) {
-            yyin = f;
-        }
-    }
-    return yyparse();
-}
-

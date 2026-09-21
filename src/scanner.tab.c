@@ -75,9 +75,10 @@
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
+extern FILE *yyin;
 void yyerror(const char *s);
 
-#line 81 "scanner.tab.c"
+#line 82 "scanner.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -559,8 +560,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    40,    40,    42,    46,    47,    51,    52,    56,    57,
-      58
+       0,    41,    41,    43,    47,    48,    52,    53,    57,    58,
+      59
 };
 #endif
 
@@ -1134,50 +1135,56 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
+  case 3: /* program: program command  */
+#line 43 "scanner.y"
+                      {}
+#line 1142 "scanner.tab.c"
+    break;
+
   case 4: /* command: tipo IDENTIFIER SEMI  */
-#line 46 "scanner.y"
-                             {}
-#line 1141 "scanner.tab.c"
+#line 47 "scanner.y"
+                           {}
+#line 1148 "scanner.tab.c"
     break;
 
   case 5: /* command: IF LPAREN condicional RPAREN LBRACE program RBRACE  */
-#line 47 "scanner.y"
-                                                           {}
-#line 1147 "scanner.tab.c"
+#line 48 "scanner.y"
+                                                         {}
+#line 1154 "scanner.tab.c"
     break;
 
   case 6: /* condicional: TOKEN_TRUE  */
-#line 51 "scanner.y"
-                   {}
-#line 1153 "scanner.tab.c"
+#line 52 "scanner.y"
+                 {}
+#line 1160 "scanner.tab.c"
     break;
 
   case 7: /* condicional: TOKEN_FALSE  */
-#line 52 "scanner.y"
-                    {}
-#line 1159 "scanner.tab.c"
+#line 53 "scanner.y"
+                  {}
+#line 1166 "scanner.tab.c"
     break;
 
   case 8: /* tipo: INT  */
-#line 56 "scanner.y"
-            {}
-#line 1165 "scanner.tab.c"
+#line 57 "scanner.y"
+          {}
+#line 1172 "scanner.tab.c"
     break;
 
   case 9: /* tipo: FLOAT  */
-#line 57 "scanner.y"
-              {}
-#line 1171 "scanner.tab.c"
+#line 58 "scanner.y"
+            {}
+#line 1178 "scanner.tab.c"
     break;
 
   case 10: /* tipo: CHAR  */
-#line 58 "scanner.y"
-             {}
-#line 1177 "scanner.tab.c"
+#line 59 "scanner.y"
+           {}
+#line 1184 "scanner.tab.c"
     break;
 
 
-#line 1181 "scanner.tab.c"
+#line 1188 "scanner.tab.c"
 
       default: break;
     }
@@ -1370,10 +1377,27 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 61 "scanner.y"
+#line 62 "scanner.y"
 
 
 void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
 }
 
+int main(int argc, char **argv) {
+    if (argc > 1) {
+        FILE *f = fopen(argv[1], "r");
+        if (!f) {
+            perror("Erro ao abrir o arquivo");
+            return 1;
+        }
+        yyin = f;
+    }
+
+    if (yyparse() == 0) {
+        printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
+    }
+    
+    if (yyin) fclose(yyin);
+    return 0;
+}

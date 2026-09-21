@@ -68,6 +68,8 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 "null"      { return NULL_LITERAL; }
 
     /* Operadores */
+"++"        { return INC; }
+"--"        { return DEC; }
 "+"         { return PLUS; }
 "-"         { return MINUS; }
 "*"         { return MULT; }

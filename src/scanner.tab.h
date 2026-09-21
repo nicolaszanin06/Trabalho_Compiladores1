@@ -87,28 +87,30 @@ extern int yydebug;
     MULT = 288,                    /* MULT  */
     DIV = 289,                     /* DIV  */
     MOD = 290,                     /* MOD  */
-    EQ = 291,                      /* EQ  */
-    NEQ = 292,                     /* NEQ  */
-    LT = 293,                      /* LT  */
-    LE = 294,                      /* LE  */
-    GT = 295,                      /* GT  */
-    GE = 296,                      /* GE  */
-    AND = 297,                     /* AND  */
-    OR = 298,                      /* OR  */
-    NOT = 299,                     /* NOT  */
-    ASSIGN = 300,                  /* ASSIGN  */
-    LBRACE = 301,                  /* LBRACE  */
-    RBRACE = 302,                  /* RBRACE  */
-    LPAREN = 303,                  /* LPAREN  */
-    RPAREN = 304,                  /* RPAREN  */
-    LBRACKET = 305,                /* LBRACKET  */
-    RBRACKET = 306,                /* RBRACKET  */
-    SEMI = 307,                    /* SEMI  */
-    COMMA = 308,                   /* COMMA  */
-    FLOAT_LITERAL = 309,           /* FLOAT_LITERAL  */
-    IDENTIFIER = 310,              /* IDENTIFIER  */
-    STRING_LITERAL = 311,          /* STRING_LITERAL  */
-    CHAR_LITERAL = 312             /* CHAR_LITERAL  */
+    INC = 291,                     /* INC  */
+    DEC = 292,                     /* DEC  */
+    EQ = 293,                      /* EQ  */
+    NEQ = 294,                     /* NEQ  */
+    LT = 295,                      /* LT  */
+    LE = 296,                      /* LE  */
+    GT = 297,                      /* GT  */
+    GE = 298,                      /* GE  */
+    AND = 299,                     /* AND  */
+    OR = 300,                      /* OR  */
+    NOT = 301,                     /* NOT  */
+    ASSIGN = 302,                  /* ASSIGN  */
+    LBRACE = 303,                  /* LBRACE  */
+    RBRACE = 304,                  /* RBRACE  */
+    LPAREN = 305,                  /* LPAREN  */
+    RPAREN = 306,                  /* RPAREN  */
+    LBRACKET = 307,                /* LBRACKET  */
+    RBRACKET = 308,                /* RBRACKET  */
+    SEMI = 309,                    /* SEMI  */
+    COMMA = 310,                   /* COMMA  */
+    FLOAT_LITERAL = 311,           /* FLOAT_LITERAL  */
+    IDENTIFIER = 312,              /* IDENTIFIER  */
+    STRING_LITERAL = 313,          /* STRING_LITERAL  */
+    CHAR_LITERAL = 314             /* CHAR_LITERAL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -121,7 +123,7 @@ union YYSTYPE
 
     int intValue;
 
-#line 125 "scanner.tab.h"
+#line 127 "scanner.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -24,6 +24,7 @@ nav:
   - Início: index.md
   - Planejamento e Metodologia: planejamento.md
   - Como Rodar: como-rodar.md
+  - Escopo do Projeto: escopo.md
 
 extra_css:
   - stylesheets/extra.css

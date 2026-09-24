@@ -21,7 +21,8 @@ theme:
         name: Modo claro
 
 nav:
-  - Home: index.md
+  - Início: index.md
+  - Planejamento e Metodologia: planejamento.md
 
 extra_css:
   - stylesheets/extra.css

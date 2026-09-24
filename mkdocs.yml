@@ -27,6 +27,7 @@ nav:
   - Escopo do Projeto: escopo.md
   - Analisador Léxico: analisador-lexico.md
   - Analisador Sintático: analisador-sintatico.md
+  - Testes e Validação: testes.md
 
 extra_css:
   - stylesheets/extra.css

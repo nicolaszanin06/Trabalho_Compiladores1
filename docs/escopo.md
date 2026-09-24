@@ -113,6 +113,6 @@ Para manter o escopo alinhado com os objetivos da disciplina, este compilador **
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | --- | --- | --- | --- |
-| 1.0 | Criação do documento de escopo e definições | 24/09/2026 | [Henrique](https://github.com/henryqma?utm_source=gemini) |
+| 1.0 | Criação do documento de escopo e definições | 24/09/2026 | [Henrique](https://github.com/henryqma) |
 
 ---

@@ -77,4 +77,4 @@ O caractere isolado `.` no final das regras age como um "pega-tudo". Se o símbo
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | --- | --- | --- | --- |
-| 1.0 | Criação da documentação do Analisador Léxico | 24/09/2026 | [Henrique](https://github.com/henryqma?utm_source=gemini) |
+| 1.0 | Criação da documentação do Analisador Léxico | 24/09/2026 | [Henrique](https://github.com/henryqma) |

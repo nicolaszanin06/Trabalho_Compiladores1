@@ -26,6 +26,7 @@ nav:
   - Como Rodar: como-rodar.md
   - Escopo do Projeto: escopo.md
   - Analisador Léxico: analisador-lexico.md
+  - Analisador Sintático: analisador-sintatico.md
 
 extra_css:
   - stylesheets/extra.css

@@ -169,6 +169,8 @@ Os arquivos removidos incluem:
 
 ## 🧪 Exemplos de Teste
 
+Os casos executaveis da gramatica atual estao em [`testes/`](testes/README.md). No PowerShell, rode `.\testes\executar.ps1` na raiz do projeto.
+
 ### Exemplo de Entrada Válida
 
 Arquivo `teste.java`:

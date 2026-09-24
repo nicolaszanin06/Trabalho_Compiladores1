@@ -25,6 +25,7 @@ nav:
   - Planejamento e Metodologia: planejamento.md
   - Como Rodar: como-rodar.md
   - Escopo do Projeto: escopo.md
+  - Analisador Léxico: analisador-lexico.md
 
 extra_css:
   - stylesheets/extra.css

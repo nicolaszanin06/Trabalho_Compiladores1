@@ -47,7 +47,7 @@ programa:
     ;
 
 comando:
-     tipo IDENTIFIER ASSIGN valor_literal SEMI {}
+     tipo IDENTIFIER ASSIGN valor SEMI {}
     | tipo IDENTIFIER SEMI {}
     | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
     | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
@@ -63,16 +63,22 @@ tipo:
       INT {}
     | FLOAT {}
     | CHAR {}
+    | BOOLEAN {}
     ;
 
-valor_literal:
-      FLOAT_LITERAL {} 
+valor:
+      IDENTIFIER {}
+    | FLOAT_LITERAL {} 
     | INT_LITERAL {}
     | CHAR_LITERAL {}
+    | TOKEN_TRUE {}
+    | TOKEN_FALSE {}
+    ;
 
 incrementacao:
       INC {}
     | DEC {}
+    ;
 
 %%
 

@@ -97,13 +97,16 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 ","         { return COMMA; }
 
     /* Regras com Macros */
-{FLOAT_LITERAL}   { return FLOAT_LITERAL; }
+{FLOAT_LITERAL}   { yylval.floatValue = atof(yytext); return FLOAT_LITERAL; }
 {INT_LITERAL} {
     yylval.intValue = atoi(yytext);
     return INT_LITERAL;
 }
-{CHAR_LITERAL}    { return CHAR_LITERAL; }
-{STRING_LITERAL}  { return STRING_LITERAL; }
+{CHAR_LITERAL}    {
+                      yylval.charValue = yytext[1];
+                      return CHAR_LITERAL;
+                  }
+{STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
 {IDENTIFIER}      { return IDENTIFIER; }
 
     /* Tratamento de erro para String não fechada */

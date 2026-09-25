@@ -18,8 +18,11 @@ void yyerror(const char *s);
 
 }
 
+/* Identificadores e Valoração */
+%token <stringValue> IDENTIFIER STRING_LITERAL
+%token <charValue> CHAR_LITERAL
+%token <floatValue> FLOAT_LITERAL
 %token <intValue>  INT_LITERAL
-
 
 /* Tokens do Java Procedural */
 %token PUBLIC CLASS STATIC VOID 
@@ -49,14 +52,17 @@ void yyerror(const char *s);
 %token <floatValue> FLOAT_LITERAL
 %%
 
-program:
+programa:
     /* regra temporaria para o scanner */
-    | program command {}
+    | programa comando {}
     ;
 
-command:
-      tipo IDENTIFIER SEMI {}
-    | IF LPAREN condicional RPAREN LBRACE program RBRACE {}
+comando:
+     tipo IDENTIFIER ASSIGN valor SEMI {}
+    | tipo IDENTIFIER SEMI {}
+    | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
+    | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
+    | IDENTIFIER incrementacao SEMI {}
     ;
 
 condicional:
@@ -68,6 +74,21 @@ tipo:
       INT {}
     | FLOAT {}
     | CHAR {}
+    | BOOLEAN {}
+    ;
+
+valor:
+      IDENTIFIER {}
+    | FLOAT_LITERAL {} 
+    | INT_LITERAL {}
+    | CHAR_LITERAL {}
+    | TOKEN_TRUE {}
+    | TOKEN_FALSE {}
+    ;
+
+incrementacao:
+      INC {}
+    | DEC {}
     ;
 
 %%

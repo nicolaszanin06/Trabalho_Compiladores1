@@ -107,14 +107,8 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 
     /* Regras com Macros */
 {FLOAT_LITERAL}   { yylval.floatValue = atof(yytext); return FLOAT_LITERAL; }
-{INT_LITERAL} {
-    yylval.intValue = atoi(yytext);
-    return INT_LITERAL;
-}
-{CHAR_LITERAL}    {
-                      yylval.charValue = yytext[1];
-                      return CHAR_LITERAL;
-                  }
+{INT_LITERAL}     { yylval.intValue = atoi(yytext); return INT_LITERAL; }
+{CHAR_LITERAL}    { yylval.charValue = yytext[1]; return CHAR_LITERAL; }
 {STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
 {IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 

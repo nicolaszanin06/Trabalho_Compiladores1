@@ -12,6 +12,8 @@
 
 %option noyywrap
 %option yylineno
+%option nounput    
+%option noinput      
 
 /* Definições de Expressões Regulares */
 DIGIT           [0-9]

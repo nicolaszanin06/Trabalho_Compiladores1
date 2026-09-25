@@ -62,6 +62,8 @@ programa:
 comando:
      tipo IDENTIFIER ASSIGN expressao SEMI {}
     | tipo IDENTIFIER SEMI {}
+    | IDENTIFIER ASSIGN expressao SEMI {}
+    | IF LPAREN expressao RPAREN LBRACE programa RBRACE ELSE LBRACE programa RBRACE {}
     | IF LPAREN expressao RPAREN LBRACE programa RBRACE {}
     | WHILE LPAREN expressao RPAREN LBRACE programa RBRACE {}
     | IDENTIFIER incrementacao SEMI {}
@@ -78,6 +80,7 @@ expressao:
     
     | expressao AND expressao {}
     | expressao OR expressao {}
+    | MINUS expressao %prec NOT {}
     | NOT expressao {}
     | expressao EQ expressao {}
     | expressao NEQ expressao {}

@@ -12,10 +12,17 @@ void yyerror(const char *s);
 
 %union {
     int intValue;
+    float floatValue;
+    char charValue;
+    char* stringValue;
+
 }
 
+/* Identificadores e Valoração */
+%token <stringValue> IDENTIFIER STRING_LITERAL
+%token <charValue> CHAR_LITERAL
+%token <floatValue> FLOAT_LITERAL
 %token <intValue>  INT_LITERAL
-
 
 /* Tokens do Java Procedural */
 %token PUBLIC CLASS STATIC VOID 
@@ -31,10 +38,6 @@ void yyerror(const char *s);
 
 %left PLUS MINUS
 %left MULT DIV
-
-/* Identificadores e Valoração */
-%token FLOAT_LITERAL IDENTIFIER
-%token STRING_LITERAL CHAR_LITERAL
 
 %%
 

@@ -1148,69 +1148,66 @@ YY_RULE_SETUP
 case 53:
 YY_RULE_SETUP
 #line 101 "scanner.l"
-{ return FLOAT_LITERAL; }
+{ yylval.floatValue = atof(yytext); return FLOAT_LITERAL; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
 #line 102 "scanner.l"
-{
-    yylval.intValue = atoi(yytext);
-    return INT_LITERAL;
-}
+{ yylval.intValue = atoi(yytext); return INT_LITERAL; }
 	YY_BREAK
 case 55:
 /* rule 55 can match eol */
 YY_RULE_SETUP
-#line 106 "scanner.l"
-{ return CHAR_LITERAL; }
+#line 103 "scanner.l"
+{ yylval.charValue = yytext[1]; return CHAR_LITERAL; }
 	YY_BREAK
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
-#line 107 "scanner.l"
-{ return STRING_LITERAL; }
+#line 104 "scanner.l"
+{ yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 108 "scanner.l"
+#line 105 "scanner.l"
 { return IDENTIFIER; }
 	YY_BREAK
 /* Tratamento de erro para String não fechada */
 case 58:
 /* rule 58 can match eol */
 YY_RULE_SETUP
-#line 111 "scanner.l"
+#line 108 "scanner.l"
 { printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }
 	YY_BREAK
 /* Descarte de Espaços e Comentários */
 case 59:
 /* rule 59 can match eol */
 YY_RULE_SETUP
-#line 114 "scanner.l"
+#line 111 "scanner.l"
 { /* ignora */ }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 115 "scanner.l"
+#line 112 "scanner.l"
 { /* ignora */ }
 	YY_BREAK
 case 61:
 /* rule 61 can match eol */
 YY_RULE_SETUP
-#line 116 "scanner.l"
+#line 113 "scanner.l"
 { /* ignora */ }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 118 "scanner.l"
+#line 115 "scanner.l"
 { printf("Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 120 "scanner.l"
+#line 117 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 1214 "lex.yy.c"
+#line 1211 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2227,6 +2224,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 120 "scanner.l"
+#line 117 "scanner.l"
 
 

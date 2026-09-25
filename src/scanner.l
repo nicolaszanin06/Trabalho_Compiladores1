@@ -61,6 +61,15 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 "continue"  { return CONTINUE; }
 "return"    { return RETURN; }
 
+    /* Entrada e Saída */
+
+"System.out.println"    { return PRINTLN; }
+"System.out.print"      { return PRINT; }
+
+    /* Funções Matemáticas Nativas */
+"Math.sqrt"     { return MATH_SQRT; }
+"Math.pow"      { return MATH_POW; }
+
     /* Modificadores e Literais Fixos */
 "final"     { return FINAL; }
 "true"      { return TOKEN_TRUE; }
@@ -101,7 +110,7 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 {INT_LITERAL}     { yylval.intValue = atoi(yytext); return INT_LITERAL; }
 {CHAR_LITERAL}    { yylval.charValue = yytext[1]; return CHAR_LITERAL; }
 {STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
-{IDENTIFIER}      { return IDENTIFIER; }
+{IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 
     /* Tratamento de erro para String não fechada */
 \"([^"\\]|\\.)*   { printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }

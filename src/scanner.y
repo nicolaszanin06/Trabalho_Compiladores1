@@ -41,14 +41,16 @@ void yyerror(const char *s);
 
 %%
 
-program:
+programa:
     /* regra temporaria para o scanner */
-    | program command {}
+    | programa comando {}
     ;
 
-command:
-      tipo IDENTIFIER SEMI {}
-    | IF LPAREN condicional RPAREN LBRACE program RBRACE {}
+comando:
+     tipo IDENTIFIER ASSIGN valor_literal SEMI {}
+    | tipo IDENTIFIER SEMI {}
+    | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
+    | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
     ;
 
 condicional:
@@ -61,6 +63,11 @@ tipo:
     | FLOAT {}
     | CHAR {}
     ;
+
+valor_literal:
+      FLOAT_LITERAL {} 
+    | INT_LITERAL {}
+    | CHAR_LITERAL {}
 
 %%
 

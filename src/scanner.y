@@ -82,6 +82,8 @@ valor:
     | STRING_LITERAL {}
     | TOKEN_TRUE {}
     | TOKEN_FALSE {}
+    | MATH_SQRT LPAREN valor RPAREN {}
+    | MATH_POW LPAREN valor COMMA valor RPAREN {}
     ;
 
 incrementacao:

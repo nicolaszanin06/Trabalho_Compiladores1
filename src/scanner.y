@@ -36,6 +36,13 @@ void yyerror(const char *s);
 %left PLUS MINUS
 %left MULT DIV
 
+    /* Entrada e Saída */
+%token PRINTLN PRINT
+
+    /* Funções Matemáticas Nativas */
+%token MATH_SQRT MATH_POW
+
+
 /* Identificadores e Valoração */
 %token <stringValue> IDENTIFIER STRING_LITERAL
 %token <charValue> CHAR_LITERAL

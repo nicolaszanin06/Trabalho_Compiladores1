@@ -61,6 +61,15 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 "continue"  { return CONTINUE; }
 "return"    { return RETURN; }
 
+    /* Entrada e Saída */
+
+"System.out.println"    { return PRINTLN; }
+"System.out.print"      { return PRINT; }
+
+    /* Funções Matemáticas Nativas */
+"Math.sqrt"     { return MATH_SQRT; }
+"Math.pow"      { return MATH_POW; }
+
     /* Modificadores e Literais Fixos */
 "final"     { return FINAL; }
 "true"      { return TOKEN_TRUE; }

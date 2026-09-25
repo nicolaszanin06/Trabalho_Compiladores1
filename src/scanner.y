@@ -37,9 +37,9 @@ void yyerror(const char *s);
 %left MULT DIV
 
 /* Identificadores e Valoração */
-%token FLOAT_LITERAL IDENTIFIER
-%token STRING_LITERAL CHAR_LITERAL
-
+%token <stringValue> IDENTIFIER STRING_LITERAL
+%token <charValue> CHAR_LITERAL
+%token <floatValue> FLOAT_LITERAL
 %%
 
 program:

@@ -35,15 +35,22 @@ void yyerror(const char *s);
 %token EQ NEQ LT LE GT GE AND OR NOT ASSIGN
 %token LBRACE RBRACE LPAREN RPAREN LBRACKET RBRACKET SEMI COMMA
 
-
-%left PLUS MINUS
-%left MULT DIV
-
     /* Entrada e Saída */
 %token PRINTLN PRINT
 
     /* Funções Matemáticas Nativas */
 %token MATH_SQRT MATH_POW
+
+
+/* A ordem define a precedência (de baixo para cima) */
+%left OR
+%left AND
+%left EQ NEQ
+%left LT LE GT GE
+%left PLUS MINUS
+%left MULT DIV MOD
+%right NOT
+
 
 %%
 
@@ -53,43 +60,51 @@ programa:
     ;
 
 comando:
-     tipo IDENTIFIER ASSIGN valor SEMI {}
+     tipo IDENTIFIER ASSIGN expressao SEMI {}
     | tipo IDENTIFIER SEMI {}
-    | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
-    | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
+    | IF LPAREN expressao RPAREN LBRACE programa RBRACE {}
+    | WHILE LPAREN expressao RPAREN LBRACE programa RBRACE {}
     | IDENTIFIER incrementacao SEMI {}
-    | PRINTLN LPAREN valor RPAREN SEMI {}
-    | PRINT LPAREN valor RPAREN SEMI {}
+    | PRINTLN LPAREN expressao RPAREN SEMI {}
+    | PRINT LPAREN expressao RPAREN SEMI {}
     ;
 
-condicional:
-      valor EQ valor {}
-    | valor NEQ valor {}
-    | valor LT valor {}
-    | valor LE valor {}
-    | valor GT valor {}
-    | valor GE valor {}
-    | TOKEN_TRUE {}
-    | TOKEN_FALSE {}
-    ; 
-
-tipo:
-      INT {}
-    | FLOAT {}
-    | CHAR {}
-    | BOOLEAN {}
-    ;
-
-valor:
-      IDENTIFIER {}
+expressao:
+      expressao PLUS expressao {}
+    | expressao MINUS expressao {}
+    | expressao MULT expressao {}
+    | expressao DIV expressao {}
+    | expressao MOD expressao {}
+    
+    | expressao AND expressao {}
+    | expressao OR expressao {}
+    | NOT expressao {}
+    | expressao EQ expressao {}
+    | expressao NEQ expressao {}
+    | expressao LT expressao {}
+    | expressao LE expressao {}
+    | expressao GT expressao {}
+    | expressao GE expressao {}
+    
+    | LPAREN expressao RPAREN {}
+    
+    | MATH_SQRT LPAREN expressao RPAREN {}
+    | MATH_POW LPAREN expressao COMMA expressao RPAREN {}
+    
+    | IDENTIFIER {}
     | FLOAT_LITERAL {} 
     | INT_LITERAL {}
     | CHAR_LITERAL {}
     | STRING_LITERAL {}
     | TOKEN_TRUE {}
     | TOKEN_FALSE {}
-    | MATH_SQRT LPAREN valor RPAREN {}
-    | MATH_POW LPAREN valor COMMA valor RPAREN {}
+    ;
+
+tipo:
+      INT {}
+    | FLOAT {}
+    | CHAR {}
+    | BOOLEAN {}
     ;
 
 incrementacao:

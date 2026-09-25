@@ -13,8 +13,8 @@ BISON_H   = scanner.tab.h
 FLEX_C    = lex.yy.c
 
 # Parâmetros opcionais ao Bison e Flex
-BISON_FLAGS = -d   # -d gera o arquivo .h (token definitions)
-FLEX_FLAGS  =      # deixe vazio ou acrescente opções se necessário
+BISON_FLAGS = -d # -d gera o arquivo .h (token definitions)
+FLEX_FLAGS  =       # deixe vazio ou acrescente opções se necessário
 
 # Parâmetros de compilação
 CC = gcc

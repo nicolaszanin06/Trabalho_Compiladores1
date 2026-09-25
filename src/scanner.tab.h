@@ -110,7 +110,11 @@ extern int yydebug;
     LBRACKET = 311,                /* LBRACKET  */
     RBRACKET = 312,                /* RBRACKET  */
     SEMI = 313,                    /* SEMI  */
-    COMMA = 314                    /* COMMA  */
+    COMMA = 314,                   /* COMMA  */
+    PRINTLN = 315,                 /* PRINTLN  */
+    PRINT = 316,                   /* PRINT  */
+    MATH_SQRT = 317,               /* MATH_SQRT  */
+    MATH_POW = 318                 /* MATH_POW  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -127,7 +131,7 @@ union YYSTYPE
     char* stringValue;
 
 
-#line 131 "scanner.tab.h"
+#line 135 "scanner.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

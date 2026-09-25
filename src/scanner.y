@@ -12,6 +12,10 @@ void yyerror(const char *s);
 
 %union {
     int intValue;
+    float floatValue;
+    char charValue;
+    char* stringValue;
+
 }
 
 %token <intValue>  INT_LITERAL

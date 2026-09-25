@@ -63,7 +63,13 @@ comando:
     ;
 
 condicional:
-      TOKEN_TRUE {}
+      valor EQ valor {}
+    | valor NEQ valor {}
+    | valor LT valor {}
+    | valor LE valor {}
+    | valor GT valor {}
+    | valor GE valor {}
+    | TOKEN_TRUE {}
     | TOKEN_FALSE {}
     ; 
 

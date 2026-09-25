@@ -45,11 +45,6 @@ void yyerror(const char *s);
     /* Funções Matemáticas Nativas */
 %token MATH_SQRT MATH_POW
 
-
-/* Identificadores e Valoração */
-%token <stringValue> IDENTIFIER STRING_LITERAL
-%token <charValue> CHAR_LITERAL
-%token <floatValue> FLOAT_LITERAL
 %%
 
 programa:
@@ -63,6 +58,8 @@ comando:
     | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
     | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
     | IDENTIFIER incrementacao SEMI {}
+    | PRINTLN LPAREN valor RPAREN SEMI {}
+    | PRINT LPAREN valor RPAREN SEMI {}
     ;
 
 condicional:
@@ -82,6 +79,7 @@ valor:
     | FLOAT_LITERAL {} 
     | INT_LITERAL {}
     | CHAR_LITERAL {}
+    | STRING_LITERAL {}
     | TOKEN_TRUE {}
     | TOKEN_FALSE {}
     ;

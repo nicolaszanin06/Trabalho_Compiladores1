@@ -51,6 +51,7 @@ comando:
     | tipo IDENTIFIER SEMI {}
     | IF LPAREN condicional RPAREN LBRACE programa RBRACE {}
     | WHILE LPAREN condicional RPAREN LBRACE programa RBRACE {}
+    | IDENTIFIER incrementacao SEMI {}
     ;
 
 condicional:
@@ -68,6 +69,10 @@ valor_literal:
       FLOAT_LITERAL {} 
     | INT_LITERAL {}
     | CHAR_LITERAL {}
+
+incrementacao:
+      INC {}
+    | DEC {}
 
 %%
 

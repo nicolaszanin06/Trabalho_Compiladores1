@@ -107,7 +107,7 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
                       return CHAR_LITERAL;
                   }
 {STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
-{IDENTIFIER}      { return IDENTIFIER; }
+{IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 
     /* Tratamento de erro para String não fechada */
 \"([^"\\]|\\.)*   { printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }

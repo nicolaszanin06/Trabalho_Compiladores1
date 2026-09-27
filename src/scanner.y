@@ -6,6 +6,7 @@ extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
+int yywrap(void);
 void yyerror(const char *s);
 %}
 
@@ -26,7 +27,7 @@ void yyerror(const char *s);
 
 /* Tokens do Java Procedural */
 %token PUBLIC CLASS STATIC VOID 
-%token BOOLEAN BYTE CHAR DOUBLE FLOAT INT LONG SHORT
+%token BOOLEAN BYTE CHAR DOUBLE FLOAT INT LONG SHORT STRING_TYPE
 %token IF ELSE SWITCH CASE DEFAULT WHILE DO FOR BREAK CONTINUE RETURN
 %token FINAL TOKEN_TRUE TOKEN_FALSE NULL_LITERAL
 
@@ -108,6 +109,7 @@ tipo:
     | FLOAT {}
     | CHAR {}
     | BOOLEAN {}
+    | STRING_TYPE {}
     ;
 
 incrementacao:
@@ -119,6 +121,10 @@ incrementacao:
 
 void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
+}
+
+int yywrap(void) {
+    return 1;
 }
 
 int main(int argc, char **argv) {

@@ -10,7 +10,6 @@
 #include <stdlib.h>
 %}
 
-%option noyywrap
 %option yylineno
 %option nounput    
 %option noinput      
@@ -49,6 +48,7 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 "int"       { return INT; }
 "long"      { return LONG; }
 "short"     { return SHORT; }
+"String"    { return STRING_TYPE; }
 
     /* Controle de Fluxo */
 "if"        { return IF; }

@@ -1,47 +1,20 @@
-# **Testes e Validação**
+# Testes e validação
 
-A validação do compilador é realizada através de um conjunto de arquivos de teste organizados no diretório `testes/`. O objetivo desta etapa é garantir que os analisadores léxico e sintático se comportem conforme o esperado, tanto ao compilar um código correto quanto ao identificar falhas no código-fonte.
+Os 14 casos atuais estão classificados conforme o resultado esperado no analisador:
 
-## **Estrutura do Diretório de Testes**
+- `testes/validos/`: seis entradas aceitas, incluindo declarações, inicialização, condição com identificador booleano, blocos aninhados, comentários e entrada vazia.
+- `testes/invalidos/`: oito entradas rejeitadas, cobrindo ponto e vírgula ausente, expressão ausente, texto solto, caractere inválido, string não encerrada, comentário não encerrado e literais com quebras de linha reais.
 
-Para manter a organização e facilitar a verificação dos casos de uso, a equipe dividiu os cenários de teste em duas categorias principais dentro do repositório:
+As entradas válidas retornam código 0 e imprimem sucesso. As inválidas retornam código 1 e não imprimem sucesso. Literais com quebra de linha podem gerar erros léxicos e sintáticos na mesma execução.
 
-### 1. Testes Válidos (`testes/validos/`)
+Para uma demonstração clara, use `declaracoes.java` e `ifs_aninhados.java` como válidos; `sem_ponto_e_virgula.java` e `expressao_ausente.java` como erros sintáticos; `caractere_invalido.java` e `string_nao_encerrada.java` como erros léxicos.
 
-Esta pasta contém arquivos com códigos escritos no subconjunto de Java suportado pelo compilador. Eles devem ser processados até o fim sem gerar nenhum erro sintático ou léxico. Os arquivos implementados são:
+No WSL, compile dentro de `src/` com `make -B` e execute, por exemplo:
 
-* **`comentarios.java`**: Valida se o analisador léxico ignora corretamente os blocos de comentários sem gerar *tokens*.
-* **`declaracoes.java`**: Verifica a sintaxe de declaração de variáveis (como `int`, `float` e `char`) seguidas de ponto e vírgula.
-* **`ifs_aninhados.java`**: Testa o reconhecimento estrutural de blocos condicionais dentro de outros blocos.
-* **`vazio.java`**: Garante que o *parser* consiga processar adequadamente um arquivo sem nenhum comando (fim de arquivo imediato).
+```bash
+./scanner < ../testes/invalidos/expressao_ausente.java
+```
 
-### 2. Testes Inválidos (`testes/invalidos/`)
+No PowerShell, com GCC instalado no Windows, execute `./testes/executar.ps1` a partir da raiz. O verificador compila os arquivos C gerados e compara stdout, stderr e código de saída de cada caso. Mudanças em Flex/Bison precisam ser regeneradas antes.
 
-Esta pasta abriga códigos propositalmente incorretos. O objetivo é acionar os mecanismos de tratamento de erro construídos no Flex e no Bison, garantindo que o compilador não quebre (crash) e exiba a mensagem de erro na linha correta. Os cenários cobrem:
-
-* **Erros Léxicos:**
-* `caractere_invalido.java`: Insere símbolos que não pertencem à linguagem.
-* `string_nao_encerrada.java`: Abre aspas duplas sem as fechar antes da quebra de linha.
-
-
-* **Erros Sintáticos:**
-* `sem_ponto_e_virgula.java`: Omissão do terminador de instrução `;`.
-* `atribuicao_na_declaracao.java`: Inicializa uma variável, atualmente aceito pela gramática.
-* `condicao_nao_suportada.java`: Usa um identificador como condição de `if`, atualmente aceito pela gramática.
-
-
-
-## **Automação dos Testes**
-
-Para evitar a execução manual arquivo por arquivo, o projeto conta com um *script* de automação desenvolvido para ambientes Windows.
-
-O arquivo **`executar.ps1`** localizado na pasta `testes/` é um script em PowerShell que itera automaticamente sobre os arquivos de teste, passa cada um deles para o executável do `scanner` e imprime os resultados da compilação na tela do desenvolvedor.
-
----
-
-## **Histórico de Versões**
-
-| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
-| --- | --- | --- | --- |
-| 1.0 | Criação da documentação de Testes e Validação | 24/09/2026 | [Henrique](https://github.com/henryqma) |
-Esses dois arquivos permanecem na pasta histórica de inválidos, mas o verificador espera sucesso. Os testes também conferem o código de saída: 0 para sucesso e 1 para erro. Strings/caracteres com quebras de linha reais e comentários de bloco não encerrados devem falhar.
+A classificação acompanha a gramática atual; não implica validação semântica ou execução do programa. O roteiro completo e a descrição de cada arquivo estão em `testes/README.md`.

@@ -1,3 +1,0 @@
-if (contador) {
-    int valor;
-}

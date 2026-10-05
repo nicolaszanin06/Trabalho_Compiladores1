@@ -1,268 +1,84 @@
-# ☕ Java Procedural - Analisador Léxico & Compilador
+# Java Procedural — Analisador Léxico e Sintático
 
-Projeto desenvolvido para a disciplina **FGA0003 - Compiladores 1** (UnB - Faculdade do Gama), implementando um analisador léxico (Scanner) com **Flex** e **Bison** para um subconjunto procedural da linguagem Java.
+Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual verifica a sintaxe; ainda não executa o programa, não gera C e não faz análise semântica.
 
----
+## Compilar e executar no WSL/Linux
 
-## 📌 Especificação dos Tokens Reconhecidos
-
-### 1. Palavras-Chave e Modificadores
-
-**Estrutura:**
-
-* `public`
-* `class`
-* `static`
-* `void`
-* `final`
-
-**Controle de Fluxo:**
-
-* `if`
-* `else`
-* `switch`
-* `case`
-* `default`
-* `while`
-* `do`
-* `for`
-* `break`
-* `continue`
-* `return`
-
-**Tipos de Dados:**
-
-* `boolean`
-* `byte`
-* `char`
-* `short`
-* `int`
-* `long`
-* `float`
-* `double`
-
-### 2. Literais e Identificadores
-
-* **Identificadores:** nomes de classes, métodos e variáveis (`[a-zA-Z_][a-zA-Z0-9_]*`)
-* **Inteiros:** `[0-9]+`
-* **Ponto Flutuante:** `[0-9]+\.[0-9]+`
-* **Caracteres:** `'c'` (`CHAR_LITERAL`)
-* **Strings:** `"texto"` (`STRING_LITERAL`)
-* **Valores fixos:** `true`, `false`, `null`
-
-### 3. Operadores
-
-**Aritméticos:**
-
-* `+`
-* `-`
-* `*`
-* `/`
-* `%`
-
-**Relacionais:**
-
-* `==`
-* `!=`
-* `<`
-* `<=`
-* `>`
-* `>=`
-
-**Lógicos:**
-
-* `&&`
-* `||`
-* `!`
-
-**Atribuição:**
-
-* `=`
-
-### 4. Delimitadores e Pontuação
-
-* `;`
-* `,`
-* `.`
-* `(`
-* `)`
-* `{`
-* `}`
-* `[`
-* `]`
-
-### 5. Tratamento de Espaços e Comentários
-
-O analisador ignora:
-
-* Espaços em branco
-* Quebras de linha (`\n`)
-* Tabulações (`\t`)
-* Retorno de carro (`\r`)
-* Comentários de linha única (`// ...`)
-* Comentários de bloco (`/* ... */`)
-
----
-
-## 🚫 Limitações de Escopo
-
-O projeto **não suporta** os seguintes recursos da linguagem Java:
-
-* Orientação a Objetos avançada (`new`, herança, polimorfismo e classes aninhadas)
-* Tratamento de exceções (`try`, `catch`, `finally`, `throw`, `throws`)
-* Generics
-* Lambdas
-* Streams
-* Reflection
-* Threads
-* Outros recursos dinâmicos da JVM
-
-O projeto tem como objetivo trabalhar com um **subconjunto procedural da linguagem Java**, com foco nos conceitos de análise léxica e compilação.
-
----
-
-## 🛠️ Como Compilar e Executar
-
-### Pré-requisitos
-
-É necessário ter instalado:
-
-* `gcc`
-* `flex`
-* `bison`
-* `make`
-
-### 1. Compilar o Projeto
-
-Na raiz do projeto, execute:
+Dependências: GCC, Make, Flex, Bison e biblioteca do Flex. No Ubuntu:
 
 ```bash
-make
+sudo apt update
+sudo apt install build-essential flex bison libfl-dev
 ```
 
-O comando processará os arquivos `.l` e `.y` e realizará a compilação do executável `scanner`.
-
-### 2. Executar com Arquivo de Teste
-
-Para analisar um arquivo-fonte Java, utilize o redirecionamento da entrada padrão:
+A partir da raiz do repositório:
 
 ```bash
-./scanner < teste.java
+cd src
+make -B
+./scanner < ../testes/validos/declaracoes.java
 ```
 
-### 3. Limpar os Arquivos Gerados
+O Makefile está em `src/`. `make -B` regenera os arquivos do Flex/Bison e recompila o executável, inclusive quando os arquivos gerados já vieram do Git.
 
-Para remover os arquivos intermediários e o executável:
+Para demonstrar um erro:
 
 ```bash
-make clean
+./scanner < ../testes/invalidos/string_nao_encerrada.java
 ```
 
-Os arquivos removidos incluem:
+Dentro de `src/`, `make clean` remove os arquivos gerados e o executável.
 
-* `lex.yy.c`
-* `scanner.tab.c`
-* `scanner.tab.h`
-* `scanner`
+## Gramática implementada
 
----
-
-## 🧪 Exemplos de Teste
-
-Os casos executaveis da gramatica atual estao em [`testes/`](testes/README.md). No PowerShell, rode `.\testes\executar.ps1` na raiz do projeto.
-
-### Exemplo de Entrada Válida
-
-Arquivo `teste.java`:
+A entrada é uma sequência de comandos, sem envolver o código em `public class` ou `main`:
 
 ```java
-public class Exemplo {
-    public static void main() {
-        int a = 10;
-        float b = 20.5;
-        if (a < b) {
-            return;
-        }
-    }
+int x = 0;
+while (x < 3) {
+    System.out.println(x);
+    x++;
 }
 ```
 
-### Saída Produzida pelo Scanner
+O parser aceita:
+
+- Declarações de `int`, `float`, `char`, `boolean` e `String`, com ou sem inicialização.
+- Atribuições, incremento e decremento como comandos.
+- `if` com ou sem `else` e `while`, com blocos entre chaves.
+- `System.out.print` e `System.out.println`, com uma expressão.
+- Expressões com identificadores, literais inteiros, decimais, caracteres, strings e booleanos; operadores aritméticos, relacionais e lógicos; parênteses; `Math.sqrt` e `Math.pow`.
+
+O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `final`, `byte`, `short`, `long`, `double`, `for`, `do`, `switch`, `case`, `default`, `break`, `continue`, `return` e `null`. Reconhecer um token não significa que o parser já aceite construções que o utilizam. Classes, métodos e esses comandos/tipos adicionais ainda não fazem parte da gramática.
+
+Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não podem conter quebras de linha reais; sequências de escape continuam sendo reconhecidas.
+
+## Resultado e erros
+
+Uma entrada válida imprime:
 
 ```text
-PUBLIC CLASS ID(Exemplo) LBRACE
-PUBLIC STATIC VOID ID(main) LPAREN RPAREN LBRACE
-INT ID(a) ASSIGN NUM(10) SEMI
-FLOAT ID(b) ASSIGN FLOAT_LITERAL(20.5) SEMI
-IF LPAREN ID(a) LT ID(b) RPAREN LBRACE
-RETURN SEMI
-RBRACE
-RBRACE
-RBRACE
+Analise concluida com sucesso! Nenhum erro sintatico encontrado.
 ```
 
----
+Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. A mensagem de sucesso só aparece quando não há erro léxico nem sintático. O processo retorna `0` no sucesso e `1` em caso de erro.
 
-## ❌ Tratamento de Erros
+Não há verificação de declaração de variáveis nem de compatibilidade de tipos. Uma entrada aceita sintaticamente não é necessariamente um programa Java semanticamente válido. A tradução para C está planejada para etapas futuras.
 
-O analisador também realiza o tratamento de alguns erros léxicos.
+## Testes e arquivos
 
-### Caractere Inválido
+No PowerShell, com GCC disponível no Windows, execute na raiz:
 
-Entrada:
-
-```java
-@
+```powershell
+.\testes\executar.ps1
 ```
 
-Saída esperada:
+O script compila os arquivos C gerados e verifica mensagens e códigos de saída. Após alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de usar esse script. Consulte `testes/README.md`.
 
-```text
-Erro lexico na linha X: Caractere invalido '@'
-```
-
-### String Não Encerrada
-
-Entrada:
-
-```java
-"teste
-```
-
-Saída esperada:
-
-```text
-Erro lexico na linha X: String nao encerrada
-```
-
----
-
-## 📂 Estrutura do Repositório
-
-| Arquivo     | Descrição                                                       |
-| ----------- | --------------------------------------------------------------- |
-| `scanner.l` | Especificação das expressões regulares e regras léxicas do Flex |
-| `scanner.y` | Definição dos tokens e gramática inicial no Bison               |
-| `Makefile`  | Automação do processo de compilação e limpeza                   |
-| `README.md` | Documentação, especificação e instruções de uso                 |
-
----
-
-## 🎯 Objetivo do Projeto
-
-O projeto tem como objetivo aplicar, de forma prática, conceitos fundamentais de **Compiladores**, especialmente:
-
-* Análise léxica
-* Expressões regulares
-* Reconhecimento de tokens
-* Tratamento de erros léxicos
-* Integração entre **Flex** e **Bison**
-* Geração e compilação de código em C
-* Construção de uma gramática inicial para um subconjunto da linguagem Java
-
----
-
-## 👨‍💻 Disciplina
-
-**FGA0003 - Compiladores 1**
-**Universidade de Brasília (UnB) - Faculdade do Gama (FGA)**
+| Arquivo | Finalidade |
+| --- | --- |
+| `src/scanner.l` | Regras léxicas do Flex |
+| `src/scanner.y` | Gramática do Bison e entrada do programa |
+| `src/Makefile` | Compilação e limpeza |
+| `testes/` | Entradas e verificador |
+| `docs/` | Documentação do projeto |

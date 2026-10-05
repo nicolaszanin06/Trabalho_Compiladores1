@@ -8,11 +8,14 @@
 #include "scanner.tab.h"
 #include <stdio.h>
 #include <stdlib.h>
+int erros_lexicos = 0;
+int linha_comentario = 1;
 %}
 
 %option yylineno
 %option nounput    
-%option noinput      
+%option noinput
+%x COMENTARIO
 
 /* Definições de Expressões Regulares */
 DIGIT           [0-9]
@@ -24,12 +27,11 @@ INT_LITERAL     {DIGIT}+
 FLOAT_LITERAL   {DIGIT}+\.{DIGIT}+
 
 /* Regras para Char e String */
-CHAR_LITERAL    '([^'\\]|\\.)'
-STRING_LITERAL  \"([^"\\]|\\.)*\"
+CHAR_LITERAL    '([^'\\\r\n]|\\[^\r\n])'
+STRING_LITERAL  \"([^"\\\r\n]|\\[^\r\n])*\"
 
 WHITESPACE      [ \t\r\n]+
 SINGLE_COMMENT  "//".*
-MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 
 %%
 
@@ -115,13 +117,17 @@ MULTI_COMMENT   "/*"([^*]|\*+[^*/])*\*+"/"
 {IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 
     /* Tratamento de erro para String não fechada */
-\"([^"\\]|\\.)*   { printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }
+\"([^"\\\r\n]|\\[^\r\n])*\\?   { erros_lexicos++; printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }
 
     /* Descarte de Espaços e Comentários */
 {WHITESPACE}      { /* ignora */ }
 {SINGLE_COMMENT}  { /* ignora */ }
-{MULTI_COMMENT}   { /* ignora */ }
+"/*"             { linha_comentario = yylineno; BEGIN(COMENTARIO); }
+<COMENTARIO>"*/"  { BEGIN(INITIAL); }
+<COMENTARIO>\n    { /* ignora; yylineno conta a quebra de linha */ }
+<COMENTARIO>.     { /* ignora */ }
+<COMENTARIO><<EOF>> { erros_lexicos++; printf("Erro lexico na linha %d: Comentario nao encerrado\n", linha_comentario); BEGIN(INITIAL); return 0; }
 
-.                 { printf("Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
+.                 { erros_lexicos++; printf("Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
 
 %%

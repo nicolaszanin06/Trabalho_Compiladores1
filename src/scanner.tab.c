@@ -76,10 +76,11 @@ extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
+extern int erros_lexicos;
 int yywrap(void);
 void yyerror(const char *s);
 
-#line 83 "scanner.tab.c"
+#line 84 "scanner.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -569,11 +570,11 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    58,    58,    60,    64,    65,    66,    67,    68,    69,
-      70,    71,    72,    76,    77,    78,    79,    80,    82,    83,
-      84,    85,    86,    87,    88,    89,    90,    91,    93,    95,
-      96,    98,    99,   100,   101,   102,   103,   104,   108,   109,
-     110,   111,   112,   116,   117
+       0,    59,    59,    61,    65,    66,    67,    68,    69,    70,
+      71,    72,    73,    77,    78,    79,    80,    81,    83,    84,
+      85,    86,    87,    88,    89,    90,    91,    92,    94,    96,
+      97,    99,   100,   101,   102,   103,   104,   105,   109,   110,
+     111,   112,   113,   117,   118
 };
 #endif
 
@@ -1247,259 +1248,259 @@ yyreduce:
   switch (yyn)
     {
   case 3: /* programa: programa comando  */
-#line 60 "scanner.y"
+#line 61 "scanner.y"
                        {}
-#line 1253 "scanner.tab.c"
+#line 1254 "scanner.tab.c"
     break;
 
   case 4: /* comando: tipo IDENTIFIER ASSIGN expressao SEMI  */
-#line 64 "scanner.y"
+#line 65 "scanner.y"
                                            {}
-#line 1259 "scanner.tab.c"
+#line 1260 "scanner.tab.c"
     break;
 
   case 5: /* comando: tipo IDENTIFIER SEMI  */
-#line 65 "scanner.y"
+#line 66 "scanner.y"
                            {}
-#line 1265 "scanner.tab.c"
+#line 1266 "scanner.tab.c"
     break;
 
   case 6: /* comando: IDENTIFIER ASSIGN expressao SEMI  */
-#line 66 "scanner.y"
+#line 67 "scanner.y"
                                        {}
-#line 1271 "scanner.tab.c"
+#line 1272 "scanner.tab.c"
     break;
 
   case 7: /* comando: IF LPAREN expressao RPAREN LBRACE programa RBRACE ELSE LBRACE programa RBRACE  */
-#line 67 "scanner.y"
+#line 68 "scanner.y"
                                                                                     {}
-#line 1277 "scanner.tab.c"
+#line 1278 "scanner.tab.c"
     break;
 
   case 8: /* comando: IF LPAREN expressao RPAREN LBRACE programa RBRACE  */
-#line 68 "scanner.y"
+#line 69 "scanner.y"
                                                         {}
-#line 1283 "scanner.tab.c"
+#line 1284 "scanner.tab.c"
     break;
 
   case 9: /* comando: WHILE LPAREN expressao RPAREN LBRACE programa RBRACE  */
-#line 69 "scanner.y"
+#line 70 "scanner.y"
                                                            {}
-#line 1289 "scanner.tab.c"
+#line 1290 "scanner.tab.c"
     break;
 
   case 10: /* comando: IDENTIFIER incrementacao SEMI  */
-#line 70 "scanner.y"
+#line 71 "scanner.y"
                                     {}
-#line 1295 "scanner.tab.c"
+#line 1296 "scanner.tab.c"
     break;
 
   case 11: /* comando: PRINTLN LPAREN expressao RPAREN SEMI  */
-#line 71 "scanner.y"
+#line 72 "scanner.y"
                                            {}
-#line 1301 "scanner.tab.c"
+#line 1302 "scanner.tab.c"
     break;
 
   case 12: /* comando: PRINT LPAREN expressao RPAREN SEMI  */
-#line 72 "scanner.y"
+#line 73 "scanner.y"
                                          {}
-#line 1307 "scanner.tab.c"
+#line 1308 "scanner.tab.c"
     break;
 
   case 13: /* expressao: expressao PLUS expressao  */
-#line 76 "scanner.y"
+#line 77 "scanner.y"
                                {}
-#line 1313 "scanner.tab.c"
+#line 1314 "scanner.tab.c"
     break;
 
   case 14: /* expressao: expressao MINUS expressao  */
-#line 77 "scanner.y"
+#line 78 "scanner.y"
                                 {}
-#line 1319 "scanner.tab.c"
+#line 1320 "scanner.tab.c"
     break;
 
   case 15: /* expressao: expressao MULT expressao  */
-#line 78 "scanner.y"
+#line 79 "scanner.y"
                                {}
-#line 1325 "scanner.tab.c"
+#line 1326 "scanner.tab.c"
     break;
 
   case 16: /* expressao: expressao DIV expressao  */
-#line 79 "scanner.y"
+#line 80 "scanner.y"
                               {}
-#line 1331 "scanner.tab.c"
+#line 1332 "scanner.tab.c"
     break;
 
   case 17: /* expressao: expressao MOD expressao  */
-#line 80 "scanner.y"
+#line 81 "scanner.y"
                               {}
-#line 1337 "scanner.tab.c"
+#line 1338 "scanner.tab.c"
     break;
 
   case 18: /* expressao: expressao AND expressao  */
-#line 82 "scanner.y"
+#line 83 "scanner.y"
                               {}
-#line 1343 "scanner.tab.c"
+#line 1344 "scanner.tab.c"
     break;
 
   case 19: /* expressao: expressao OR expressao  */
-#line 83 "scanner.y"
+#line 84 "scanner.y"
                              {}
-#line 1349 "scanner.tab.c"
+#line 1350 "scanner.tab.c"
     break;
 
   case 20: /* expressao: MINUS expressao  */
-#line 84 "scanner.y"
+#line 85 "scanner.y"
                                 {}
-#line 1355 "scanner.tab.c"
+#line 1356 "scanner.tab.c"
     break;
 
   case 21: /* expressao: NOT expressao  */
-#line 85 "scanner.y"
+#line 86 "scanner.y"
                     {}
-#line 1361 "scanner.tab.c"
+#line 1362 "scanner.tab.c"
     break;
 
   case 22: /* expressao: expressao EQ expressao  */
-#line 86 "scanner.y"
+#line 87 "scanner.y"
                              {}
-#line 1367 "scanner.tab.c"
+#line 1368 "scanner.tab.c"
     break;
 
   case 23: /* expressao: expressao NEQ expressao  */
-#line 87 "scanner.y"
+#line 88 "scanner.y"
                               {}
-#line 1373 "scanner.tab.c"
+#line 1374 "scanner.tab.c"
     break;
 
   case 24: /* expressao: expressao LT expressao  */
-#line 88 "scanner.y"
+#line 89 "scanner.y"
                              {}
-#line 1379 "scanner.tab.c"
+#line 1380 "scanner.tab.c"
     break;
 
   case 25: /* expressao: expressao LE expressao  */
-#line 89 "scanner.y"
+#line 90 "scanner.y"
                              {}
-#line 1385 "scanner.tab.c"
+#line 1386 "scanner.tab.c"
     break;
 
   case 26: /* expressao: expressao GT expressao  */
-#line 90 "scanner.y"
+#line 91 "scanner.y"
                              {}
-#line 1391 "scanner.tab.c"
+#line 1392 "scanner.tab.c"
     break;
 
   case 27: /* expressao: expressao GE expressao  */
-#line 91 "scanner.y"
+#line 92 "scanner.y"
                              {}
-#line 1397 "scanner.tab.c"
+#line 1398 "scanner.tab.c"
     break;
 
   case 28: /* expressao: LPAREN expressao RPAREN  */
-#line 93 "scanner.y"
+#line 94 "scanner.y"
                               {}
-#line 1403 "scanner.tab.c"
+#line 1404 "scanner.tab.c"
     break;
 
   case 29: /* expressao: MATH_SQRT LPAREN expressao RPAREN  */
-#line 95 "scanner.y"
+#line 96 "scanner.y"
                                         {}
-#line 1409 "scanner.tab.c"
+#line 1410 "scanner.tab.c"
     break;
 
   case 30: /* expressao: MATH_POW LPAREN expressao COMMA expressao RPAREN  */
-#line 96 "scanner.y"
+#line 97 "scanner.y"
                                                        {}
-#line 1415 "scanner.tab.c"
+#line 1416 "scanner.tab.c"
     break;
 
   case 31: /* expressao: IDENTIFIER  */
-#line 98 "scanner.y"
+#line 99 "scanner.y"
                  {}
-#line 1421 "scanner.tab.c"
+#line 1422 "scanner.tab.c"
     break;
 
   case 32: /* expressao: FLOAT_LITERAL  */
-#line 99 "scanner.y"
+#line 100 "scanner.y"
                     {}
-#line 1427 "scanner.tab.c"
+#line 1428 "scanner.tab.c"
     break;
 
   case 33: /* expressao: INT_LITERAL  */
-#line 100 "scanner.y"
+#line 101 "scanner.y"
                   {}
-#line 1433 "scanner.tab.c"
+#line 1434 "scanner.tab.c"
     break;
 
   case 34: /* expressao: CHAR_LITERAL  */
-#line 101 "scanner.y"
+#line 102 "scanner.y"
                    {}
-#line 1439 "scanner.tab.c"
+#line 1440 "scanner.tab.c"
     break;
 
   case 35: /* expressao: STRING_LITERAL  */
-#line 102 "scanner.y"
+#line 103 "scanner.y"
                      {}
-#line 1445 "scanner.tab.c"
+#line 1446 "scanner.tab.c"
     break;
 
   case 36: /* expressao: TOKEN_TRUE  */
-#line 103 "scanner.y"
+#line 104 "scanner.y"
                  {}
-#line 1451 "scanner.tab.c"
+#line 1452 "scanner.tab.c"
     break;
 
   case 37: /* expressao: TOKEN_FALSE  */
-#line 104 "scanner.y"
+#line 105 "scanner.y"
                   {}
-#line 1457 "scanner.tab.c"
+#line 1458 "scanner.tab.c"
     break;
 
   case 38: /* tipo: INT  */
-#line 108 "scanner.y"
+#line 109 "scanner.y"
           {}
-#line 1463 "scanner.tab.c"
+#line 1464 "scanner.tab.c"
     break;
 
   case 39: /* tipo: FLOAT  */
-#line 109 "scanner.y"
+#line 110 "scanner.y"
             {}
-#line 1469 "scanner.tab.c"
+#line 1470 "scanner.tab.c"
     break;
 
   case 40: /* tipo: CHAR  */
-#line 110 "scanner.y"
+#line 111 "scanner.y"
            {}
-#line 1475 "scanner.tab.c"
+#line 1476 "scanner.tab.c"
     break;
 
   case 41: /* tipo: BOOLEAN  */
-#line 111 "scanner.y"
+#line 112 "scanner.y"
               {}
-#line 1481 "scanner.tab.c"
+#line 1482 "scanner.tab.c"
     break;
 
   case 42: /* tipo: STRING_TYPE  */
-#line 112 "scanner.y"
+#line 113 "scanner.y"
                   {}
-#line 1487 "scanner.tab.c"
+#line 1488 "scanner.tab.c"
     break;
 
   case 43: /* incrementacao: INC  */
-#line 116 "scanner.y"
+#line 117 "scanner.y"
           {}
-#line 1493 "scanner.tab.c"
+#line 1494 "scanner.tab.c"
     break;
 
   case 44: /* incrementacao: DEC  */
-#line 117 "scanner.y"
+#line 118 "scanner.y"
           {}
-#line 1499 "scanner.tab.c"
+#line 1500 "scanner.tab.c"
     break;
 
 
-#line 1503 "scanner.tab.c"
+#line 1504 "scanner.tab.c"
 
       default: break;
     }
@@ -1692,7 +1693,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 120 "scanner.y"
+#line 121 "scanner.y"
 
 
 void yyerror(const char *s) {
@@ -1713,10 +1714,11 @@ int main(int argc, char **argv) {
         yyin = f;
     }
 
-    if (yyparse() == 0) {
+    int resultado = yyparse();
+    if (resultado == 0 && erros_lexicos == 0) {
         printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
     }
     
     if (yyin) fclose(yyin);
-    return 0;
+    return (resultado != 0 || erros_lexicos != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -8,7 +8,7 @@ O compilador e analisador léxico estão sendo desenvolvidos para a linguagem **
 
 ### Linguagem Alvo e Tradução
 
-Este projeto funciona como um compilador *source-to-source* (também conhecido como *transpiler*). O código-fonte escrito no subconjunto de **Java** será analisado e, na fase final do projeto, traduzido para a linguagem **C**.
+O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica e sintática, sem tradução para C ou análise semântica. O código-fonte escrito no subconjunto de **Java** será analisado e, na fase final do projeto, traduzido para a linguagem **C**.
 
 Como as linguagens compartilham uma sintaxe semelhante no seu núcleo procedural, o mapeamento será feito de forma direta. A tabela abaixo ilustra a nossa estratégia conceitual de tradução para as futuras etapas de geração de código intermediário e final:
 

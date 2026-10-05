@@ -6,6 +6,7 @@ extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
+extern int erros_lexicos;
 int yywrap(void);
 void yyerror(const char *s);
 %}
@@ -137,10 +138,11 @@ int main(int argc, char **argv) {
         yyin = f;
     }
 
-    if (yyparse() == 0) {
+    int resultado = yyparse();
+    if (resultado == 0 && erros_lexicos == 0) {
         printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
     }
     
     if (yyin) fclose(yyin);
-    return 0;
+    return (resultado != 0 || erros_lexicos != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

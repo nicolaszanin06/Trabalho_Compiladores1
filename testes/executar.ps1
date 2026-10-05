@@ -6,15 +6,18 @@ $executavel = Join-Path $diretorioTestes ("scanner-teste-{0}.exe" -f [guid]::New
 $sucesso = 'Analise concluida com sucesso! Nenhum erro sintatico encontrado.'
 
 $casos = @(
-    @{ Nome = 'arquivo vazio'; Arquivo = 'validos/vazio.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
-    @{ Nome = 'declaracoes'; Arquivo = 'validos/declaracoes.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
-    @{ Nome = 'ifs aninhados'; Arquivo = 'validos/ifs_aninhados.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
-    @{ Nome = 'espacos e comentarios'; Arquivo = 'validos/comentarios.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
-    @{ Nome = 'sem ponto e virgula'; Arquivo = 'invalidos/sem_ponto_e_virgula.java'; Saida = ''; Erro = "Erro sintatico na linha \d+: syntax error perto de '.*'" },
-    @{ Nome = 'atribuicao nao suportada'; Arquivo = 'invalidos/atribuicao_na_declaracao.java'; Saida = ''; Erro = "Erro sintatico na linha \d+: syntax error perto de '.*'" },
-    @{ Nome = 'condicao nao suportada'; Arquivo = 'invalidos/condicao_nao_suportada.java'; Saida = ''; Erro = "Erro sintatico na linha \d+: syntax error perto de '.*'" },
-    @{ Nome = 'caractere invalido'; Arquivo = 'invalidos/caractere_invalido.java'; Saida = "Erro lexico na linha \d+: Caractere invalido '@'\n$([regex]::Escape($sucesso))"; Erro = '' },
-    @{ Nome = 'string nao encerrada'; Arquivo = 'invalidos/string_nao_encerrada.java'; Saida = "Erro lexico na linha \d+: String nao encerrada\n$([regex]::Escape($sucesso))"; Erro = '' }
+    @{ Codigo = 0; Nome = 'arquivo vazio'; Arquivo = 'validos/vazio.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 0; Nome = 'declaracoes'; Arquivo = 'validos/declaracoes.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 0; Nome = 'ifs aninhados'; Arquivo = 'validos/ifs_aninhados.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 0; Nome = 'espacos e comentarios'; Arquivo = 'validos/comentarios.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 1; Nome = 'sem ponto e virgula'; Arquivo = 'invalidos/sem_ponto_e_virgula.java'; Saida = ''; Erro = "Erro sintatico na linha \d+: syntax error perto de '.*'" },
+    @{ Codigo = 0; Nome = 'atribuicao na declaracao'; Arquivo = 'invalidos/atribuicao_na_declaracao.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 0; Nome = 'condicao com identificador'; Arquivo = 'invalidos/condicao_nao_suportada.java'; Saida = [regex]::Escape($sucesso); Erro = '' },
+    @{ Codigo = 1; Nome = 'caractere invalido'; Arquivo = 'invalidos/caractere_invalido.java'; Saida = "Erro lexico na linha \d+: Caractere invalido '@'"; Erro = '' },
+    @{ Codigo = 1; Nome = 'string nao encerrada'; Arquivo = 'invalidos/string_nao_encerrada.java'; Saida = "Erro lexico na linha 1: String nao encerrada"; Erro = '' },
+    @{ Codigo = 1; Nome = 'string multilinha'; Arquivo = 'invalidos/string_multilinha.java'; Saida = 'Erro lexico na linha 1: String nao encerrada'; Erro = "Erro sintatico na linha 2: syntax error perto de 'linha'" },
+    @{ Codigo = 1; Nome = 'char multilinha'; Arquivo = 'invalidos/char_multilinha.java'; Saida = "Erro lexico na linha 1: Caractere invalido '''\nErro lexico na linha 2: Caractere invalido '''"; Erro = "Erro sintatico na linha 2: syntax error perto de ';'" },
+    @{ Codigo = 1; Nome = 'comentario nao encerrado'; Arquivo = 'invalidos/comentario_nao_encerrado.java'; Saida = 'Erro lexico na linha 1: Comentario nao encerrado'; Erro = '' }
 )
 
 function Normalizar-Saida([string]$texto) {
@@ -44,7 +47,7 @@ try {
 
         $saidaCorreta = $saida -cmatch "\A(?:$($caso.Saida))\z"
         $erroCorreto = $erro -cmatch "\A(?:$($caso.Erro))\z"
-        if ($saidaCorreta -and $erroCorreto) {
+        if ($saidaCorreta -and $erroCorreto -and $processo.ExitCode -eq $caso.Codigo) {
             Write-Host "OK: $($caso.Nome)"
         } else {
             $falhas++

@@ -1,80 +1,13 @@
-# **Analisador Léxico**
+# Analisador léxico
 
-Esta página detalha a implementação da primeira fase do nosso compilador: a Análise Léxica. O objetivo desta etapa é ler o código-fonte em Java, agrupando os caracteres em unidades lógicas com significado, chamadas de *tokens*.
+O Flex gera o scanner a partir de `src/scanner.l`. O cabeçalho `scanner.tab.h` fornece os tokens do Bison. `%option yylineno` conta linhas; `nounput` e `noinput` desabilitam funções não utilizadas. A função `yywrap` está definida em `scanner.y`.
 
-## **Ferramenta Utilizada**
+Identificadores usam `[a-zA-Z_][a-zA-Z0-9_]*`, inteiros usam `[0-9]+` e decimais usam `[0-9]+\.[0-9]+`. Strings e caracteres reconhecem sequências de escape, mas não aceitam quebras de linha reais dentro do literal.
 
-Para o desenvolvimento do analisador léxico (também conhecido como *scanner*), a equipe utilizou a ferramenta **Flex** (Fast Lexical Analyzer Generator). O código-fonte desta etapa está centralizado no arquivo `scanner.l`.
+Espaços e comentários de linha são descartados. Comentários de bloco usam o estado exclusivo `COMENTARIO`: o scanner descarta seu conteúdo até encontrar `*/`. Se o arquivo termina antes, informa comentário não encerrado na linha de abertura.
 
-## **Configurações Iniciais**
+O Flex escolhe a regra que consome mais caracteres. Em caso de empate, escolhe a primeira regra no arquivo.
 
-No arquivo `scanner.l`, foram definidas algumas opções importantes para o funcionamento do Flex:
+O scanner registra erros para strings não encerradas, comentários de bloco não encerrados e caracteres inválidos. O contador `erros_lexicos` impede que o programa anuncie sucesso após uma falha léxica. A linha de uma string não encerrada não avança por consumir a quebra de linha seguinte.
 
-* `%option noyywrap`: Indica que o analisador processará apenas um arquivo por vez, não precisando chamar a função `yywrap()` ao final da leitura.
-
-
-* `%option yylineno`: Habilita o rastreamento automático do número das linhas, o que é essencial para apontar erros léxicos e sintáticos com precisão.
-
-
-* Inclusão do cabeçalho `scanner.tab.h`: Necessária para que o Flex reconheça os códigos numéricos dos *tokens* gerados posteriormente pelo analisador sintático (Bison).
-
-
-
-## **Definições de Expressões Regulares**
-
-Para facilitar a leitura e a manutenção, foram criadas macros com expressões regulares básicas, que depois compõem regras mais complexas:
-
-```lex
-DIGIT           [0-9]
-LETTER          [a-zA-Z_]
-ALPHANUM        [a-zA-Z0-9_]
-
-IDENTIFIER      {LETTER}{ALPHANUM}*
-INT_LITERAL     {DIGIT}+
-FLOAT_LITERAL   {DIGIT}+\.{DIGIT}+
-
-```
-
-### Strings e Caracteres
-
-A captura de texto exigiu regras que considerassem caracteres de escape (como um `\n` ou uma aspa escapada `\"` dentro de uma string):
-
-* **Caracteres:** `'([^'\\]|\\.)'`
-
-* **Strings:** `\"([^"\\]|\\.)*\"`
-
-
-## **Ignorando Espaços e Comentários**
-
-O compilador não precisa processar espaços em branco ou comentários para entender a lógica do programa. As seguintes expressões foram criadas para consumir esses caracteres sem retornar nenhum *token* ao Bison (utilizando uma ação vazia `{ /* ignora */ }`):
-
-* **Espaços em branco:** `[ \t\r\n]+`
-
-* **Comentários de linha única:** `"//".*`
-
-* **Comentários de bloco:** `"/*"([^*]|\*+[^*/])*\*+"/"`
-
-
-Esta última regra de comentário de bloco utiliza uma lógica na própria regex para garantir que o comentário só termine quando encontrar a sequência exata `*/`.
-
-## **Tratamento de Erros Léxicos**
-
-O Flex processa o arquivo testando as regras de cima para baixo. Se nenhum padrão válido casar com o texto de entrada, o analisador aciona as regras de tratamento de erros no final do arquivo:
-
-1. **Strings não encerradas:**
-Se uma aspa dupla for aberta, mas o arquivo terminar ou não houver o fechamento adequado, a regra `\"([^"\\]|\\.)*` captura a anomalia e emite a mensagem:
-`Erro lexico na linha X: String nao encerrada`.
-
-
-2. **Caracteres Inválidos (Regra *Catch-all*):**
-O caractere isolado `.` no final das regras age como um "pega-tudo". Se o símbolo lido não pertencer à linguagem (como `@` ou `#`), o programa o identifica e exibe:
-`Erro lexico na linha X: Caractere invalido 'Y'`.
-
-
----
-
-## **Histórico de Versões**
-
-| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
-| --- | --- | --- | --- |
-| 1.0 | Criação da documentação do Analisador Léxico | 24/09/2026 | [Henrique](https://github.com/henryqma) |
+Reconhecimento de tokens e suporte sintático são etapas distintas: várias palavras-chave já reconhecidas ainda não têm regras na gramática. A análise semântica e a tradução para C permanecem planejadas.

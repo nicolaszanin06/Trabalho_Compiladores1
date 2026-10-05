@@ -26,8 +26,8 @@ Esta pasta abriga códigos propositalmente incorretos. O objetivo é acionar os 
 
 * **Erros Sintáticos:**
 * `sem_ponto_e_virgula.java`: Omissão do terminador de instrução `;`.
-* `atribuicao_na_declaracao.java`: Tenta atribuir um valor no momento da declaração (ex: `int contador = 10;`), o que é intencionalmente testado para falhar caso a gramática atual ainda não suporte essa união de regras.
-* `condicao_nao_suportada.java`: Utiliza uma expressão dentro de um `if` que a gramática ainda não consegue avaliar.
+* `atribuicao_na_declaracao.java`: Inicializa uma variável, atualmente aceito pela gramática.
+* `condicao_nao_suportada.java`: Usa um identificador como condição de `if`, atualmente aceito pela gramática.
 
 
 
@@ -44,3 +44,4 @@ O arquivo **`executar.ps1`** localizado na pasta `testes/` é um script em Power
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | --- | --- | --- | --- |
 | 1.0 | Criação da documentação de Testes e Validação | 24/09/2026 | [Henrique](https://github.com/henryqma) |
+Esses dois arquivos permanecem na pasta histórica de inválidos, mas o verificador espera sucesso. Os testes também conferem o código de saída: 0 para sucesso e 1 para erro. Strings/caracteres com quebras de linha reais e comentários de bloco não encerrados devem falhar.

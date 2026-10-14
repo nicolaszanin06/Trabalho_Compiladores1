@@ -57,7 +57,6 @@ void yyerror(const char *s);
 %%
 
 programa:
-    /* regra temporaria para o scanner */
     | programa comando {}
     ;
 

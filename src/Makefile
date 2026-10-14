@@ -1,13 +1,13 @@
 # Nome do executável final
-EXEC = scanner
+EXEC = jtoc
 
 # Arquivos-fonte do Bison e do Flex
-BISON_FILE = scanner.y
-FLEX_FILE  = scanner.l
+BISON_FILE = jtoc.y
+FLEX_FILE  = jtoc.l
 
 # Arquivos que o Bison vai gerar
-BISON_C   = scanner.tab.c
-BISON_H   = scanner.tab.h
+BISON_C   = jtoc.tab.c
+BISON_H   = jtoc.tab.h
 
 # Arquivo gerado pelo Flex
 FLEX_C    = lex.yy.c

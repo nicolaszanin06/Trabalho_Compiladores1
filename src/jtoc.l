@@ -5,7 +5,7 @@
 */
 
 %{
-#include "scanner.tab.h"
+#include "jtoc.tab.h"
 #include <stdio.h>
 #include <stdlib.h>
 int erros_lexicos = 0;

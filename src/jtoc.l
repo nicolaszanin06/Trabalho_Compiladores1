@@ -8,6 +8,7 @@
 #include "jtoc.tab.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 int erros_lexicos = 0;
 int linha_comentario = 1;
 %}
@@ -110,9 +111,9 @@ SINGLE_COMMENT  "//".*
 ","         { return COMMA; }
 
     /* Regras com Macros */
-{FLOAT_LITERAL}   { yylval.floatValue = atof(yytext); return FLOAT_LITERAL; }
-{INT_LITERAL}     { yylval.intValue = atoi(yytext); return INT_LITERAL; }
-{CHAR_LITERAL}    { yylval.charValue = yytext[1]; return CHAR_LITERAL; }
+{FLOAT_LITERAL}   { yylval.stringValue = strdup(yytext); return FLOAT_LITERAL; }
+{INT_LITERAL}     { yylval.stringValue = strdup(yytext); return INT_LITERAL; }
+{CHAR_LITERAL}    { yylval.stringValue = strdup(yytext); return CHAR_LITERAL; }
 {STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
 {IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 

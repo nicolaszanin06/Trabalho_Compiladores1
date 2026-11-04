@@ -55,7 +55,7 @@ stmt:
           free($2);
           $$ = NULL;
       }
-    | IDENTIFIER ASSIGN expr {
+    | IDENTIFIER ASSIGN expr fim {
           Simbolo *s = buscarSimbolo($1);
           if (!s) {
               yyerror("Identificador nao declarado");
@@ -67,11 +67,16 @@ stmt:
           printf("\nAST: ");
           imprimirAST($$);
       }
-    | expr {
+    | expr fim {
           $$ = $1;
           printf("\nAST: ");
           imprimirAST($$);
       }
+    ;
+
+fim:
+      %empty
+    | SEMI
     ;
 
 expr:

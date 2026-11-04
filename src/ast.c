@@ -15,10 +15,12 @@ NoAST *criarNoOp(char op, NoAST *esq, NoAST *dir) {
 NoAST *criarNoNum(int val) {
     NoAST *no = malloc(sizeof(NoAST));
     no->valor = val;
+    no->nome[0] = '\0';
     no->operador = 0;
     no->tipo = TIPO_INT;
     no->esquerda = no->direita = NULL;
     return no;
+
 }
 
 NoAST *criarNoId(char *nome, Tipo tipo) {

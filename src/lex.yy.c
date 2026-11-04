@@ -1,5 +1,5 @@
 
-#line 2 "lex.yy.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -613,12 +613,12 @@ char *yytext;
 #include <string.h>
 int erros_lexicos = 0;
 int linha_comentario = 1;
-#line 616 "lex.yy.c"
+#line 617 "lex.yy.c"
 #define YY_NO_INPUT 1
 
 /* Definições de Expressões Regulares */
 /* Regras para Char e String */
-#line 621 "lex.yy.c"
+#line 622 "lex.yy.c"
 
 #define INITIAL 0
 #define COMENTARIO 1
@@ -839,7 +839,7 @@ YY_DECL
 
 #line 40 "jtoc.l"
     /* Estrutura do Arquivo */
-#line 842 "lex.yy.c"
+#line 843 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1277,7 +1277,7 @@ YY_RULE_SETUP
 #line 135 "jtoc.l"
 ECHO;
 	YY_BREAK
-#line 1280 "lex.yy.c"
+#line 1281 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

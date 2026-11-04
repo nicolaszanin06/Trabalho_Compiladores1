@@ -25,8 +25,8 @@ LDFLAGS = -lfl     # biblioteca do Flex
 all: $(EXEC)
 
 # Regra para gerar o executável: depende dos arquivos C do Bison e do Flex
-$(EXEC): $(BISON_C) $(FLEX_C)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(LDFLAGS)
+$(EXEC): $(BISON_C) $(FLEX_C) ast.c tabela.c ast.h tabela.h
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) ast.c tabela.c $(LDFLAGS)
 
 # Regra para rodar o Bison: gera exemplo.tab.c e exemplo.tab.h
 $(BISON_C) $(BISON_H): $(BISON_FILE)

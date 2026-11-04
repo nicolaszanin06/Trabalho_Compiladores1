@@ -72,16 +72,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
+#include "tabela.h"
 
 extern int yylex();
 extern int yylineno;
-extern char* yytext;
 extern FILE *yyin;
 extern int erros_lexicos;
 int yywrap(void);
 void yyerror(const char *s);
 
-#line 85 "jtoc.tab.c"
+#line 86 "jtoc.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -175,51 +176,14 @@ enum yysymbol_kind_t
   YYSYMBOL_MATH_SQRT = 63,                 /* MATH_SQRT  */
   YYSYMBOL_MATH_POW = 64,                  /* MATH_POW  */
   YYSYMBOL_YYACCEPT = 65,                  /* $accept  */
-  YYSYMBOL_inicio = 66,                    /* inicio  */
-  YYSYMBOL_programa = 67,                  /* programa  */
-  YYSYMBOL_comando = 68,                   /* comando  */
-  YYSYMBOL_expressao = 69,                 /* expressao  */
-  YYSYMBOL_tipo = 70,                      /* tipo  */
-  YYSYMBOL_incrementacao = 71              /* incrementacao  */
+  YYSYMBOL_input = 66,                     /* input  */
+  YYSYMBOL_stmt = 67,                      /* stmt  */
+  YYSYMBOL_expr = 68                       /* expr  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 
-/* Unqualified %code blocks.  */
-#line 21 "jtoc.y"
-
-struct NoAST {
-    char *texto;
-    NoAST *filho;
-    NoAST *irmao;
-};
-
-/* Uma entrada para cada declaracao encontrada no programa. */
-typedef struct Simbolo {
-    char *simbolo;
-    char *tipo;
-    char *valor;
-    const char *escopo;
-    struct Simbolo *proximo;
-} Simbolo;
-
-NoAST *criar_no(const char *texto);
-NoAST *criar_folha(char *texto);
-NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c);
-void adicionar_filho(NoAST *pai, NoAST *filho);
-void imprimir_ast(NoAST *no, int nivel);
-void liberar_ast(NoAST *no);
-char *texto_expressao(NoAST *no);
-void inserir_simbolo(NoAST *declaracao, int nivel);
-void montar_tabela(NoAST *no, int nivel);
-void imprimir_tabela(void);
-void liberar_tabela(void);
-
-NoAST *raiz = NULL;
-Simbolo *tabela_simbolos = NULL;
-
-#line 223 "jtoc.tab.c"
 
 #ifdef short
 # undef short
@@ -540,18 +504,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  3
+#define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   351
+#define YYLAST   17
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  65
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  7
+#define YYNNTS  4
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  45
+#define YYNRULES  10
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  102
+#define YYNSTATES  17
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   319
@@ -604,13 +568,10 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int8 yyrline[] =
 {
-       0,   100,   100,   104,   105,   109,   110,   111,   112,   113,
-     114,   115,   116,   117,   121,   122,   123,   124,   125,   127,
-     128,   129,   130,   131,   132,   133,   134,   135,   136,   138,
-     140,   141,   143,   144,   145,   146,   147,   148,   149,   153,
-     154,   155,   156,   157,   161,   162
+       0,    47,    47,    48,    52,    58,    70,    78,    82,    86,
+      87
 };
 #endif
 
@@ -635,8 +596,7 @@ static const char *const yytname[] =
   "MULT", "DIV", "MOD", "INC", "DEC", "EQ", "NEQ", "LT", "LE", "GT", "GE",
   "AND", "OR", "NOT", "ASSIGN", "LBRACE", "RBRACE", "LPAREN", "RPAREN",
   "LBRACKET", "RBRACKET", "SEMI", "COMMA", "PRINTLN", "PRINT", "MATH_SQRT",
-  "MATH_POW", "$accept", "inicio", "programa", "comando", "expressao",
-  "tipo", "incrementacao", YY_NULLPTR
+  "MATH_POW", "$accept", "input", "stmt", "expr", YY_NULLPTR
 };
 
 static const char *
@@ -646,7 +606,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-80)
+#define YYPACT_NINF (-56)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -658,19 +618,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-static const yytype_int16 yypact[] =
+static const yytype_int8 yypact[] =
 {
-     -80,     4,   108,   -80,   -31,   -80,   -80,   -80,   -80,   -80,
-     -50,   -47,   -46,   -33,   -80,    24,   -80,   -80,    12,   -12,
-      12,    12,    12,    12,    -8,   -80,   -80,   -80,   -80,   -80,
-     -80,   -80,    12,    12,    12,    -7,    -5,   137,   -80,   171,
-     186,   201,   216,    12,   -80,   -80,   -80,   231,    12,    12,
-      12,    12,    12,    12,    12,    12,    12,    12,    12,    12,
-      12,    12,    12,   -80,     0,     2,    -1,     3,   154,   -80,
-     246,   112,   -14,   -14,   -80,   -80,   -80,   303,   303,    60,
-      60,    60,    60,   290,   276,   -80,   -80,   -80,   -80,   -80,
-     -80,    12,    40,    65,   261,    37,   -80,   -80,    11,   -80,
-      92,   -80
+     -56,     0,   -56,   -50,   -56,     3,   -56,   -23,    -2,   -55,
+      -2,    -2,   -56,   -23,   -56,   -56,   -56
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -678,29 +629,20 @@ static const yytype_int16 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       3,     0,     2,     1,     0,    42,    41,    40,    39,    43,
-       0,     0,     0,     0,     4,     0,    44,    45,     0,     0,
-       0,     0,     0,     0,     0,    32,    36,    35,    33,    34,
-      37,    38,     0,     0,     0,     0,     0,     0,    11,     0,
-       0,     0,     0,     0,     6,    21,    22,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     7,     0,     0,     0,     0,     0,    29,
-       0,     0,    14,    15,    16,    17,    18,    23,    24,    25,
-      26,    27,    28,    19,    20,     3,     3,    12,    13,     5,
-      30,     0,     0,     0,     0,     9,    10,    31,     0,     3,
-       0,     8
+       2,     0,     1,    10,     9,     0,     3,     6,     0,     0,
+       0,     0,    10,     5,     4,     7,     8
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -80,   -80,   -79,   -80,   -20,   -80,   -80
+     -56,   -56,   -56,     1
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     1,     2,    14,    37,    15,    19
+       0,     1,     6,     7
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -708,119 +650,36 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      39,    40,    41,    42,     3,    20,    92,    93,    21,    22,
-      16,    17,    45,    46,    47,    25,    26,    27,    28,    29,
-     100,    18,    23,    68,    52,    53,    54,    24,    70,    71,
-      72,    73,    74,    75,    76,    77,    78,    79,    80,    81,
-      82,    83,    84,     4,    43,    30,    31,    38,    48,    32,
-      49,    44,     5,    85,     6,    86,     7,     8,    87,    98,
-       9,    10,    88,    33,    99,     0,    11,    34,     4,     0,
-       0,    94,     0,     0,     0,    35,    36,     5,     0,     6,
-       0,     7,     8,     0,     0,     9,    10,     0,     0,     0,
-       0,    11,     0,     0,    95,     4,    50,    51,    52,    53,
-      54,    12,    13,     0,     5,     0,     6,     0,     7,     8,
-       0,     4,     9,    10,     0,     0,     0,     0,    11,    96,
-       5,     0,     6,     0,     7,     8,    12,    13,     9,    10,
-       0,     0,     0,     0,    11,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   101,     0,    50,    51,
-      52,    53,    54,    12,    13,    55,    56,    57,    58,    59,
-      60,    61,    62,     0,     0,     0,     0,     0,     0,    12,
-      13,     0,    91,    50,    51,    52,    53,    54,     0,     0,
-      55,    56,    57,    58,    59,    60,    61,    62,     0,     0,
-      50,    51,    52,    53,    54,     0,    63,    55,    56,    57,
-      58,    59,    60,    61,    62,     0,     0,    50,    51,    52,
-      53,    54,     0,    89,    55,    56,    57,    58,    59,    60,
-      61,    62,    50,    51,    52,    53,    54,    64,     0,    55,
-      56,    57,    58,    59,    60,    61,    62,    50,    51,    52,
-      53,    54,    65,     0,    55,    56,    57,    58,    59,    60,
-      61,    62,    50,    51,    52,    53,    54,    66,     0,    55,
-      56,    57,    58,    59,    60,    61,    62,    50,    51,    52,
-      53,    54,    67,     0,    55,    56,    57,    58,    59,    60,
-      61,    62,    50,    51,    52,    53,    54,    69,     0,    55,
-      56,    57,    58,    59,    60,    61,    62,    50,    51,    52,
-      53,    54,    90,     0,    55,    56,    57,    58,    59,    60,
-      61,    62,    50,    51,    52,    53,    54,    97,     0,    55,
-      56,    57,    58,    59,    60,    61,    50,    51,    52,    53,
-      54,     0,     0,    55,    56,    57,    58,    59,    60,    50,
-      51,    52,    53,    54,     0,     0,     0,     0,    57,    58,
-      59,    60
+       2,    12,     8,     3,    14,     4,     9,     4,     0,    13,
+       0,    15,    16,    10,    11,     0,     0,     5
 };
 
 static const yytype_int8 yycheck[] =
 {
-      20,    21,    22,    23,     0,    55,    85,    86,    55,    55,
-      41,    42,    32,    33,    34,     3,     4,     5,     6,     7,
-      99,    52,    55,    43,    38,    39,    40,     3,    48,    49,
-      50,    51,    52,    53,    54,    55,    56,    57,    58,    59,
-      60,    61,    62,     3,    52,    33,    34,    59,    55,    37,
-      55,    59,    12,    53,    14,    53,    16,    17,    59,    22,
-      20,    21,    59,    51,    53,    -1,    26,    55,     3,    -1,
-      -1,    91,    -1,    -1,    -1,    63,    64,    12,    -1,    14,
-      -1,    16,    17,    -1,    -1,    20,    21,    -1,    -1,    -1,
-      -1,    26,    -1,    -1,    54,     3,    36,    37,    38,    39,
-      40,    61,    62,    -1,    12,    -1,    14,    -1,    16,    17,
-      -1,     3,    20,    21,    -1,    -1,    -1,    -1,    26,    54,
-      12,    -1,    14,    -1,    16,    17,    61,    62,    20,    21,
-      -1,    -1,    -1,    -1,    26,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    54,    -1,    36,    37,
-      38,    39,    40,    61,    62,    43,    44,    45,    46,    47,
-      48,    49,    50,    -1,    -1,    -1,    -1,    -1,    -1,    61,
-      62,    -1,    60,    36,    37,    38,    39,    40,    -1,    -1,
-      43,    44,    45,    46,    47,    48,    49,    50,    -1,    -1,
-      36,    37,    38,    39,    40,    -1,    59,    43,    44,    45,
-      46,    47,    48,    49,    50,    -1,    -1,    36,    37,    38,
-      39,    40,    -1,    59,    43,    44,    45,    46,    47,    48,
-      49,    50,    36,    37,    38,    39,    40,    56,    -1,    43,
-      44,    45,    46,    47,    48,    49,    50,    36,    37,    38,
-      39,    40,    56,    -1,    43,    44,    45,    46,    47,    48,
-      49,    50,    36,    37,    38,    39,    40,    56,    -1,    43,
-      44,    45,    46,    47,    48,    49,    50,    36,    37,    38,
-      39,    40,    56,    -1,    43,    44,    45,    46,    47,    48,
-      49,    50,    36,    37,    38,    39,    40,    56,    -1,    43,
-      44,    45,    46,    47,    48,    49,    50,    36,    37,    38,
-      39,    40,    56,    -1,    43,    44,    45,    46,    47,    48,
-      49,    50,    36,    37,    38,    39,    40,    56,    -1,    43,
-      44,    45,    46,    47,    48,    49,    36,    37,    38,    39,
-      40,    -1,    -1,    43,    44,    45,    46,    47,    48,    36,
-      37,    38,    39,    40,    -1,    -1,    -1,    -1,    45,    46,
-      47,    48
+       0,     3,    52,     3,    59,     7,     3,     7,    -1,     8,
+      -1,    10,    11,    36,    37,    -1,    -1,    17
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,    66,    67,     0,     3,    12,    14,    16,    17,    20,
-      21,    26,    61,    62,    68,    70,    41,    42,    52,    71,
-      55,    55,    55,    55,     3,     3,     4,     5,     6,     7,
-      33,    34,    37,    51,    55,    63,    64,    69,    59,    69,
-      69,    69,    69,    52,    59,    69,    69,    69,    55,    55,
-      36,    37,    38,    39,    40,    43,    44,    45,    46,    47,
-      48,    49,    50,    59,    56,    56,    56,    56,    69,    56,
-      69,    69,    69,    69,    69,    69,    69,    69,    69,    69,
-      69,    69,    69,    69,    69,    53,    53,    59,    59,    59,
-      56,    60,    67,    67,    69,    54,    54,    56,    22,    53,
-      67,    54
+       0,    66,     0,     3,     7,    17,    67,    68,    52,     3,
+      36,    37,     3,    68,    59,    68,    68
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    65,    66,    67,    67,    68,    68,    68,    68,    68,
-      68,    68,    68,    68,    69,    69,    69,    69,    69,    69,
-      69,    69,    69,    69,    69,    69,    69,    69,    69,    69,
-      69,    69,    69,    69,    69,    69,    69,    69,    69,    70,
-      70,    70,    70,    70,    71,    71
+       0,    65,    66,    66,    67,    67,    67,    68,    68,    68,
+      68
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     0,     2,     5,     3,     4,    11,     7,
-       7,     3,     5,     5,     3,     3,     3,     3,     3,     3,
-       3,     2,     2,     3,     3,     3,     3,     3,     3,     3,
-       4,     6,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1
+       0,     2,     0,     2,     3,     3,     1,     3,     3,     1,
+       1
 };
 
 
@@ -1024,63 +883,33 @@ yydestruct (const char *yymsg,
   switch (yykind)
     {
     case YYSYMBOL_IDENTIFIER: /* IDENTIFIER  */
-#line 64 "jtoc.y"
+#line 29 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1030 "jtoc.tab.c"
+#line 889 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_STRING_LITERAL: /* STRING_LITERAL  */
-#line 64 "jtoc.y"
+#line 29 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1036 "jtoc.tab.c"
+#line 895 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_CHAR_LITERAL: /* CHAR_LITERAL  */
-#line 64 "jtoc.y"
+#line 29 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1042 "jtoc.tab.c"
+#line 901 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_FLOAT_LITERAL: /* FLOAT_LITERAL  */
-#line 64 "jtoc.y"
+#line 29 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1048 "jtoc.tab.c"
+#line 907 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_INT_LITERAL: /* INT_LITERAL  */
-#line 64 "jtoc.y"
+#line 29 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1054 "jtoc.tab.c"
-        break;
-
-    case YYSYMBOL_programa: /* programa  */
-#line 65 "jtoc.y"
-            { liberar_ast(((*yyvaluep).no)); }
-#line 1060 "jtoc.tab.c"
-        break;
-
-    case YYSYMBOL_comando: /* comando  */
-#line 65 "jtoc.y"
-            { liberar_ast(((*yyvaluep).no)); }
-#line 1066 "jtoc.tab.c"
-        break;
-
-    case YYSYMBOL_expressao: /* expressao  */
-#line 65 "jtoc.y"
-            { liberar_ast(((*yyvaluep).no)); }
-#line 1072 "jtoc.tab.c"
-        break;
-
-    case YYSYMBOL_tipo: /* tipo  */
-#line 65 "jtoc.y"
-            { liberar_ast(((*yyvaluep).no)); }
-#line 1078 "jtoc.tab.c"
-        break;
-
-    case YYSYMBOL_incrementacao: /* incrementacao  */
-#line 65 "jtoc.y"
-            { liberar_ast(((*yyvaluep).no)); }
-#line 1084 "jtoc.tab.c"
+#line 913 "jtoc.tab.c"
         break;
 
       default:
@@ -1347,272 +1176,85 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* inicio: programa  */
-#line 100 "jtoc.y"
-               { raiz = (yyvsp[0].no); }
-#line 1354 "jtoc.tab.c"
+  case 4: /* stmt: INT IDENTIFIER SEMI  */
+#line 52 "jtoc.y"
+                          {
+          if (buscarSimbolo((yyvsp[-1].stringValue))) yyerror("Redeclaracao de variavel");
+          else inserirSimbolo((yyvsp[-1].stringValue), TIPO_INT);
+          free((yyvsp[-1].stringValue));
+          (yyval.no) = NULL;
+      }
+#line 1188 "jtoc.tab.c"
     break;
 
-  case 3: /* programa: %empty  */
-#line 104 "jtoc.y"
-             { (yyval.no) = criar_no("Bloco"); }
-#line 1360 "jtoc.tab.c"
+  case 5: /* stmt: IDENTIFIER ASSIGN expr  */
+#line 58 "jtoc.y"
+                             {
+          Simbolo *s = buscarSimbolo((yyvsp[-2].stringValue));
+          if (!s) {
+              yyerror("Identificador nao declarado");
+              (yyval.no) = criarNoNum(0);
+          } else {
+              (yyval.no) = criarNoOp('=', criarNoId((yyvsp[-2].stringValue), s->tipo), (yyvsp[0].no));
+          }
+          free((yyvsp[-2].stringValue));
+          printf("\nAST: ");
+          imprimirAST((yyval.no));
+      }
+#line 1205 "jtoc.tab.c"
     break;
 
-  case 4: /* programa: programa comando  */
-#line 105 "jtoc.y"
-                       { adicionar_filho((yyvsp[-1].no), (yyvsp[0].no)); (yyval.no) = (yyvsp[-1].no); }
-#line 1366 "jtoc.tab.c"
+  case 6: /* stmt: expr  */
+#line 70 "jtoc.y"
+           {
+          (yyval.no) = (yyvsp[0].no);
+          printf("\nAST: ");
+          imprimirAST((yyval.no));
+      }
+#line 1215 "jtoc.tab.c"
     break;
 
-  case 5: /* comando: tipo IDENTIFIER ASSIGN expressao SEMI  */
-#line 109 "jtoc.y"
-                                           { (yyval.no) = montar_no("Declaracao", (yyvsp[-4].no), criar_folha((yyvsp[-3].stringValue)), (yyvsp[-1].no)); }
-#line 1372 "jtoc.tab.c"
+  case 7: /* expr: expr PLUS expr  */
+#line 78 "jtoc.y"
+                     {
+          if (!tiposCompativeis((yyvsp[-2].no)->tipo, (yyvsp[0].no)->tipo)) yyerror("Tipos incompativeis para '+'");
+          (yyval.no) = criarNoOp('+', (yyvsp[-2].no), (yyvsp[0].no));
+      }
+#line 1224 "jtoc.tab.c"
     break;
 
-  case 6: /* comando: tipo IDENTIFIER SEMI  */
-#line 110 "jtoc.y"
-                           { (yyval.no) = montar_no("Declaracao", (yyvsp[-2].no), criar_folha((yyvsp[-1].stringValue)), NULL); }
-#line 1378 "jtoc.tab.c"
+  case 8: /* expr: expr MINUS expr  */
+#line 82 "jtoc.y"
+                      {
+          if (!tiposCompativeis((yyvsp[-2].no)->tipo, (yyvsp[0].no)->tipo)) yyerror("Tipos incompativeis para '-'");
+          (yyval.no) = criarNoOp('-', (yyvsp[-2].no), (yyvsp[0].no));
+      }
+#line 1233 "jtoc.tab.c"
     break;
 
-  case 7: /* comando: IDENTIFIER ASSIGN expressao SEMI  */
-#line 111 "jtoc.y"
-                                       { (yyval.no) = montar_no("=", criar_folha((yyvsp[-3].stringValue)), (yyvsp[-1].no), NULL); }
-#line 1384 "jtoc.tab.c"
+  case 9: /* expr: INT_LITERAL  */
+#line 86 "jtoc.y"
+                  { (yyval.no) = criarNoNum(atoi((yyvsp[0].stringValue))); free((yyvsp[0].stringValue)); }
+#line 1239 "jtoc.tab.c"
     break;
 
-  case 8: /* comando: IF LPAREN expressao RPAREN LBRACE programa RBRACE ELSE LBRACE programa RBRACE  */
-#line 112 "jtoc.y"
-                                                                                    { (yyval.no) = montar_no("If", (yyvsp[-8].no), (yyvsp[-5].no), (yyvsp[-1].no)); }
-#line 1390 "jtoc.tab.c"
-    break;
-
-  case 9: /* comando: IF LPAREN expressao RPAREN LBRACE programa RBRACE  */
-#line 113 "jtoc.y"
-                                                        { (yyval.no) = montar_no("If", (yyvsp[-4].no), (yyvsp[-1].no), NULL); }
-#line 1396 "jtoc.tab.c"
-    break;
-
-  case 10: /* comando: WHILE LPAREN expressao RPAREN LBRACE programa RBRACE  */
-#line 114 "jtoc.y"
-                                                           { (yyval.no) = montar_no("While", (yyvsp[-4].no), (yyvsp[-1].no), NULL); }
-#line 1402 "jtoc.tab.c"
-    break;
-
-  case 11: /* comando: IDENTIFIER incrementacao SEMI  */
-#line 115 "jtoc.y"
-                                    { adicionar_filho((yyvsp[-1].no), criar_folha((yyvsp[-2].stringValue))); (yyval.no) = (yyvsp[-1].no); }
-#line 1408 "jtoc.tab.c"
-    break;
-
-  case 12: /* comando: PRINTLN LPAREN expressao RPAREN SEMI  */
-#line 116 "jtoc.y"
-                                           { (yyval.no) = montar_no("Println", (yyvsp[-2].no), NULL, NULL); }
-#line 1414 "jtoc.tab.c"
-    break;
-
-  case 13: /* comando: PRINT LPAREN expressao RPAREN SEMI  */
-#line 117 "jtoc.y"
-                                         { (yyval.no) = montar_no("Print", (yyvsp[-2].no), NULL, NULL); }
-#line 1420 "jtoc.tab.c"
-    break;
-
-  case 14: /* expressao: expressao PLUS expressao  */
-#line 121 "jtoc.y"
-                               { (yyval.no) = montar_no("+", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1426 "jtoc.tab.c"
-    break;
-
-  case 15: /* expressao: expressao MINUS expressao  */
-#line 122 "jtoc.y"
-                                { (yyval.no) = montar_no("-", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1432 "jtoc.tab.c"
-    break;
-
-  case 16: /* expressao: expressao MULT expressao  */
-#line 123 "jtoc.y"
-                               { (yyval.no) = montar_no("*", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1438 "jtoc.tab.c"
-    break;
-
-  case 17: /* expressao: expressao DIV expressao  */
-#line 124 "jtoc.y"
-                              { (yyval.no) = montar_no("/", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1444 "jtoc.tab.c"
-    break;
-
-  case 18: /* expressao: expressao MOD expressao  */
-#line 125 "jtoc.y"
-                              { (yyval.no) = montar_no("%", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1450 "jtoc.tab.c"
-    break;
-
-  case 19: /* expressao: expressao AND expressao  */
-#line 127 "jtoc.y"
-                              { (yyval.no) = montar_no("&&", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1456 "jtoc.tab.c"
-    break;
-
-  case 20: /* expressao: expressao OR expressao  */
-#line 128 "jtoc.y"
-                             { (yyval.no) = montar_no("||", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1462 "jtoc.tab.c"
-    break;
-
-  case 21: /* expressao: MINUS expressao  */
-#line 129 "jtoc.y"
-                                { (yyval.no) = montar_no("-", (yyvsp[0].no), NULL, NULL); }
-#line 1468 "jtoc.tab.c"
-    break;
-
-  case 22: /* expressao: NOT expressao  */
-#line 130 "jtoc.y"
-                    { (yyval.no) = montar_no("!", (yyvsp[0].no), NULL, NULL); }
-#line 1474 "jtoc.tab.c"
-    break;
-
-  case 23: /* expressao: expressao EQ expressao  */
-#line 131 "jtoc.y"
-                             { (yyval.no) = montar_no("==", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1480 "jtoc.tab.c"
-    break;
-
-  case 24: /* expressao: expressao NEQ expressao  */
-#line 132 "jtoc.y"
-                              { (yyval.no) = montar_no("!=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1486 "jtoc.tab.c"
-    break;
-
-  case 25: /* expressao: expressao LT expressao  */
-#line 133 "jtoc.y"
-                             { (yyval.no) = montar_no("<", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1492 "jtoc.tab.c"
-    break;
-
-  case 26: /* expressao: expressao LE expressao  */
-#line 134 "jtoc.y"
-                             { (yyval.no) = montar_no("<=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1498 "jtoc.tab.c"
-    break;
-
-  case 27: /* expressao: expressao GT expressao  */
-#line 135 "jtoc.y"
-                             { (yyval.no) = montar_no(">", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1504 "jtoc.tab.c"
-    break;
-
-  case 28: /* expressao: expressao GE expressao  */
-#line 136 "jtoc.y"
-                             { (yyval.no) = montar_no(">=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1510 "jtoc.tab.c"
-    break;
-
-  case 29: /* expressao: LPAREN expressao RPAREN  */
-#line 138 "jtoc.y"
-                              { (yyval.no) = (yyvsp[-1].no); }
-#line 1516 "jtoc.tab.c"
-    break;
-
-  case 30: /* expressao: MATH_SQRT LPAREN expressao RPAREN  */
-#line 140 "jtoc.y"
-                                        { (yyval.no) = montar_no("Math.sqrt", (yyvsp[-1].no), NULL, NULL); }
-#line 1522 "jtoc.tab.c"
-    break;
-
-  case 31: /* expressao: MATH_POW LPAREN expressao COMMA expressao RPAREN  */
-#line 141 "jtoc.y"
-                                                       { (yyval.no) = montar_no("Math.pow", (yyvsp[-3].no), (yyvsp[-1].no), NULL); }
-#line 1528 "jtoc.tab.c"
-    break;
-
-  case 32: /* expressao: IDENTIFIER  */
-#line 143 "jtoc.y"
-                 { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1534 "jtoc.tab.c"
-    break;
-
-  case 33: /* expressao: FLOAT_LITERAL  */
-#line 144 "jtoc.y"
-                    { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1540 "jtoc.tab.c"
-    break;
-
-  case 34: /* expressao: INT_LITERAL  */
-#line 145 "jtoc.y"
-                  { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1546 "jtoc.tab.c"
-    break;
-
-  case 35: /* expressao: CHAR_LITERAL  */
-#line 146 "jtoc.y"
-                   { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1552 "jtoc.tab.c"
-    break;
-
-  case 36: /* expressao: STRING_LITERAL  */
-#line 147 "jtoc.y"
-                     { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1558 "jtoc.tab.c"
-    break;
-
-  case 37: /* expressao: TOKEN_TRUE  */
-#line 148 "jtoc.y"
-                 { (yyval.no) = criar_no("true"); }
-#line 1564 "jtoc.tab.c"
-    break;
-
-  case 38: /* expressao: TOKEN_FALSE  */
-#line 149 "jtoc.y"
-                  { (yyval.no) = criar_no("false"); }
-#line 1570 "jtoc.tab.c"
-    break;
-
-  case 39: /* tipo: INT  */
-#line 153 "jtoc.y"
-          { (yyval.no) = criar_no("int"); }
-#line 1576 "jtoc.tab.c"
-    break;
-
-  case 40: /* tipo: FLOAT  */
-#line 154 "jtoc.y"
-            { (yyval.no) = criar_no("float"); }
-#line 1582 "jtoc.tab.c"
-    break;
-
-  case 41: /* tipo: CHAR  */
-#line 155 "jtoc.y"
-           { (yyval.no) = criar_no("char"); }
-#line 1588 "jtoc.tab.c"
-    break;
-
-  case 42: /* tipo: BOOLEAN  */
-#line 156 "jtoc.y"
-              { (yyval.no) = criar_no("boolean"); }
-#line 1594 "jtoc.tab.c"
-    break;
-
-  case 43: /* tipo: STRING_TYPE  */
-#line 157 "jtoc.y"
-                  { (yyval.no) = criar_no("String"); }
-#line 1600 "jtoc.tab.c"
-    break;
-
-  case 44: /* incrementacao: INC  */
-#line 161 "jtoc.y"
-          { (yyval.no) = criar_no("++"); }
-#line 1606 "jtoc.tab.c"
-    break;
-
-  case 45: /* incrementacao: DEC  */
-#line 162 "jtoc.y"
-          { (yyval.no) = criar_no("--"); }
-#line 1612 "jtoc.tab.c"
+  case 10: /* expr: IDENTIFIER  */
+#line 87 "jtoc.y"
+                 {
+          Simbolo *s = buscarSimbolo((yyvsp[0].stringValue));
+          if (!s) {
+              yyerror("Identificador nao declarado");
+              (yyval.no) = criarNoNum(0);
+          } else {
+              (yyval.no) = criarNoId((yyvsp[0].stringValue), s->tipo);
+          }
+          free((yyvsp[0].stringValue));
+      }
+#line 1254 "jtoc.tab.c"
     break;
 
 
-#line 1616 "jtoc.tab.c"
+#line 1258 "jtoc.tab.c"
 
       default: break;
     }
@@ -1805,181 +1447,11 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 165 "jtoc.y"
+#line 99 "jtoc.y"
 
-
-/* Cada no guarda um texto, seu primeiro filho e o proximo irmao.
- * Assim, um bloco pode ter quantos comandos forem necessarios. */
-NoAST *criar_no(const char *texto) {
-    NoAST *no = malloc(sizeof(NoAST));
-    if (no == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a AST.\n");
-        exit(EXIT_FAILURE);
-    }
-    no->texto = strdup(texto);
-    if (no->texto == NULL) {
-        free(no);
-        fprintf(stderr, "Memoria insuficiente para a AST.\n");
-        exit(EXIT_FAILURE);
-    }
-    no->filho = NULL;
-    no->irmao = NULL;
-    return no;
-}
-
-void adicionar_filho(NoAST *pai, NoAST *filho) {
-    NoAST *atual;
-    if (filho == NULL) return;
-    if (pai->filho == NULL) {
-        pai->filho = filho;
-        return;
-    }
-    atual = pai->filho;
-    while (atual->irmao != NULL) atual = atual->irmao;
-    atual->irmao = filho;
-}
-
-/* Atalho para criar comandos e operadores com ate tres filhos. */
-NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c) {
-    NoAST *no = criar_no(texto);
-    adicionar_filho(no, a);
-    adicionar_filho(no, b);
-    adicionar_filho(no, c);
-    return no;
-}
-
-/* O texto recebido pertence ao token e pode ser liberado apos a copia.
- * Guardamos o lexema inteiro para preservar aspas e escapes de literais. */
-NoAST *criar_folha(char *texto) {
-    NoAST *no = criar_no(texto);
-    free(texto);
-    return no;
-}
-
-void imprimir_ast(NoAST *no, int nivel) {
-    while (no != NULL) {
-        printf("%*s%s\n", nivel * 2, "", no->texto);
-        imprimir_ast(no->filho, nivel + 1);
-        no = no->irmao;
-    }
-}
-
-void liberar_ast(NoAST *no) {
-    while (no != NULL) {
-        NoAST *proximo = no->irmao;
-        liberar_ast(no->filho);
-        free(no->texto);
-        free(no);
-        no = proximo;
-    }
-}
-
-/* Converte a expressao da AST em texto, sem executar o programa.
- * O valor registrado e o da inicializacao, nao o resultado em tempo de execucao. */
-char *texto_expressao(NoAST *no) {
-    char *esquerda, *direita, *texto;
-    size_t tamanho;
-    if (no == NULL) return strdup("nao inicializado");
-    if (no->filho == NULL) return strdup(no->texto);
-
-    esquerda = texto_expressao(no->filho);
-    direita = no->filho->irmao != NULL
-        ? texto_expressao(no->filho->irmao) : NULL;
-    tamanho = strlen(no->texto) + strlen(esquerda) + 6;
-    if (direita != NULL) tamanho += strlen(direita);
-    texto = malloc(tamanho);
-    if (texto == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (strcmp(no->texto, "Math.pow") == 0) {
-        snprintf(texto, tamanho, "Math.pow(%s, %s)", esquerda, direita);
-    } else if (strcmp(no->texto, "Math.sqrt") == 0) {
-        snprintf(texto, tamanho, "Math.sqrt(%s)", esquerda);
-    } else if (direita == NULL) {
-        snprintf(texto, tamanho, "(%s%s)", no->texto, esquerda);
-    } else {
-        snprintf(texto, tamanho, "(%s %s %s)", esquerda, no->texto, direita);
-    }
-    free(esquerda);
-    free(direita);
-    return texto;
-}
-
-void inserir_simbolo(NoAST *declaracao, int nivel) {
-    NoAST *tipo = declaracao->filho;
-    NoAST *nome = tipo->irmao;
-    Simbolo *atual;
-    Simbolo *novo = malloc(sizeof(Simbolo));
-    if (novo == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
-        exit(EXIT_FAILURE);
-    }
-    novo->simbolo = strdup(nome->texto);
-    novo->tipo = strdup(tipo->texto);
-    novo->valor = texto_expressao(nome->irmao);
-    novo->escopo = nivel == 0 ? "global" : "local";
-    novo->proximo = NULL;
-    if (novo->simbolo == NULL || novo->tipo == NULL || novo->valor == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (tabela_simbolos == NULL) {
-        tabela_simbolos = novo;
-    } else {
-        atual = tabela_simbolos;
-        while (atual->proximo != NULL) atual = atual->proximo;
-        atual->proximo = novo;
-    }
-}
-
-/* O bloco principal tem nivel 0. Qualquer bloco interno e local.
- * Cada declaracao ocupa uma linha, inclusive nomes iguais em blocos diferentes.
- * Visitamos apenas comandos e blocos, sem confundir identificadores com comandos. */
-void montar_tabela(NoAST *bloco, int nivel) {
-    NoAST *comando = bloco->filho;
-    while (comando != NULL) {
-        if (strcmp(comando->texto, "Declaracao") == 0) {
-            inserir_simbolo(comando, nivel);
-        } else if (strcmp(comando->texto, "If") == 0 ||
-                   strcmp(comando->texto, "While") == 0) {
-            /* O primeiro filho e a condicao; os demais sao os blocos. */
-            NoAST *corpo = comando->filho->irmao;
-            while (corpo != NULL) {
-                montar_tabela(corpo, nivel + 1);
-                corpo = corpo->irmao;
-            }
-        }
-        comando = comando->irmao;
-    }
-}
-
-void imprimir_tabela(void) {
-    Simbolo *atual = tabela_simbolos;
-    printf("\nTabela de simbolos (valor de inicializacao):\n");
-    printf("%-20s | %-10s | %-30s | %s\n", "Simbolo", "Tipo", "Valor", "Escopo");
-    while (atual != NULL) {
-        printf("%-20s | %-10s | %-30s | %s\n",
-               atual->simbolo, atual->tipo, atual->valor, atual->escopo);
-        atual = atual->proximo;
-    }
-}
-
-void liberar_tabela(void) {
-    while (tabela_simbolos != NULL) {
-        Simbolo *proximo = tabela_simbolos->proximo;
-        free(tabela_simbolos->simbolo);
-        free(tabela_simbolos->tipo);
-        free(tabela_simbolos->valor);
-        free(tabela_simbolos);
-        tabela_simbolos = proximo;
-    }
-}
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
+    fprintf(stderr, "Erro semantico: %s\n", s);
 }
 
 int yywrap(void) {
@@ -1996,17 +1468,10 @@ int main(int argc, char **argv) {
         yyin = f;
     }
 
-    int resultado = yyparse();
-    if (resultado == 0 && erros_lexicos == 0) {
-        printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
-        printf("AST:\n");
-        imprimir_ast(raiz, 0);
-        montar_tabela(raiz, 0);
-        imprimir_tabela();
-    }
+    yyparse();
+    printf("\nTabela de Simbolos:\n");
+    imprimirTabela();
 
-    liberar_tabela();
-    liberar_ast(raiz);
     if (yyin) fclose(yyin);
-    return (resultado != 0 || erros_lexicos != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return 0;
 }

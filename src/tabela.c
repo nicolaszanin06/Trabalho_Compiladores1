@@ -1,36 +1,33 @@
-#include "tabela.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
+#include "tabela.h"
 
-Simbolo *tabela = NULL;
+#define TAM 211
 
-void inserirSimbolo(char *nome, char *tipo) {
-    // Verifica se o símbolo já foi inserido
-    Simbolo *s = tabela;
-    while (s) {
-        if (strcmp(s->nome, nome) == 0)
-            return;
-        s = s->prox;
-    }
-    Simbolo *novo = malloc(sizeof(Simbolo));
-    strcpy(novo->nome, nome);
-    strcpy(novo->tipo, tipo);
-    novo->prox = NULL;
-    if (tabela == NULL) {
-        tabela = novo;
-    } else {
-        Simbolo *last = tabela;
-        while (last->prox)
-            last = last->prox;
-        last->prox = novo;
-    }
+Simbolo *tabela[TAM];
+
+unsigned hash(char *s) {
+    unsigned h = 0;
+    while (*s) h = (h << 4) + *s++;
+    return h % TAM;
+}
+
+void inserirSimbolo(char *nome, Tipo tipo) {
+    unsigned i = hash(nome);
+    Simbolo *s = malloc(sizeof(Simbolo));
+    strcpy(s->nome, nome);
+    s->tipo = tipo;
+    s->proximo = tabela[i];
+    tabela[i] = s;
 }
 
 Simbolo *buscarSimbolo(char *nome) {
-    for (Simbolo *s = tabela; s; s = s->prox)
-        if (strcmp(s->nome, nome) == 0)
-            return s;
+    unsigned i = hash(nome);
+    for (Simbolo *s = tabela[i]; s; s = s->proximo) {
+        if (strcmp(s->nome, nome) == 0) return s;
+    }
     return NULL;
 }
 

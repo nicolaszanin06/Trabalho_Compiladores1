@@ -169,7 +169,12 @@ Os arquivos removidos incluem:
 
 ## 🧪 Exemplos de Teste
 
-Os casos executaveis da gramatica atual estao em [`testes/`](testes/README.md). No PowerShell, rode `.\testes\executar.ps1` na raiz do projeto.
+Os testes automatizados estao documentados em [`testes/`](testes/README.md).
+Na raiz do projeto, rode `python testes/test_analisador.py` (Python 3 e GCC).
+A suite verifica os tokens do lexico e a aceitacao ou rejeicao de entradas pelo
+parser. Com Flex e Bison instalados, use `--regenerate` para testar diretamente
+as especificacoes `.l` e `.y`. Essa verificacao tambem roda no GitHub Actions.
+O verificador original continua disponivel em `.\testes\executar.ps1`.
 
 ### Exemplo de Entrada Válida
 

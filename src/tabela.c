@@ -35,7 +35,9 @@ Simbolo *buscarSimbolo(char *nome) {
 }
 
 void imprimirTabela() {
-    printf("\nTabela de Símbolos:\n");
-    for (Simbolo *s = tabela; s; s = s->prox)
-        printf("Nome: %s, Tipo: %s\n", s->nome, s->tipo);
+    for (int i = 0; i < TAM; i++) {
+        for (Simbolo *s = tabela[i]; s; s = s->proximo) {
+            printf("Nome: %s, Tipo: %s\n", s->nome, s->tipo == TIPO_INT ? "int" : "float");
+        }
+    }
 }

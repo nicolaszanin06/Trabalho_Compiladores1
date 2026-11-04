@@ -1,12 +1,12 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ast.h"
 #include "tabela.h"
 
 extern int yylex();
 extern int yylineno;
-extern char* yytext;
 extern FILE *yyin;
 extern int erros_lexicos;
 int yywrap(void);
@@ -25,7 +25,7 @@ void yyerror(const char *s);
 %token <stringValue> IDENTIFIER STRING_LITERAL
 %token <stringValue> CHAR_LITERAL FLOAT_LITERAL INT_LITERAL
 
-%type <no> expressao
+%type <no> expr stmt
 %destructor { free($$); } <stringValue>
 
 %token PUBLIC CLASS STATIC VOID
@@ -38,40 +38,68 @@ void yyerror(const char *s);
 %token PRINTLN PRINT
 %token MATH_SQRT MATH_POW
 
-%left OR
-%left AND
-%left EQ NEQ
-%left LT LE GT GE
+%right ASSIGN
 %left PLUS MINUS
-%left MULT DIV MOD
-%right NOT
 
 %%
 
-entrada:
+input:
       %empty
-    | entrada linha
+    | input stmt
     ;
 
-linha:
-      expressao { imprimirAST($1); printf("\n"); }
+stmt:
+      INT IDENTIFIER SEMI {
+          if (buscarSimbolo($2)) yyerror("Redeclaracao de variavel");
+          else inserirSimbolo($2, TIPO_INT);
+          free($2);
+          $$ = NULL;
+      }
+    | IDENTIFIER ASSIGN expr {
+          Simbolo *s = buscarSimbolo($1);
+          if (!s) {
+              yyerror("Identificador nao declarado");
+              $$ = criarNoNum(0);
+          } else {
+              $$ = criarNoOp('=', criarNoId($1, s->tipo), $3);
+          }
+          free($1);
+          printf("\nAST: ");
+          imprimirAST($$);
+      }
+    | expr {
+          $$ = $1;
+          printf("\nAST: ");
+          imprimirAST($$);
+      }
     ;
 
-expressao:
-      expressao PLUS expressao  { $$ = criarNoOp('+', $1, $3); }
-    | expressao MINUS expressao { $$ = criarNoOp('-', $1, $3); }
-    | expressao MULT expressao  { $$ = criarNoOp('*', $1, $3); }
-    | expressao DIV expressao   { $$ = criarNoOp('/', $1, $3); }
-    | expressao MOD expressao   { $$ = criarNoOp('%', $1, $3); }
-    | LPAREN expressao RPAREN   { $$ = $2; }
-    | IDENTIFIER  { $$ = criarNoId($1); inserirSimbolo($1, "int"); free($1); }
+expr:
+      expr PLUS expr {
+          if (!tiposCompativeis($1->tipo, $3->tipo)) yyerror("Tipos incompativeis para '+'");
+          $$ = criarNoOp('+', $1, $3);
+      }
+    | expr MINUS expr {
+          if (!tiposCompativeis($1->tipo, $3->tipo)) yyerror("Tipos incompativeis para '-'");
+          $$ = criarNoOp('-', $1, $3);
+      }
     | INT_LITERAL { $$ = criarNoNum(atoi($1)); free($1); }
+    | IDENTIFIER {
+          Simbolo *s = buscarSimbolo($1);
+          if (!s) {
+              yyerror("Identificador nao declarado");
+              $$ = criarNoNum(0);
+          } else {
+              $$ = criarNoId($1, s->tipo);
+          }
+          free($1);
+      }
     ;
 
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
+    fprintf(stderr, "Erro semantico: %s\n", s);
 }
 
 int yywrap(void) {
@@ -88,12 +116,10 @@ int main(int argc, char **argv) {
         yyin = f;
     }
 
-    printf("Árvore Sintática Abstrata (AST):\n");
-    int resultado = yyparse();
-    if (resultado == 0 && erros_lexicos == 0) {
-        imprimirTabela();
-    }
+    yyparse();
+    printf("\nTabela de Simbolos:\n");
+    imprimirTabela();
 
     if (yyin) fclose(yyin);
-    return (resultado != 0 || erros_lexicos != 0) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return 0;
 }

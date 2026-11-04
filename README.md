@@ -16,7 +16,7 @@ A partir da raiz do repositório:
 ```bash
 cd src
 make -B
-./scanner < ../testes/validos/declaracoes.java
+./jtoc < ../testes/validos/declaracoes.java
 ```
 
 O Makefile está em `src/`. `make -B` regenera os arquivos do Flex/Bison e recompila o executável, inclusive quando os arquivos gerados já vieram do Git.
@@ -24,7 +24,7 @@ O Makefile está em `src/`. `make -B` regenera os arquivos do Flex/Bison e recom
 Para demonstrar um erro:
 
 ```bash
-./scanner < ../testes/invalidos/string_nao_encerrada.java
+./jtoc < ../testes/invalidos/string_nao_encerrada.java
 ```
 
 Dentro de `src/`, `make clean` remove os arquivos gerados e o executável.
@@ -61,11 +61,26 @@ Uma entrada válida imprime:
 Analise concluida com sucesso! Nenhum erro sintatico encontrado.
 ```
 
+Depois da mensagem de sucesso, o analisador imprime a AST e a tabela de símbolos
+com tipo, valor de inicialização e escopo global ou local de cada declaração.
+
 Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. A mensagem de sucesso só aparece quando não há erro léxico nem sintático. O processo retorna `0` no sucesso e `1` em caso de erro.
 
 Não há verificação de declaração de variáveis nem de compatibilidade de tipos. Uma entrada aceita sintaticamente não é necessariamente um programa Java semanticamente válido. A tradução para C está planejada para etapas futuras.
 
 ## Testes e arquivos
+
+Na raiz, com Python 3 e GCC disponíveis, execute:
+
+```bash
+python testes/test_analisador.py
+```
+
+A suíte contém 22 testes, com subcasos para os 14 arquivos de entrada, tokens,
+diagnósticos, precedência na AST e tabela de símbolos. Com Flex e Bison instalados,
+use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
+uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada
+push e pull request.
 
 No PowerShell, com GCC disponível no Windows, execute na raiz:
 
@@ -77,8 +92,8 @@ O script compila os arquivos C gerados e verifica mensagens e códigos de saída
 
 | Arquivo | Finalidade |
 | --- | --- |
-| `src/scanner.l` | Regras léxicas do Flex |
-| `src/scanner.y` | Gramática do Bison e entrada do programa |
+| `src/jtoc.l` | Regras léxicas do Flex |
+| `src/jtoc.y` | Gramática do Bison, AST, tabela de símbolos e entrada do programa |
 | `src/Makefile` | Compilação e limpeza |
 | `testes/` | Entradas e verificador |
 | `docs/` | Documentação do projeto |

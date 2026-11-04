@@ -27,7 +27,7 @@ function Normalizar-Saida([string]$texto) {
 }
 
 try {
-    & gcc -o $executavel (Join-Path $diretorioProjeto 'src/scanner.tab.c') (Join-Path $diretorioProjeto 'src/lex.yy.c')
+    & gcc -o $executavel (Join-Path $diretorioProjeto 'src/jtoc.tab.c') (Join-Path $diretorioProjeto 'src/lex.yy.c')
     if ($LASTEXITCODE -ne 0) {
         throw 'Falha ao compilar o scanner. Verifique se o gcc esta instalado.'
     }
@@ -48,6 +48,9 @@ try {
         $processo.WaitForExit()
 
         $saidaCorreta = $saida -cmatch "\A(?:$($caso.Saida))\z"
+        if ($caso.Codigo -eq 0) {
+            $saidaCorreta = $saida -cmatch "\A$([regex]::Escape($sucesso))\nAST:\nBloco\n[\s\S]*\nTabela de simbolos \(valor de inicializacao\):\n[\s\S]*\z"
+        }
         $erroCorreto = $erro -cmatch "\A(?:$($caso.Erro))\z"
         if ($saidaCorreta -and $erroCorreto -and $processo.ExitCode -eq $caso.Codigo) {
             Write-Host "OK: $($caso.Nome)"

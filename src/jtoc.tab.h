@@ -44,6 +44,12 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 16 "jtoc.y"
+
+typedef struct NoAST NoAST;
+
+#line 53 "jtoc.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -124,15 +130,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 15 "jtoc.y"
+#line 53 "jtoc.y"
 
-    int intValue;
-    float floatValue;
-    char charValue;
     char* stringValue;
+    NoAST *no;
 
-
-#line 136 "jtoc.tab.h"
+#line 139 "jtoc.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -1,65 +1,107 @@
 # Testes do analisador
 
-## Suite automatizada (Windows e Linux)
+## Suíte automatizada (Windows e Linux)
 
-Requisitos: Python 3 e GCC no `PATH`. Nao e necessario instalar pacotes com `pip`.
-Na raiz do projeto, execute:
+Requisitos: Python 3 e GCC no `PATH`, sem pacotes adicionais de Python.
+Na raiz do repositório, execute:
 
 ```powershell
 python testes/test_analisador.py
 ```
 
 No Linux, o comando pode ser `python3 testes/test_analisador.py`.
-O comando termina com codigo zero quando todos os testes passam e com codigo
-diferente de zero quando ha falha. Cada teste tem um nome que identifica o
-comportamento verificado; falhas mostram a diferenca entre o esperado e o obtido.
+A suíte compila o analisador e um observador de tokens (`lexer_driver.c`) em uma
+pasta temporária, removida ao terminar. O observador chama `yylex()` diretamente
+e verifica nomes dos tokens, lexemas, linhas e o lexema inteiro armazenado em
+`yylval.stringValue`, incluindo zeros à esquerda.
 
-A suite compila dois executaveis em uma pasta temporaria, removida ao terminar:
-o analisador completo e um observador de tokens (`lexer_driver.c`). O observador
-chama `yylex()` diretamente para testar o lexico independentemente das limitacoes
-da gramatica. Os testes verificam o nome do token, o texto reconhecido, a linha e,
-nos inteiros, o valor de `yylval.intValue`.
+Os 22 testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 
-Os 17 testes (alguns com varios subcasos) cobrem:
+- Palavras reservadas, identificadores, operadores, delimitadores e literais.
+- Comentários, espaços, CRLF e linhas dos diagnósticos.
+- Tokens de `String`, impressão e funções matemáticas.
+- Aceitação ou rejeição das entradas e os códigos de saída 0 ou 1.
+- Ausência da mensagem de sucesso e de AST quando há erros.
+- Precedência e parênteses na AST.
+- Tipo, inicialização e escopo na tabela de símbolos, incluindo nomes repetidos
+  em blocos distintos e preservação do valor inicial após uma atribuição.
+- Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
 
-- Palavras reservadas, identificadores e nomes com prefixos como `intValue`.
-- Operadores e delimitadores, incluindo operadores colados e de dois caracteres.
-- Literais inteiros, reais, caracteres e strings com escapes.
-- Espacos, CRLF, comentarios e contagem de linhas.
-- Diagnosticos lexicos e continuidade da leitura depois de caractere invalido.
-- Os nove arquivos de exemplo em `validos/` e `invalidos/`.
-- Blocos vazios, tokens e linhas exatos nos erros sintaticos e arquivo inexistente.
-
-Por padrao, sao usados os arquivos C ja gerados e versionados em `src/`. Se mudar
-`scanner.l` ou `scanner.y`, instale Flex e Bison e execute:
+Por padrão, a suíte compila os arquivos C versionados em `src/`. Ao alterar
+`jtoc.l` ou `jtoc.y`, instale Flex e Bison e execute:
 
 ```powershell
 python testes/test_analisador.py --regenerate
 ```
 
-Essa opcao regenera os arquivos em uma pasta temporaria antes de compilar, sem
-alterar `src/`. O fluxo `.github/workflows/testes.yml` usa essa opcao em cada push
-e pull request. A falha de qualquer teste faz a verificacao do GitHub falhar.
+Essa opção regenera os arquivos em uma pasta temporária, sem alterar `src/`.
+O fluxo `.github/workflows/testes.yml` usa essa opção em cada push e pull request.
+Qualquer teste que falhe faz o comando e a verificação no GitHub falharem.
+A suíte verifica a AST e a tabela de declarações, mas não implica validação
+semântica de tipos ou tradução para C.
 
-Os testes registram duas limitacoes atuais, e nao as corrigem: erros sintaticos
-retornam codigo zero, e erros lexicos podem ser seguidos de uma mensagem de
-sucesso. Quando o tratamento de erros for corrigido, as expectativas correspondentes
-tambem devem ser atualizadas. A suite nao verifica geracao de codigo ou analise
-semantica, pois essas etapas ainda nao estao implementadas.
+## Arquivos de entrada
 
-## Verificador original em PowerShell
+Todos os arquivos de entrada usam `.java` e são classificados pelo resultado esperado no analisador atual.
 
-Execute no PowerShell, a partir da raiz do projeto:
+| Pasta | Resultado esperado |
+| --- | --- |
+| `validos/` | Sem erros léxicos ou sintáticos; mensagem de sucesso; código 0 |
+| `invalidos/` | Erro léxico e/ou sintático; sem mensagem de sucesso; código 1 |
+
+## Casos válidos
+
+- `vazio.java`: entrada vazia.
+- `declaracoes.java`: declarações de variáveis.
+- `atribuicao_na_declaracao.java`: declaração com inicialização.
+- `condicao_com_identificador.java`: variável booleana usada na condição de um `if`.
+- `ifs_aninhados.java`: blocos condicionais aninhados.
+- `comentarios.java`: espaços e comentários ignorados.
+
+## Casos inválidos
+
+| Arquivo | Erro esperado |
+| --- | --- |
+| `sem_ponto_e_virgula.java` | Sintático: falta `;` |
+| `expressao_ausente.java` | Sintático: falta expressão depois de `=` |
+| `texto_solto.java` | Sintático: texto `Ola, mundo` não forma um comando |
+| `caractere_invalido.java` | Léxico: símbolo `@` |
+| `string_nao_encerrada.java` | Léxico: string sem fechamento |
+| `comentario_nao_encerrado.java` | Léxico: comentário de bloco sem fechamento |
+| `string_multilinha.java` | Léxico, seguido de sintático: quebra de linha dentro da string |
+| `char_multilinha.java` | Léxico, seguido de sintático: quebra de linha dentro do caractere |
+
+Uma falha léxica pode gerar também uma mensagem sintática, pois o parser continua recebendo os tokens restantes. Para demonstrar cada categoria isoladamente, use os exemplos abaixo.
+
+## Roteiro de apresentação no WSL
+
+A partir da raiz do projeto:
+
+```bash
+cd src
+make -B
+
+# Dois exemplos corretos
+./jtoc < ../testes/validos/declaracoes.java
+./jtoc < ../testes/validos/ifs_aninhados.java
+
+# Dois erros sintáticos
+./jtoc < ../testes/invalidos/sem_ponto_e_virgula.java
+./jtoc < ../testes/invalidos/expressao_ausente.java
+
+# Dois erros léxicos
+./jtoc < ../testes/invalidos/caractere_invalido.java
+./jtoc < ../testes/invalidos/string_nao_encerrada.java
+```
+
+## Verificação automática no Windows
+
+No PowerShell, com GCC disponível no Windows, execute na raiz:
 
 ```powershell
 .\testes\executar.ps1
 ```
 
-Os arquivos de entrada dos testes usam a extensao `.java`. O script usa `gcc` para compilar os arquivos C ja gerados em `src/` e executa cada arquivo de entrada. Se alterar `scanner.l` ou `scanner.y`, regenere `lex.yy.c` e `scanner.tab.c` com Flex e Bison antes de rodar os testes.
+O script verifica os 14 arquivos, comparando as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige os cabeçalhos de AST e tabela de símbolos. Ele compila os arquivos C já gerados em `src/`. Se alterar `jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executar o script.
 
-- `validos/`: entradas aceitas pela gramatica atual: arquivo vazio, declaracoes de `int`, `float` e `char`, blocos `if` com literais booleanos e comentarios.
-- `invalidos/`: erros sintaticos, caractere invalido e string nao encerrada.
-
-O verificador compara as mensagens em `stdout` e `stderr`. Atualmente, o analisador retorna codigo de saida zero mesmo quando informa um erro. Os casos lexicos tambem imprimem uma mensagem de sucesso depois do erro; os testes registram esse comportamento atual para que uma mudanca futura fique visivel.
-
-A gramatica de `scanner.y` ainda nao aceita inicializacao de variaveis, expressoes ou classes completas. Por isso, esses exemplos aparecem apenas como entradas invalidas quando aplicavel.
+“Válido” significa aceito pela análise léxica e sintática atual. A análise semântica, incluindo declaração de variáveis e compatibilidade de tipos, ainda não está implementada. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.

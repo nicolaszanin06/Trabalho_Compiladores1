@@ -1,24 +1,24 @@
 # Nome do executável final
-EXEC = scanner
+EXEC = jtoc
 
 # Arquivos-fonte do Bison e do Flex
-BISON_FILE = scanner.y
-FLEX_FILE  = scanner.l
+BISON_FILE = jtoc.y
+FLEX_FILE  = jtoc.l
 
 # Arquivos que o Bison vai gerar
-BISON_C   = scanner.tab.c
-BISON_H   = scanner.tab.h
+BISON_C   = jtoc.tab.c
+BISON_H   = jtoc.tab.h
 
 # Arquivo gerado pelo Flex
 FLEX_C    = lex.yy.c
 
 # Parâmetros opcionais ao Bison e Flex
-BISON_FLAGS = -d   # -d gera o arquivo .h (token definitions)
-FLEX_FLAGS  =      # deixe vazio ou acrescente opções se necessário
+BISON_FLAGS = -d # -d gera o arquivo .h (token definitions)
+FLEX_FLAGS  =       # deixe vazio ou acrescente opções se necessário
 
 # Parâmetros de compilação
 CC = gcc
-CFLAGS = 
+CFLAGS = -Wall
 LDFLAGS = -lfl     # biblioteca do Flex
 
 # Regra padrão (alvo "all" vai gerar o executável)

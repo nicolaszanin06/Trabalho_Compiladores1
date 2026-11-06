@@ -44,6 +44,7 @@ void analisar_comandos(NoAST *bloco, Escopo *escopo);
 void montar_tabela(NoAST *bloco, Escopo *pai);
 void imprimir_tabela(void);
 void liberar_tabela(void);
+void debug_compiler(void);
 
 NoAST *raiz = NULL;
 Simbolo *tabela_simbolos = NULL;
@@ -382,6 +383,13 @@ void liberar_tabela(void) {
     }
 }
 
+/* Toda a saida de inspecao fica aqui; a analise nao depende desta funcao. */
+void debug_compiler(void) {
+    printf("AST:\n");
+    imprimir_ast(raiz, 0);
+    imprimir_tabela();
+}
+
 void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s perto de '%s'\n", yylineno, s, yytext);
 }
@@ -391,8 +399,21 @@ int yywrap(void) {
 }
 
 int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *f = fopen(argv[1], "r");
+    int imprimir_debug = 0;
+    const char *arquivo = NULL;
+    int i;
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--debug") == 0) {
+            imprimir_debug = 1;
+        } else if (argv[i][0] == '-' || arquivo != NULL) {
+            fprintf(stderr, "Uso: %s [--debug] [arquivo.java]\n", argv[0]);
+            return EXIT_FAILURE;
+        } else {
+            arquivo = argv[i];
+        }
+    }
+    if (arquivo != NULL) {
+        FILE *f = fopen(arquivo, "r");
         if (!f) {
             perror("Erro ao abrir o arquivo");
             return 1;
@@ -405,9 +426,7 @@ int main(int argc, char **argv) {
         montar_tabela(raiz, NULL);
         if (erros_semanticos == 0) {
             printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
-            printf("AST:\n");
-            imprimir_ast(raiz, 0);
-            imprimir_tabela();
+            if (imprimir_debug) debug_compiler();
         }
     }
 

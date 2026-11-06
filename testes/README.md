@@ -30,6 +30,8 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Rejeição de declarações repetidas no mesmo escopo e de usos sem declaração,
   incluindo a ordem das declarações, blocos irmãos, cabeçalho do `for` e `switch`.
 - Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
+- Execução sem dumps por padrão, opção `--debug` e preservação dos diagnósticos
+  quando a impressão de AST e tabela está desativada.
 
 Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo o
 módulo da AST (`ast.c` e `ast.h`). Ao alterar
@@ -87,8 +89,8 @@ cd src
 make -B
 
 # Dois exemplos corretos
-./jtoc < ../testes/validos/declaracoes.java
-./jtoc < ../testes/validos/ifs_aninhados.java
+./jtoc --debug < ../testes/validos/declaracoes.java
+./jtoc --debug < ../testes/validos/ifs_aninhados.java
 
 # Dois erros sintáticos
 ./jtoc < ../testes/invalidos/sem_ponto_e_virgula.java
@@ -107,6 +109,6 @@ No PowerShell, com GCC disponível no Windows, execute na raiz:
 .\testes\executar.ps1
 ```
 
-O script verifica os 14 arquivos, comparando as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige os cabeçalhos de AST e tabela de símbolos. Ele compila os arquivos C já gerados em `src/`. Se alterar `jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executar o script.
+O script executa o analisador com `--debug` e verifica os 14 arquivos, comparando as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige os cabeçalhos de AST e tabela de símbolos. Ele compila os arquivos C já gerados em `src/`. Se alterar `jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executar o script.
 
 “Válido” significa aceito pelas análises léxica, sintática e semântica inicial. A compatibilidade de tipos ainda não é verificada. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.

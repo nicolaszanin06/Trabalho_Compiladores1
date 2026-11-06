@@ -47,6 +47,11 @@ class AnalisadorTest(unittest.TestCase):
         return subprocess.run([str(executavel), *map(str, argumentos)], input=entrada,
                               capture_output=True, text=True, encoding="utf-8", timeout=5)
 
+    def executar_parser(self, entrada="", argumentos=(), debug=True):
+        if debug:
+            argumentos = ("--debug", *argumentos)
+        return self.executar(self.parser, entrada, argumentos)
+
     def conferir_lexer(self, entrada, esperado):
         resultado = self.executar(self.lexer, entrada)
         self.assertEqual(resultado.returncode, 0)
@@ -99,7 +104,7 @@ class AnalisadorTest(unittest.TestCase):
     def test_arquivos_validos(self):
         for arquivo in sorted((TESTES / "validos").glob("*.java")):
             with self.subTest(arquivo=arquivo.name):
-                resultado = self.executar(self.parser, argumentos=[arquivo])
+                resultado = self.executar_parser(argumentos=[arquivo])
                 self.conferir_sucesso(resultado)
 
     def conferir_sucesso(self, resultado):
@@ -111,7 +116,7 @@ class AnalisadorTest(unittest.TestCase):
     def test_arquivos_com_erros_sintaticos(self):
         for nome in ("sem_ponto_e_virgula", "expressao_ausente", "texto_solto"):
             with self.subTest(arquivo=nome):
-                resultado = self.executar(self.parser, argumentos=[TESTES / "invalidos" / (nome + ".java")])
+                resultado = self.executar_parser(argumentos=[TESTES / "invalidos" / (nome + ".java")])
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
                 self.assertRegex(resultado.stderr, r"\AErro sintatico na linha \d+: syntax error perto de '.*'\n\Z")
@@ -122,13 +127,13 @@ class AnalisadorTest(unittest.TestCase):
                                ("comentario_nao_encerrado", "Comentario nao encerrado")):
             with self.subTest(arquivo=nome):
                 arquivo = TESTES / "invalidos" / (nome + ".java")
-                resultado = self.executar(self.parser, argumentos=[arquivo])
+                resultado = self.executar_parser(argumentos=[arquivo])
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stderr, "")
                 self.assertEqual(resultado.stdout, f"Erro lexico na linha 1: {mensagem}\n")
 
     def test_blocos_vazios_e_declaracoes_sem_espacos(self):
-        resultado = self.executar(self.parser, "if(true){}if(false){int x;float y;char z;}")
+        resultado = self.executar_parser("if(true){}if(false){int x;float y;char z;}")
         self.conferir_sucesso(resultado)
 
     def test_erros_sintaticos_com_linha_e_token_exatos(self):
@@ -139,7 +144,7 @@ class AnalisadorTest(unittest.TestCase):
                  ("double x;", 1, "double")]
         for entrada, linha, token in casos:
             with self.subTest(entrada=entrada):
-                resultado = self.executar(self.parser, entrada)
+                resultado = self.executar_parser(entrada)
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
                 self.assertEqual(resultado.stderr, f"Erro sintatico na linha {linha}: syntax error perto de '{token}'\n")
@@ -157,7 +162,7 @@ class AnalisadorTest(unittest.TestCase):
         ]
         for nome, saida, erro in casos:
             with self.subTest(arquivo=nome):
-                resultado = self.executar(self.parser, argumentos=[TESTES / "invalidos" / (nome + ".java")])
+                resultado = self.executar_parser(argumentos=[TESTES / "invalidos" / (nome + ".java")])
                 self.assertEqual((resultado.returncode, resultado.stdout, resultado.stderr), (1, saida, erro))
 
     def test_ast_respeita_precedencia_e_parenteses(self):
@@ -166,13 +171,13 @@ class AnalisadorTest(unittest.TestCase):
             ("(1 + 2) * 3", "    *\n      +\n        1\n        2\n      3\n"),
         ]:
             with self.subTest(expressao=expressao):
-                resultado = self.executar(self.parser, f"int x = {expressao};")
+                resultado = self.executar_parser(f"int x = {expressao};")
                 self.conferir_sucesso(resultado)
                 ast = resultado.stdout.split("AST:\n", 1)[1].split("\nTabela de simbolos", 1)[0]
                 self.assertEqual(ast, "Bloco\n  Declaracao\n    int\n    x\n" + arvore)
 
     def test_tabela_de_simbolos_preserva_inicializacao_e_escopos(self):
-        resultado = self.executar(self.parser,
+        resultado = self.executar_parser(
             "int x = 1 + 2; x = 9; if (true) { String x = \"local\"; } else { char c; } while(false) { float y = 2.5; }")
         self.conferir_sucesso(resultado)
         tabela = resultado.stdout.split("Tabela de simbolos (valor de inicializacao):\n", 1)[1]
@@ -186,14 +191,14 @@ class AnalisadorTest(unittest.TestCase):
         ])
 
     def test_comandos_e_funcoes_da_gramatica_atual(self):
-        resultado = self.executar(self.parser,
+        resultado = self.executar_parser(
             "int x = 0; boolean b = !false && true; while (x < 3) { System.out.println(Math.sqrt(x)); x++; } if (b) { System.out.print(Math.pow(2, 3)); } else { x--; }")
         self.conferir_sucesso(resultado)
         for comando in ("While", "Println", "Print", "Math.sqrt", "Math.pow", "If", "++", "--"):
             self.assertIn(comando, resultado.stdout)
 
     def test_arquivo_inexistente(self):
-        resultado = self.executar(self.parser, argumentos=[Path(self.temporario.name) / "inexistente.java"])
+        resultado = self.executar_parser(argumentos=[Path(self.temporario.name) / "inexistente.java"])
         self.assertEqual(resultado.returncode, 1)
         self.assertEqual(resultado.stdout, "")
         self.assertIn("Erro ao abrir o arquivo", resultado.stderr)
@@ -209,12 +214,12 @@ class AnalisadorTest(unittest.TestCase):
     def test_ast_das_atribuicoes_compostas(self):
         for operador in ("+=", "-=", "*=", "/="):
             with self.subTest(operador=operador):
-                resultado = self.executar(self.parser, f"int x = 1; x {operador} 2 + 3;")
+                resultado = self.executar_parser(f"int x = 1; x {operador} 2 + 3;")
                 self.conferir_sucesso(resultado)
                 self.assertIn(f"  {operador}\n    x\n    +\n      2\n      3\n", resultado.stdout)
 
     def test_ast_do_for_e_declaracoes_na_tabela(self):
-        resultado = self.executar(self.parser,
+        resultado = self.executar_parser(
             "for (int i = 0; i < 10; i++) { int dobro = i * 2; }")
         self.conferir_sucesso(resultado)
         ast = resultado.stdout.split("AST:\n", 1)[1].split("\nTabela de simbolos", 1)[0]
@@ -229,14 +234,14 @@ class AnalisadorTest(unittest.TestCase):
         for cabecalho in (";;", "int i = 0;;", ";true;", "int i = 3;i > 0;i--",
                           "int i = 0;i < 3;i += 1", "i = 0;i < 3;i = i + 1"):
             with self.subTest(cabecalho=cabecalho):
-                resultado = self.executar(self.parser, f"int i; for ({cabecalho}) {{}}")
+                resultado = self.executar_parser(f"int i; for ({cabecalho}) {{}}")
                 self.conferir_sucesso(resultado)
                 self.assertIn("  For\n", resultado.stdout)
-        resultado = self.executar(self.parser, "for (;;) {}")
+        resultado = self.executar_parser("for (;;) {}")
         self.assertIn("  For\n    Vazio\n    Vazio\n    Vazio\n    Bloco\n", resultado.stdout)
 
     def test_switch_com_cases_agrupados_default_e_break(self):
-        resultado = self.executar(self.parser,
+        resultado = self.executar_parser(
             "int x = 1; switch (x) { case 0: case 1: x += 2; break; "
             "default: int outro = 3; System.out.println(outro); }")
         self.conferir_sucesso(resultado)
@@ -250,7 +255,7 @@ class AnalisadorTest(unittest.TestCase):
                         "for (int i = 0; i < 2; i++) { switch (i) { case 1: "
                         "{ int n = i; } while (false) { break; } default: break; } }"):
             with self.subTest(entrada=entrada):
-                self.conferir_sucesso(self.executar(self.parser, entrada))
+                self.conferir_sucesso(self.executar_parser(entrada))
 
     def test_rejeita_novas_estruturas_malformadas(self):
         entradas = ["int x; x +=;", "int x += 1;", "for (int i = 0 i < 2; i++) {}",
@@ -259,13 +264,13 @@ class AnalisadorTest(unittest.TestCase):
                     "case 1: int x;", "switch (1) { int x; }", "break"]
         for entrada in entradas:
             with self.subTest(entrada=entrada):
-                resultado = self.executar(self.parser, entrada)
+                resultado = self.executar_parser(entrada)
                 self.assertEqual(resultado.returncode, 1)
                 self.assertIn("Erro sintatico", resultado.stderr)
                 self.assertNotIn(SUCESSO, resultado.stdout)
 
     def conferir_erro_semantico(self, entrada, mensagem, nome):
-        resultado = self.executar(self.parser, entrada)
+        resultado = self.executar_parser(entrada)
         self.assertEqual(resultado.returncode, 1)
         self.assertEqual(resultado.stdout, "")
         self.assertIn(f"Erro semântico: {mensagem} '{nome}'.\n", resultado.stderr)
@@ -316,7 +321,7 @@ class AnalisadorTest(unittest.TestCase):
                     "int x; for (int i = 0; i < 2; i++) { x += i; }"]
         for entrada in entradas:
             with self.subTest(entrada=entrada):
-                self.conferir_sucesso(self.executar(self.parser, entrada))
+                self.conferir_sucesso(self.executar_parser(entrada))
 
     def test_escopo_do_for_e_limites_da_visibilidade(self):
         entradas = [("for (int i = 0; i < 2; i++) {} i = 1;", "i"),
@@ -328,13 +333,13 @@ class AnalisadorTest(unittest.TestCase):
         for entrada, nome in entradas:
             with self.subTest(entrada=entrada):
                 self.conferir_erro_semantico(entrada, "Variável não declarada", nome)
-        self.conferir_sucesso(self.executar(self.parser,
+        self.conferir_sucesso(self.executar_parser(
             "for (int i = 0; i < 2; i++) {} for (int i = 0; i < 2; i++) {} int i;"))
 
     def test_switch_compartilha_escopo_entre_cases_e_respeita_chaves(self):
-        self.conferir_sucesso(self.executar(self.parser,
+        self.conferir_sucesso(self.executar_parser(
             "switch (1) { case 1: int x; case 2: x = 2; default: x++; }"))
-        self.conferir_sucesso(self.executar(self.parser,
+        self.conferir_sucesso(self.executar_parser(
             "switch (1) { case 1: { int x; } break; default: { int x; } }"))
         for entrada in ("switch (1) { case 1: int x; } x = 2;",
                         "switch (1) { case 1: { int x; } default: x = 1; }"):
@@ -342,7 +347,7 @@ class AnalisadorTest(unittest.TestCase):
                 self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
 
     def test_semantica_distingue_identificadores_de_literais_e_rotulos_da_ast(self):
-        self.conferir_sucesso(self.executar(self.parser,
+        self.conferir_sucesso(self.executar_parser(
             'int Bloco = 1; int If = Bloco; String s = "ausente"; char c = \'x\'; '
             'boolean b = !false || true; System.out.println(Math.pow(If, Math.sqrt(Bloco)));'))
         self.conferir_erro_semantico("System.out.println(If);", "Variável não declarada", "If")
@@ -352,6 +357,42 @@ class AnalisadorTest(unittest.TestCase):
             "int x; int x; y = z;", "Variável já declarada", "x")
         self.assertIn("Variável não declarada 'y'", resultado.stderr)
         self.assertIn("Variável não declarada 'z'", resultado.stderr)
+
+    def test_execucao_padrao_nao_imprime_ast_nem_tabela(self):
+        resultado = self.executar_parser("int x = 1; x += 2;", debug=False)
+        self.assertEqual(resultado.returncode, 0)
+        self.assertEqual(resultado.stdout, SUCESSO)
+        self.assertEqual(resultado.stderr, "")
+
+    def test_debug_funciona_com_arquivo_e_em_qualquer_ordem(self):
+        arquivo = TESTES / "validos" / "declaracoes.java"
+        for argumentos in (("--debug", arquivo), (arquivo, "--debug")):
+            with self.subTest(argumentos=argumentos):
+                self.conferir_sucesso(self.executar_parser(argumentos=argumentos, debug=False))
+        resultado = self.executar_parser(argumentos=[arquivo], debug=False)
+        self.assertEqual(resultado.returncode, 0)
+        self.assertEqual(resultado.stdout, SUCESSO)
+        self.assertEqual(resultado.stderr, "")
+
+    def test_desativar_debug_preserva_analise_e_diagnosticos(self):
+        entradas = ["int x; int x;", "x = 1;", "int x = y;", "int x =;", "int x; @"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                com_debug = self.executar_parser(entrada)
+                sem_debug = self.executar_parser(entrada, debug=False)
+                self.assertEqual(com_debug.returncode, 1)
+                self.assertEqual((com_debug.returncode, com_debug.stdout, com_debug.stderr),
+                                 (sem_debug.returncode, sem_debug.stdout, sem_debug.stderr))
+                self.assertNotIn("AST:", sem_debug.stdout)
+                self.assertNotIn("Tabela de simbolos", sem_debug.stdout)
+
+    def test_rejeita_opcoes_desconhecidas_e_multiplos_arquivos(self):
+        for argumentos in (("--desconhecido",), ("um.java", "dois.java")):
+            with self.subTest(argumentos=argumentos):
+                resultado = self.executar_parser(argumentos=argumentos, debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn("[--debug] [arquivo.java]", resultado.stderr)
 
 
 if __name__ == "__main__":

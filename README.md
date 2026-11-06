@@ -65,8 +65,17 @@ Uma entrada válida imprime:
 Analise concluida com sucesso! Nenhum erro sintatico encontrado.
 ```
 
-Depois da mensagem de sucesso, o analisador imprime a AST e a tabela de símbolos
-com tipo, valor de inicialização e escopo global ou local de cada declaração.
+Por padrão, apenas a mensagem de sucesso é impressa. Para exibir também a AST e
+a tabela de símbolos com tipo, valor de inicialização e escopo, use `--debug`:
+
+```bash
+./jtoc --debug < ../testes/validos/declaracoes.java
+./jtoc --debug ../testes/validos/declaracoes.java
+```
+
+As impressões de inspeção estão reunidas em `debug_compiler()`, chamada somente
+quando `imprimir_debug` está ativo. A construção da tabela e a análise semântica
+são executadas em ambos os modos.
 
 Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. Erros semânticos identificam a variável repetida ou não declarada. A mensagem de sucesso, a AST e a tabela só aparecem quando não há erro léxico, sintático ou semântico. O processo retorna `0` no sucesso e `1` em caso de erro.
 

@@ -37,7 +37,7 @@ try {
         $arquivo = Join-Path $diretorioTestes $caso.Arquivo
         $processoInfo = New-Object System.Diagnostics.ProcessStartInfo
         $processoInfo.FileName = $executavel
-        $processoInfo.Arguments = '"' + $arquivo + '"'
+        $processoInfo.Arguments = '--debug "' + $arquivo + '"'
         $processoInfo.UseShellExecute = $false
         $processoInfo.RedirectStandardOutput = $true
         $processoInfo.RedirectStandardError = $true

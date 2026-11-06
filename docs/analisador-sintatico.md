@@ -20,6 +20,10 @@ As ações da gramática constroem a AST usando as funções declaradas em `src/
 
 O nó `For` tem quatro filhos: inicialização, condição, atualização e corpo. As cláusulas omitidas geram nós `Vazio`. O nó `Switch` guarda a expressão e uma lista `Casos`; cada `Case` guarda o rótulo e seu bloco de comandos, enquanto `Default` guarda apenas o bloco. `Break` é um comando sem filhos.
 
-A tabela de símbolos permanece em `jtoc.y` e percorre a AST para registrar as declarações. Não há avaliação de expressões, análise semântica ou geração de código nesta etapa. Aceitar `x = true + 1;` significa apenas que a forma da expressão está na gramática; não verifica tipos nem a declaração de `x`.
+A tabela de símbolos permanece em `jtoc.y` e percorre a AST na ordem dos comandos para registrar declarações e validar usos de variáveis. Cada escopo tem um identificador e uma referência ao pai durante a visita. A inserção rejeita nomes repetidos no mesmo escopo, e a busca sobe pelos ancestrais para resolver usos. O campo `identificador` do nó distingue variáveis de literais e dos textos dos operadores.
 
-`yyerror` informa linha e token perto da falha sintática. O programa verifica o resultado de `yyparse` e o contador de erros léxicos antes de imprimir sucesso. Retorna `0` em caso de sucesso e `1` em caso de erro.
+Cada bloco abre um escopo. O `for` abre um escopo para o cabeçalho e outro para o corpo; os `case` compartilham o escopo do `switch`, salvo blocos explícitos. A análise informa `Variável já declarada` ou `Variável não declarada` em stderr e impede a mensagem de sucesso em caso de erro.
+
+Não há avaliação de expressões, validação de tipos ou geração de código nesta etapa. Por exemplo, `int x; x = true + 1;` passa pelas verificações atuais porque `x` está declarada, mas a compatibilidade de tipos ainda não é verificada. A análise também não verifica inicialização antes da leitura nem todas as restrições de nomes e rótulos do Java.
+
+`yyerror` informa linha e token perto da falha sintática. O programa verifica o resultado de `yyparse` e os contadores de erros léxicos e semânticos antes de imprimir sucesso. Retorna `0` em caso de sucesso e `1` em caso de erro.

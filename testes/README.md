@@ -27,6 +27,8 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
   `default`, `break` e rejeição de construções malformadas.
 - Tipo, inicialização e escopo na tabela de símbolos, incluindo nomes repetidos
   em blocos distintos e preservação do valor inicial após uma atribuição.
+- Rejeição de declarações repetidas no mesmo escopo e de usos sem declaração,
+  incluindo a ordem das declarações, blocos irmãos, cabeçalho do `for` e `switch`.
 - Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
 
 Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo o
@@ -40,8 +42,8 @@ python testes/test_analisador.py --regenerate
 Essa opção regenera os arquivos em uma pasta temporária, sem alterar `src/`.
 O fluxo `.github/workflows/testes.yml` usa essa opção em cada push e pull request.
 Qualquer teste que falhe faz o comando e a verificação no GitHub falharem.
-A suíte verifica a AST e a tabela de declarações, mas não implica validação
-semântica de tipos ou tradução para C.
+A suíte verifica a AST, a tabela de declarações e as regras semânticas iniciais
+de declaração e visibilidade, mas não implica validação de tipos ou tradução para C.
 
 ## Arquivos de entrada
 
@@ -107,4 +109,4 @@ No PowerShell, com GCC disponível no Windows, execute na raiz:
 
 O script verifica os 14 arquivos, comparando as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige os cabeçalhos de AST e tabela de símbolos. Ele compila os arquivos C já gerados em `src/`. Se alterar `jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executar o script.
 
-“Válido” significa aceito pela análise léxica e sintática atual. A análise semântica, incluindo declaração de variáveis e compatibilidade de tipos, ainda não está implementada. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.
+“Válido” significa aceito pelas análises léxica, sintática e semântica inicial. A compatibilidade de tipos ainda não é verificada. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.

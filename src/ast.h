@@ -4,6 +4,7 @@
 /* Cada no guarda seu texto, o primeiro filho e o proximo irmao. */
 typedef struct NoAST {
     char *texto;
+    int identificador;
     struct NoAST *filho;
     struct NoAST *irmao;
 } NoAST;
@@ -13,6 +14,8 @@ typedef struct NoAST {
  * liberar_ast libera o no, seus filhos e seus irmaos. */
 NoAST *criar_no(const char *texto);
 NoAST *criar_folha(char *texto);
+/* Marca usos e nomes de variaveis, sem confundi-los com literais. */
+NoAST *criar_identificador(char *texto);
 NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c);
 void adicionar_filho(NoAST *pai, NoAST *filho);
 void imprimir_ast(NoAST *no, int nivel);

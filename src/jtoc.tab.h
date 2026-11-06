@@ -135,7 +135,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 40 "jtoc.y"
+#line 54 "jtoc.y"
 
     char* stringValue;
     NoAST *no;

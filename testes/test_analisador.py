@@ -45,7 +45,7 @@ class AnalisadorTest(unittest.TestCase):
 
     def executar(self, executavel, entrada="", argumentos=()):
         return subprocess.run([str(executavel), *map(str, argumentos)], input=entrada,
-                              capture_output=True, text=True, timeout=5)
+                              capture_output=True, text=True, encoding="utf-8", timeout=5)
 
     def conferir_lexer(self, entrada, esperado):
         resultado = self.executar(self.lexer, entrada)
@@ -263,6 +263,95 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.returncode, 1)
                 self.assertIn("Erro sintatico", resultado.stderr)
                 self.assertNotIn(SUCESSO, resultado.stdout)
+
+    def conferir_erro_semantico(self, entrada, mensagem, nome):
+        resultado = self.executar(self.parser, entrada)
+        self.assertEqual(resultado.returncode, 1)
+        self.assertEqual(resultado.stdout, "")
+        self.assertIn(f"Erro semântico: {mensagem} '{nome}'.\n", resultado.stderr)
+        return resultado
+
+    def test_rejeita_declaracoes_repetidas_no_mesmo_escopo(self):
+        entradas = ["int x; float x;", "if (true) { int x; int x; }",
+                    "for (;;) { int x; int x; }",
+                    "switch (1) { case 1: int x; break; default: int x; }"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                resultado = self.conferir_erro_semantico(entrada, "Variável já declarada", "x")
+                self.assertEqual(resultado.stderr.count("Variável já declarada"), 1)
+
+    def test_rejeita_atribuicao_e_incremento_sem_declaracao(self):
+        for comando in ("x = 1;", "x += 1;", "x -= 1;", "x *= 1;", "x /= 1;", "x++;", "x--;"):
+            with self.subTest(comando=comando):
+                self.conferir_erro_semantico(comando, "Variável não declarada", "x")
+
+    def test_rejeita_variavel_ausente_em_expressoes(self):
+        entradas = ["int y = x + 1;", "int y; y = x;", "int y; y += x;",
+                    "System.out.println(x);", "System.out.print(Math.sqrt(x));",
+                    "int y = Math.pow(2, x);", "if (x) {}", "while (x < 3) {}",
+                    "for (;x < 3;) {}", "switch (x) {}", "switch (1) { case x: break; }"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
+
+    def test_rejeita_uso_antes_da_declaracao(self):
+        for entrada in ("x = 1; int x;", "int y = x; int x;",
+                        "if (true) { System.out.println(x); } int x;"):
+            with self.subTest(entrada=entrada):
+                self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
+
+    def test_escopos_irmaos_nao_compartilham_variaveis(self):
+        entradas = ["if (true) { int x; } x = 1;",
+                    "if (true) { int x; } else { x = 1; }",
+                    "if (true) { int x; } while (false) { x++; }",
+                    "{ int x; } { System.out.println(x); }"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
+
+    def test_aceita_busca_em_escopo_externo_e_nomes_em_blocos_distintos(self):
+        entradas = ["int x; if (true) { x = 1; while (false) { x++; } } x = 2;",
+                    "if (true) { int x; } else { int x; } { int x; } int x;",
+                    "int x = 1; { int x = 2; System.out.println(x); } x++;",
+                    "int x; for (int i = 0; i < 2; i++) { x += i; }"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                self.conferir_sucesso(self.executar(self.parser, entrada))
+
+    def test_escopo_do_for_e_limites_da_visibilidade(self):
+        entradas = [("for (int i = 0; i < 2; i++) {} i = 1;", "i"),
+                    ("for (i = 0; i < 2; i++) {}", "i"),
+                    ("for (int i = 0; i < 2; x++) {}", "x"),
+                    ("for (;x < 2;) { int x; }", "x"),
+                    ("for (;;x++) { int x; }", "x"),
+                    ("for (;;) { int x; } System.out.print(x);", "x")]
+        for entrada, nome in entradas:
+            with self.subTest(entrada=entrada):
+                self.conferir_erro_semantico(entrada, "Variável não declarada", nome)
+        self.conferir_sucesso(self.executar(self.parser,
+            "for (int i = 0; i < 2; i++) {} for (int i = 0; i < 2; i++) {} int i;"))
+
+    def test_switch_compartilha_escopo_entre_cases_e_respeita_chaves(self):
+        self.conferir_sucesso(self.executar(self.parser,
+            "switch (1) { case 1: int x; case 2: x = 2; default: x++; }"))
+        self.conferir_sucesso(self.executar(self.parser,
+            "switch (1) { case 1: { int x; } break; default: { int x; } }"))
+        for entrada in ("switch (1) { case 1: int x; } x = 2;",
+                        "switch (1) { case 1: { int x; } default: x = 1; }"):
+            with self.subTest(entrada=entrada):
+                self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
+
+    def test_semantica_distingue_identificadores_de_literais_e_rotulos_da_ast(self):
+        self.conferir_sucesso(self.executar(self.parser,
+            'int Bloco = 1; int If = Bloco; String s = "ausente"; char c = \'x\'; '
+            'boolean b = !false || true; System.out.println(Math.pow(If, Math.sqrt(Bloco)));'))
+        self.conferir_erro_semantico("System.out.println(If);", "Variável não declarada", "If")
+
+    def test_reporta_multiplos_erros_semanticos_sem_imprimir_sucesso(self):
+        resultado = self.conferir_erro_semantico(
+            "int x; int x; y = z;", "Variável já declarada", "x")
+        self.assertIn("Variável não declarada 'y'", resultado.stderr)
+        self.assertIn("Variável não declarada 'z'", resultado.stderr)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ NoAST *criar_no(const char *texto) {
     }
     no->filho = NULL;
     no->irmao = NULL;
+    no->identificador = 0;
     return no;
 }
 
@@ -48,6 +49,12 @@ NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c) {
 NoAST *criar_folha(char *texto) {
     NoAST *no = criar_no(texto);
     free(texto);
+    return no;
+}
+
+NoAST *criar_identificador(char *texto) {
+    NoAST *no = criar_folha(texto);
+    no->identificador = 1;
     return no;
 }
 

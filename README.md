@@ -1,6 +1,6 @@
 # Java Procedural — Analisador Léxico e Sintático
 
-Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual verifica a sintaxe e faz análise semântica inicial de declarações e usos de variáveis; ainda não executa o programa nem gera C.
+Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual verifica a sintaxe e faz análise semântica inicial de declarações, usos de variáveis e contexto de `break`; ainda não executa o programa nem gera C.
 
 ## Compilar e executar no WSL/Linux
 
@@ -77,11 +77,13 @@ As impressões de inspeção estão reunidas em `debug_compiler()`, chamada some
 quando `imprimir_debug` está ativo. A construção da tabela e a análise semântica
 são executadas em ambos os modos.
 
-Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. Erros semânticos identificam a variável repetida ou não declarada. A mensagem de sucesso, a AST e a tabela só aparecem quando não há erro léxico, sintático ou semântico. O processo retorna `0` no sucesso e `1` em caso de erro.
+Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. Erros semânticos identificam a variável repetida ou não declarada, ou um `break` fora de laço ou `switch`. A mensagem de sucesso, a AST e a tabela só aparecem quando não há erro léxico, sintático ou semântico. O processo retorna `0` no sucesso e `1` em caso de erro.
 
 A tabela rejeita uma variável já declarada no mesmo escopo e verifica os usos em atribuições, incrementos, condições, expressões e impressões. A busca considera o bloco atual e seus ancestrais, respeitando a ordem das declarações. Blocos irmãos não compartilham variáveis. A declaração no cabeçalho de um `for` só é visível dentro do laço; os rótulos de um `switch` compartilham escopo, a menos que se usem blocos explícitos.
 
-Essa análise inicial permite nomes repetidos em escopos diferentes e não verifica compatibilidade de tipos, inicialização antes da leitura, constantes dos rótulos nem todas as restrições semânticas do Java. A tradução para C está planejada para etapas futuras.
+O comando `break` só é permitido dentro de `while`, `for` ou `switch`, inclusive em condicionais e blocos aninhados nessas estruturas. Por exemplo, `while (true) { if (true) { break; } }` é aceito, enquanto `if (true) { break; }` gera `Erro semântico: 'break' fora de laço ou switch.`. A validação também rejeita um `break` depois do fechamento do laço ou `switch`.
+
+Essa análise inicial permite nomes repetidos em escopos diferentes e não verifica compatibilidade de tipos, inicialização antes da leitura, constantes ou unicidade dos rótulos de `switch`, nem todas as restrições semânticas do Java. A tradução para C está planejada para etapas futuras.
 
 ## Testes e arquivos
 
@@ -91,8 +93,9 @@ Na raiz, com Python 3 e GCC disponíveis, execute:
 python testes/test_analisador.py
 ```
 
-A suíte contém testes com subcasos para os 14 arquivos de entrada, tokens,
-diagnósticos, precedência na AST e tabela de símbolos. Com Flex e Bison instalados,
+A suíte contém 45 testes, com subcasos para os 14 arquivos de entrada, tokens,
+diagnósticos, precedência na AST, tabela de símbolos, visibilidade de variáveis e
+contexto de `break`, com e sem `--debug`. Com Flex e Bison instalados,
 use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
 uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada
 push e pull request.

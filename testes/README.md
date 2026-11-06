@@ -15,7 +15,7 @@ pasta temporária, removida ao terminar. O observador chama `yylex()` diretament
 e verifica nomes dos tokens, lexemas, linhas e o lexema inteiro armazenado em
 `yylval.stringValue`, incluindo zeros à esquerda.
 
-Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
+Os 45 testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 
 - Palavras reservadas, identificadores, operadores, delimitadores e literais.
 - Comentários, espaços, CRLF e linhas dos diagnósticos.
@@ -29,6 +29,9 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
   em blocos distintos e preservação do valor inicial após uma atribuição.
 - Rejeição de declarações repetidas no mesmo escopo e de usos sem declaração,
   incluindo a ordem das declarações, blocos irmãos, cabeçalho do `for` e `switch`.
+- Rejeição de `break` fora de laços e `switch`, inclusive depois do fechamento
+  dessas estruturas; aceitação dentro de `while`, `for` e `switch`, com blocos,
+  condicionais e estruturas aninhadas, com e sem `--debug`.
 - Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
 - Execução sem dumps por padrão, opção `--debug` e preservação dos diagnósticos
   quando a impressão de AST e tabela está desativada.
@@ -46,7 +49,7 @@ Essa opção regenera os arquivos em uma pasta temporária, sem alterar `src/`.
 O fluxo `.github/workflows/testes.yml` usa essa opção em cada push e pull request.
 Qualquer teste que falhe faz o comando e a verificação no GitHub falharem.
 A suíte verifica a AST, a tabela de declarações e as regras semânticas iniciais
-de declaração e visibilidade, mas não implica validação de tipos ou tradução para C.
+de declaração, visibilidade e contexto de `break`, mas não implica validação de tipos ou tradução para C.
 
 ## Arquivos de entrada
 
@@ -54,7 +57,7 @@ Todos os arquivos de entrada usam `.java` e são classificados pelo resultado es
 
 | Pasta | Resultado esperado |
 | --- | --- |
-| `validos/` | Sem erros léxicos ou sintáticos; mensagem de sucesso; código 0 |
+| `validos/` | Sem erros léxicos, sintáticos ou semânticos; mensagem de sucesso; código 0 |
 | `invalidos/` | Erro léxico e/ou sintático; sem mensagem de sucesso; código 1 |
 
 ## Casos válidos
@@ -80,6 +83,12 @@ Todos os arquivos de entrada usam `.java` e são classificados pelo resultado es
 | `char_multilinha.java` | Léxico, seguido de sintático: quebra de linha dentro do caractere |
 
 Uma falha léxica pode gerar também uma mensagem sintática, pois o parser continua recebendo os tokens restantes. Para demonstrar cada categoria isoladamente, use os exemplos abaixo.
+
+Os casos semânticos são entradas definidas na suíte Python, além dos 14 arquivos.
+Por exemplo, `int x; int x;` rejeita redeclaração, `x = 1;` rejeita uso sem
+declaração e `if (true) { break; }` rejeita `break` fora de laço ou `switch`.
+Todos retornam código 1, escrevem o diagnóstico em stderr e deixam stdout vazio,
+com ou sem `--debug`.
 
 ## Roteiro de apresentação no WSL
 

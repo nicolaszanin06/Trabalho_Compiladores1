@@ -4,6 +4,14 @@ Este projeto foi desenvolvido no contexto da disciplina de Compiladores, com o o
 
 ---
 
+## **Estado atual**
+
+O analisador usa Flex, Bison e GCC para validar um subconjunto procedural de Java. A versão atual constrói a AST e a tabela de símbolos, verifica declarações e visibilidade de variáveis e rejeita `break` fora de `while`, `for` ou `switch`. A execução ainda não gera código C nem executa o programa de entrada.
+
+A entrada é uma sequência de comandos, sem classe ou método `main`. A AST e a tabela só são impressas com `--debug`. A suíte Python contém 45 testes, incluindo subcasos de sintaxe, tokens, escopos e contexto de `break`.
+
+Consulte [Como rodar](como-rodar.md), [Escopo do projeto](escopo.md), [Analisador sintático](analisador-sintatico.md) e [Testes e validação](testes.md).
+
 ## **Integrantes**
 
 <table> 

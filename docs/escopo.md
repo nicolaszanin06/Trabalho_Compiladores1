@@ -8,7 +8,9 @@ O compilador e analisador léxico estão sendo desenvolvidos para a linguagem **
 
 ### Linguagem Alvo e Tradução
 
-O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica e sintática, sem tradução para C ou análise semântica. O código-fonte escrito no subconjunto de **Java** será analisado e, na fase final do projeto, traduzido para a linguagem **C**.
+O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica, sintática e semântica inicial, constrói a AST e a tabela de símbolos, mas ainda não traduz para C nem executa a entrada. A análise semântica verifica redeclarações no mesmo escopo, declaração antes do uso, visibilidade de variáveis e contexto de `break`.
+
+A entrada atual é uma sequência de comandos, sem classe ou método `main`. São aceitos os tipos `int`, `float`, `char`, `boolean` e `String`, atribuições simples e compostas, incremento e decremento, `if`/`else`, `while`, `for`, `switch`, impressão e expressões. O corpo de `if`, `while` e `for` exige chaves. `break` só é válido dentro de `while`, `for` ou `switch`, inclusive em blocos aninhados.
 
 Como as linguagens compartilham uma sintaxe semelhante no seu núcleo procedural, o mapeamento será feito de forma direta. A tabela abaixo ilustra a nossa estratégia conceitual de tradução para as futuras etapas de geração de código intermediário e final:
 
@@ -34,7 +36,7 @@ Como as linguagens compartilham uma sintaxe semelhante no seu núcleo procedural
 
 ## **Glossário de Tokens**
 
-O analisador léxico já reconhece os elementos principais do Java procedural. Abaixo estão detalhados os *tokens* suportados:
+O analisador léxico já reconhece os elementos principais do Java procedural. A lista abaixo descreve os *tokens* reconhecidos; isso não significa que todos sejam aceitos pelo parser. Por exemplo, classes, métodos, `do`, `continue`, `return`, `final`, `null` e tipos adicionais ainda não fazem parte da gramática.
 
 ### 1. Palavras-Chave e Modificadores
 
@@ -74,10 +76,12 @@ O analisador léxico já reconhece os elementos principais do Java procedural. A
 * **Relacionais e Lógicos:** `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`.
 
 
-* **Atribuição:** `=`.
+* **Atribuição:** `=`, `+=`, `-=`, `*=`, `/=`.
+
+* **Incremento e decremento:** `++`, `--`.
 
 
-* **Delimitadores:** `;`, `,`, `.`, `(`, `)`, `{`, `}`, `[`, `]`.
+* **Delimitadores:** `;`, `,`, `:`, `(`, `)`, `{`, `}`, `[`, `]`. O ponto aparece nas chamadas reconhecidas como tokens completos (`System.out.print`, `System.out.println`, `Math.sqrt` e `Math.pow`); um ponto isolado é inválido.
 
 
 
@@ -96,6 +100,10 @@ O analisador foi desenhado para ignorar de forma correta:
 ## **Limitações**
 
 Para manter o escopo alinhado com os objetivos da disciplina, este compilador **não suporta** os seguintes recursos do Java padrão:
+
+* **Validações ainda pendentes:** Compatibilidade de tipos, inicialização antes da leitura e constantes/unicidade dos rótulos de `switch`. Nomes iguais em escopos diferentes são aceitos.
+
+* **Limites do `for`:** Inicialização por declaração ou atribuição e atualização por atribuição, incremento ou decremento, com cláusulas opcionais. Listas separadas por vírgulas não estão implementadas.
 
 * **Orientação a Objetos avançada:** Diretiva `new`, herança, polimorfismo e classes aninhadas.
 

@@ -27,7 +27,7 @@ function Normalizar-Saida([string]$texto) {
 }
 
 try {
-    & gcc -o $executavel (Join-Path $diretorioProjeto 'src/jtoc.tab.c') (Join-Path $diretorioProjeto 'src/lex.yy.c')
+    & gcc -o $executavel (Join-Path $diretorioProjeto 'src/jtoc.tab.c') (Join-Path $diretorioProjeto 'src/lex.yy.c') (Join-Path $diretorioProjeto 'src/ast.c') (Join-Path $diretorioProjeto 'src/tabela_simbolos.c')
     if ($LASTEXITCODE -ne 0) {
         throw 'Falha ao compilar o scanner. Verifique se o gcc esta instalado.'
     }
@@ -37,7 +37,7 @@ try {
         $arquivo = Join-Path $diretorioTestes $caso.Arquivo
         $processoInfo = New-Object System.Diagnostics.ProcessStartInfo
         $processoInfo.FileName = $executavel
-        $processoInfo.Arguments = '"' + $arquivo + '"'
+        $processoInfo.Arguments = '--debug "' + $arquivo + '"'
         $processoInfo.UseShellExecute = $false
         $processoInfo.RedirectStandardOutput = $true
         $processoInfo.RedirectStandardError = $true

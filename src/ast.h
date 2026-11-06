@@ -1,21 +1,26 @@
 #ifndef AST_H
 #define AST_H
 
-typedef enum { TIPO_INT, TIPO_FLOAT, TIPO_ERRO } Tipo;
-
-typedef struct noAST {
-    char operador;
-    int valor;
-    char nome[32];
-    Tipo tipo;
-    struct noAST *esquerda;
-    struct noAST *direita;
+/* Cada no guarda seu texto, o primeiro filho e o proximo irmao. */
+typedef struct NoAST {
+    char *texto;
+    int identificador;
+    struct NoAST *filho;
+    struct NoAST *irmao;
 } NoAST;
 
-NoAST *criarNoOp(char op, NoAST *esq, NoAST *dir);
-NoAST *criarNoNum(int val);
-NoAST *criarNoId(char *nome, Tipo tipo);
-void imprimirAST(NoAST *no);
-int tiposCompativeis(Tipo t1, Tipo t2);
+/* criar_no copia o texto; criar_folha tambem libera o texto recebido.
+ * Os filhos adicionados passam a pertencer a arvore.
+ * liberar_ast libera o no, seus filhos e seus irmaos. */
+NoAST *criar_no(const char *texto);
+NoAST *criar_folha(char *texto);
+/* Marca usos e nomes de variaveis, sem confundi-los com literais. */
+NoAST *criar_identificador(char *texto);
+NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c);
+void adicionar_filho(NoAST *pai, NoAST *filho);
+void imprimir_ast(NoAST *no, int nivel);
+void liberar_ast(NoAST *no);
+/* O chamador deve liberar o texto retornado com free. */
+char *texto_expressao(NoAST *no);
 
 #endif

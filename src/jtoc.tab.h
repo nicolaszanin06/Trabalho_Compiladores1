@@ -47,7 +47,7 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 16 "jtoc.y"
 
-typedef struct NoAST NoAST;
+#include "ast.h"
 
 #line 53 "jtoc.tab.h"
 
@@ -130,7 +130,7 @@ typedef struct NoAST NoAST;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 53 "jtoc.y"
+#line 40 "jtoc.y"
 
     char* stringValue;
     NoAST *no;

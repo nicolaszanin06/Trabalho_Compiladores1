@@ -93,7 +93,8 @@ O script compila os arquivos C gerados e verifica mensagens e códigos de saída
 | Arquivo | Finalidade |
 | --- | --- |
 | `src/jtoc.l` | Regras léxicas do Flex |
-| `src/jtoc.y` | Gramática do Bison, AST, tabela de símbolos e entrada do programa |
+| `src/jtoc.y` | Gramática do Bison, tabela de símbolos e entrada do programa |
+| `src/ast.h` e `src/ast.c` | Estrutura da AST, criação, impressão, liberação e representação textual de expressões |
 | `src/Makefile` | Compilação e limpeza |
 | `testes/` | Entradas e verificador |
 | `docs/` | Documentação do projeto |

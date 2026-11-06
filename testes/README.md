@@ -27,7 +27,8 @@ Os 22 testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
   em blocos distintos e preservação do valor inicial após uma atribuição.
 - Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
 
-Por padrão, a suíte compila os arquivos C versionados em `src/`. Ao alterar
+Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo o
+módulo da AST (`ast.c` e `ast.h`). Ao alterar
 `jtoc.l` ou `jtoc.y`, instale Flex e Bison e execute:
 
 ```powershell

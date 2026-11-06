@@ -5,6 +5,8 @@
 
 static Simbolo *tabela_simbolos = NULL;
 static int proximo_escopo = 0;
+/* Quantidade de lacos e switches envolventes durante a visita da AST. */
+static int contextos_break = 0;
 int erros_semanticos = 0;
 
 /* Escopos diferentes podem ter a mesma profundidade, mas nunca o mesmo id. */
@@ -88,11 +90,14 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
                strcmp(comando->texto, "While") == 0) {
         NoAST *condicao = comando->filho;
         NoAST *corpo = condicao->irmao;
+        int laco = strcmp(comando->texto, "While") == 0;
         verificar_expressao(condicao, escopo);
+        if (laco) contextos_break++;
         while (corpo != NULL) {
             montar_tabela(corpo, escopo);
             corpo = corpo->irmao;
         }
+        if (laco) contextos_break--;
     } else if (strcmp(comando->texto, "For") == 0) {
         Escopo escopo_for = {proximo_escopo++, escopo};
         NoAST *inicializacao = comando->filho;
@@ -102,12 +107,15 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         analisar_comando(inicializacao, &escopo_for);
         verificar_expressao(condicao, &escopo_for);
         analisar_comando(atualizacao, &escopo_for);
+        contextos_break++;
         montar_tabela(corpo, &escopo_for);
+        contextos_break--;
     } else if (strcmp(comando->texto, "Switch") == 0) {
         Escopo escopo_switch = {proximo_escopo++, escopo};
         NoAST *expressao = comando->filho;
         NoAST *caso = expressao->irmao->filho;
         verificar_expressao(expressao, escopo);
+        contextos_break++;
         while (caso != NULL) {
             NoAST *corpo = caso->filho;
             if (strcmp(caso->texto, "Case") == 0) {
@@ -117,6 +125,12 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
             /* Case nao abre escopo; apenas chaves explicitas abrem outro. */
             analisar_comandos(corpo, &escopo_switch);
             caso = caso->irmao;
+        }
+        contextos_break--;
+    } else if (strcmp(comando->texto, "Break") == 0) {
+        if (contextos_break == 0) {
+            fprintf(stderr, "Erro semântico: 'break' fora de laço ou switch.\n");
+            erros_semanticos++;
         }
     } else {
         /* Atribuicoes, incrementos e impressao: todos os usos sao filhos. */

@@ -347,6 +347,38 @@ class AnalisadorTest(unittest.TestCase):
             with self.subTest(entrada=entrada):
                 self.conferir_erro_semantico(entrada, "Variável não declarada", "x")
 
+    def test_rejeita_break_fora_de_laco_ou_switch(self):
+        entradas = ["break;", "{ break; }", "if (true) { break; }",
+                    "if (false) {} else { break; }",
+                    "while (false) {} break;", "for (;;) {} { break; }",
+                    "switch (1) { default: break; } if (true) { break; }",
+                    "while (false) { for (;;) { break; } } break;"]
+        for entrada in entradas:
+            for debug in (False, True):
+                with self.subTest(entrada=entrada, debug=debug):
+                    resultado = self.executar_parser(entrada, debug=debug)
+                    self.assertEqual(resultado.returncode, 1)
+                    self.assertEqual(resultado.stdout, "")
+                    self.assertEqual(resultado.stderr,
+                                     "Erro semântico: 'break' fora de laço ou switch.\n")
+
+    def test_aceita_break_em_lacos_switch_e_blocos_aninhados(self):
+        entradas = ["while (true) { break; }", "for (;;) { break; }",
+                    "switch (1) { case 1: break; default: break; }",
+                    "while (true) { if (true) { { break; } } else { break; } }",
+                    "for (;;) { if (true) { break; } }",
+                    "switch (1) { default: if (true) { { break; } } }",
+                    "while (true) { switch (1) { default: break; } break; }",
+                    "switch (1) { default: for (;;) { break; } break; }",
+                    "for (;;) { while (true) { break; } break; }"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                self.conferir_sucesso(self.executar_parser(entrada))
+                resultado = self.executar_parser(entrada, debug=False)
+                self.assertEqual(resultado.returncode, 0)
+                self.assertEqual(resultado.stdout, SUCESSO)
+                self.assertEqual(resultado.stderr, "")
+
     def test_semantica_distingue_identificadores_de_literais_e_rotulos_da_ast(self):
         self.conferir_sucesso(self.executar_parser(
             'int Bloco = 1; int If = Bloco; String s = "ausente"; char c = \'x\'; '

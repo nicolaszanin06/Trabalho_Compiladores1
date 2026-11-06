@@ -44,12 +44,16 @@ while (x < 3) {
 O parser aceita:
 
 - Declarações de `int`, `float`, `char`, `boolean` e `String`, com ou sem inicialização.
-- Atribuições, incremento e decremento como comandos.
+- Atribuições simples e compostas (`+=`, `-=`, `*=`, `/=`), incremento e decremento como comandos.
 - `if` com ou sem `else` e `while`, com blocos entre chaves.
+- `for` com inicialização, condição e atualização opcionais, e corpo entre chaves.
+- `switch` com `case`, `default`, queda entre casos e `break`.
 - `System.out.print` e `System.out.println`, com uma expressão.
 - Expressões com identificadores, literais inteiros, decimais, caracteres, strings e booleanos; operadores aritméticos, relacionais e lógicos; parênteses; `Math.sqrt` e `Math.pow`.
 
-O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `final`, `byte`, `short`, `long`, `double`, `for`, `do`, `switch`, `case`, `default`, `break`, `continue`, `return` e `null`. Reconhecer um token não significa que o parser já aceite construções que o utilizam. Classes, métodos e esses comandos/tipos adicionais ainda não fazem parte da gramática.
+O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `final`, `byte`, `short`, `long`, `double`, `do`, `continue`, `return` e `null`. Reconhecer um token não significa que o parser já aceite construções que o utilizam. Classes, métodos e esses comandos/tipos adicionais ainda não fazem parte da gramática.
+
+No cabeçalho do `for`, a inicialização aceita uma declaração ou atribuição; a atualização aceita uma atribuição, incremento ou decremento. Listas separadas por vírgulas não estão implementadas. O `switch` usa a forma tradicional com `:`; não há validação de tipos ou constantes dos rótulos nesta etapa.
 
 Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não podem conter quebras de linha reais; sequências de escape continuam sendo reconhecidas.
 
@@ -76,7 +80,7 @@ Na raiz, com Python 3 e GCC disponíveis, execute:
 python testes/test_analisador.py
 ```
 
-A suíte contém 22 testes, com subcasos para os 14 arquivos de entrada, tokens,
+A suíte contém testes com subcasos para os 14 arquivos de entrada, tokens,
 diagnósticos, precedência na AST e tabela de símbolos. Com Flex e Bison instalados,
 use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
 uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada

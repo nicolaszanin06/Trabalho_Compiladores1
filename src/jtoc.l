@@ -84,6 +84,10 @@ SINGLE_COMMENT  "//".*
     /* Operadores */
 "++"        { return INC; }
 "--"        { return DEC; }
+"+="        { return ADD_ASSIGN; }
+"-="        { return SUB_ASSIGN; }
+"*="        { return MUL_ASSIGN; }
+"/="        { return DIV_ASSIGN; }
 "+"         { return PLUS; }
 "-"         { return MINUS; }
 "*"         { return MULT; }
@@ -109,6 +113,7 @@ SINGLE_COMMENT  "//".*
 "]"         { return RBRACKET; }
 ";"         { return SEMI; }
 ","         { return COMMA; }
+":"         { return COLON; }
 
     /* Regras com Macros */
 {FLOAT_LITERAL}   { yylval.stringValue = strdup(yytext); return FLOAT_LITERAL; }

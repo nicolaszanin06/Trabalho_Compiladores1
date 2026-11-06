@@ -47,6 +47,8 @@ Simbolo *tabela_simbolos = NULL;
 %token <stringValue> CHAR_LITERAL FLOAT_LITERAL INT_LITERAL
 
 %type <no> programa comando expressao tipo incrementacao
+%type <no> bloco declaracao atribuicao atualizacao operador_atribuicao
+%type <no> inicializacao_for condicao_for atualizacao_for casos caso
 /* Libera tokens e subarvores descartados quando ocorre erro sintatico. */
 %destructor { free($$); } <stringValue>
 %destructor { liberar_ast($$); } <no>
@@ -61,7 +63,8 @@ Simbolo *tabela_simbolos = NULL;
 /* Tokens de Operadores e Delimitadores */
 %token PLUS MINUS MULT DIV MOD INC DEC 
 %token EQ NEQ LT LE GT GE AND OR NOT ASSIGN
-%token LBRACE RBRACE LPAREN RPAREN LBRACKET RBRACKET SEMI COMMA
+%token ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN
+%token LBRACE RBRACE LPAREN RPAREN LBRACKET RBRACKET SEMI COMMA COLON
 
     /* Entrada e Saída */
 %token PRINTLN PRINT
@@ -93,15 +96,77 @@ programa:
     ;
 
 comando:
-     tipo IDENTIFIER ASSIGN expressao SEMI { $$ = montar_no("Declaracao", $1, criar_folha($2), $4); }
-    | tipo IDENTIFIER SEMI { $$ = montar_no("Declaracao", $1, criar_folha($2), NULL); }
-    | IDENTIFIER ASSIGN expressao SEMI { $$ = montar_no("=", criar_folha($1), $3, NULL); }
-    | IF LPAREN expressao RPAREN LBRACE programa RBRACE ELSE LBRACE programa RBRACE { $$ = montar_no("If", $3, $6, $10); }
-    | IF LPAREN expressao RPAREN LBRACE programa RBRACE { $$ = montar_no("If", $3, $6, NULL); }
-    | WHILE LPAREN expressao RPAREN LBRACE programa RBRACE { $$ = montar_no("While", $3, $6, NULL); }
-    | IDENTIFIER incrementacao SEMI { adicionar_filho($2, criar_folha($1)); $$ = $2; }
+      declaracao SEMI { $$ = $1; }
+    | atualizacao SEMI { $$ = $1; }
+    | bloco { $$ = $1; }
+    | IF LPAREN expressao RPAREN bloco ELSE bloco { $$ = montar_no("If", $3, $5, $7); }
+    | IF LPAREN expressao RPAREN bloco { $$ = montar_no("If", $3, $5, NULL); }
+    | WHILE LPAREN expressao RPAREN bloco { $$ = montar_no("While", $3, $5, NULL); }
+    | FOR LPAREN inicializacao_for SEMI condicao_for SEMI atualizacao_for RPAREN bloco {
+          $$ = montar_no("For", $3, $5, $7);
+          adicionar_filho($$, $9);
+      }
+    | SWITCH LPAREN expressao RPAREN LBRACE casos RBRACE { $$ = montar_no("Switch", $3, $6, NULL); }
+    | BREAK SEMI { $$ = criar_no("Break"); }
     | PRINTLN LPAREN expressao RPAREN SEMI { $$ = montar_no("Println", $3, NULL, NULL); }
     | PRINT LPAREN expressao RPAREN SEMI { $$ = montar_no("Print", $3, NULL, NULL); }
+    ;
+
+bloco:
+      LBRACE programa RBRACE { $$ = $2; }
+    ;
+
+declaracao:
+      tipo IDENTIFIER ASSIGN expressao { $$ = montar_no("Declaracao", $1, criar_folha($2), $4); }
+    | tipo IDENTIFIER { $$ = montar_no("Declaracao", $1, criar_folha($2), NULL); }
+    ;
+
+atribuicao:
+      IDENTIFIER operador_atribuicao expressao {
+          adicionar_filho($2, criar_folha($1));
+          adicionar_filho($2, $3);
+          $$ = $2;
+      }
+    ;
+
+operador_atribuicao:
+      ASSIGN { $$ = criar_no("="); }
+    | ADD_ASSIGN { $$ = criar_no("+="); }
+    | SUB_ASSIGN { $$ = criar_no("-="); }
+    | MUL_ASSIGN { $$ = criar_no("*="); }
+    | DIV_ASSIGN { $$ = criar_no("/="); }
+    ;
+
+atualizacao:
+      atribuicao { $$ = $1; }
+    | IDENTIFIER incrementacao { adicionar_filho($2, criar_folha($1)); $$ = $2; }
+    ;
+
+/* Vazio mantem as quatro posicoes dos filhos de For, mesmo em for (;;). */
+inicializacao_for:
+      %empty { $$ = criar_no("Vazio"); }
+    | declaracao { $$ = $1; }
+    | atribuicao { $$ = $1; }
+    ;
+
+condicao_for:
+      %empty { $$ = criar_no("Vazio"); }
+    | expressao { $$ = $1; }
+    ;
+
+atualizacao_for:
+      %empty { $$ = criar_no("Vazio"); }
+    | atualizacao { $$ = $1; }
+    ;
+
+casos:
+      %empty { $$ = criar_no("Casos"); }
+    | casos caso { adicionar_filho($1, $2); $$ = $1; }
+    ;
+
+caso:
+      CASE expressao COLON programa { $$ = montar_no("Case", $2, $4, NULL); }
+    | DEFAULT COLON programa { $$ = montar_no("Default", $3, NULL, NULL); }
     ;
 
 expressao:
@@ -187,6 +252,8 @@ void montar_tabela(NoAST *bloco, int nivel) {
     while (comando != NULL) {
         if (strcmp(comando->texto, "Declaracao") == 0) {
             inserir_simbolo(comando, nivel);
+        } else if (strcmp(comando->texto, "Bloco") == 0) {
+            montar_tabela(comando, nivel + 1);
         } else if (strcmp(comando->texto, "If") == 0 ||
                    strcmp(comando->texto, "While") == 0) {
             /* O primeiro filho e a condicao; os demais sao os blocos. */
@@ -194,6 +261,21 @@ void montar_tabela(NoAST *bloco, int nivel) {
             while (corpo != NULL) {
                 montar_tabela(corpo, nivel + 1);
                 corpo = corpo->irmao;
+            }
+        } else if (strcmp(comando->texto, "For") == 0) {
+            NoAST *inicializacao = comando->filho;
+            NoAST *corpo = inicializacao->irmao->irmao->irmao;
+            if (strcmp(inicializacao->texto, "Declaracao") == 0) {
+                inserir_simbolo(inicializacao, nivel + 1);
+            }
+            montar_tabela(corpo, nivel + 2);
+        } else if (strcmp(comando->texto, "Switch") == 0) {
+            NoAST *caso = comando->filho->irmao->filho;
+            while (caso != NULL) {
+                NoAST *corpo = caso->filho;
+                if (strcmp(caso->texto, "Case") == 0) corpo = corpo->irmao;
+                montar_tabela(corpo, nivel + 1);
+                caso = caso->irmao;
             }
         }
         comando = comando->irmao;

@@ -110,18 +110,23 @@ extern int yydebug;
     OR = 305,                      /* OR  */
     NOT = 306,                     /* NOT  */
     ASSIGN = 307,                  /* ASSIGN  */
-    LBRACE = 308,                  /* LBRACE  */
-    RBRACE = 309,                  /* RBRACE  */
-    LPAREN = 310,                  /* LPAREN  */
-    RPAREN = 311,                  /* RPAREN  */
-    LBRACKET = 312,                /* LBRACKET  */
-    RBRACKET = 313,                /* RBRACKET  */
-    SEMI = 314,                    /* SEMI  */
-    COMMA = 315,                   /* COMMA  */
-    PRINTLN = 316,                 /* PRINTLN  */
-    PRINT = 317,                   /* PRINT  */
-    MATH_SQRT = 318,               /* MATH_SQRT  */
-    MATH_POW = 319                 /* MATH_POW  */
+    ADD_ASSIGN = 308,              /* ADD_ASSIGN  */
+    SUB_ASSIGN = 309,              /* SUB_ASSIGN  */
+    MUL_ASSIGN = 310,              /* MUL_ASSIGN  */
+    DIV_ASSIGN = 311,              /* DIV_ASSIGN  */
+    LBRACE = 312,                  /* LBRACE  */
+    RBRACE = 313,                  /* RBRACE  */
+    LPAREN = 314,                  /* LPAREN  */
+    RPAREN = 315,                  /* RPAREN  */
+    LBRACKET = 316,                /* LBRACKET  */
+    RBRACKET = 317,                /* RBRACKET  */
+    SEMI = 318,                    /* SEMI  */
+    COMMA = 319,                   /* COMMA  */
+    COLON = 320,                   /* COLON  */
+    PRINTLN = 321,                 /* PRINTLN  */
+    PRINT = 322,                   /* PRINT  */
+    MATH_SQRT = 323,               /* MATH_SQRT  */
+    MATH_POW = 324                 /* MATH_POW  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -135,7 +140,7 @@ union YYSTYPE
     char* stringValue;
     NoAST *no;
 
-#line 139 "jtoc.tab.h"
+#line 144 "jtoc.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

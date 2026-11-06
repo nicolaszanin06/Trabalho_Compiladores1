@@ -15,7 +15,7 @@ pasta temporária, removida ao terminar. O observador chama `yylex()` diretament
 e verifica nomes dos tokens, lexemas, linhas e o lexema inteiro armazenado em
 `yylval.stringValue`, incluindo zeros à esquerda.
 
-Os 22 testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
+Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 
 - Palavras reservadas, identificadores, operadores, delimitadores e literais.
 - Comentários, espaços, CRLF e linhas dos diagnósticos.
@@ -23,6 +23,8 @@ Os 22 testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Aceitação ou rejeição das entradas e os códigos de saída 0 ou 1.
 - Ausência da mensagem de sucesso e de AST quando há erros.
 - Precedência e parênteses na AST.
+- Atribuições compostas, cláusulas opcionais do `for`, `switch`, casos agrupados,
+  `default`, `break` e rejeição de construções malformadas.
 - Tipo, inicialização e escopo na tabela de símbolos, incluindo nomes repetidos
   em blocos distintos e preservação do valor inicial após uma atribuição.
 - Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.

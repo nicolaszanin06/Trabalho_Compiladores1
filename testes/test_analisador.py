@@ -198,6 +198,72 @@ class AnalisadorTest(unittest.TestCase):
         self.assertEqual(resultado.stdout, "")
         self.assertIn("Erro ao abrir o arquivo", resultado.stderr)
 
+    def test_tokens_de_atribuicao_composta_e_dois_pontos(self):
+        self.conferir_lexer("x+=1;y-=2;z*=3;w/=4;case 1:",
+            "IDENTIFIER|x|1\nADD_ASSIGN|+=|1\nINT_LITERAL|1|1|1\nSEMI|;|1\n"
+            "IDENTIFIER|y|1\nSUB_ASSIGN|-=|1\nINT_LITERAL|2|1|2\nSEMI|;|1\n"
+            "IDENTIFIER|z|1\nMUL_ASSIGN|*=|1\nINT_LITERAL|3|1|3\nSEMI|;|1\n"
+            "IDENTIFIER|w|1\nDIV_ASSIGN|/=|1\nINT_LITERAL|4|1|4\nSEMI|;|1\n"
+            "CASE|case|1\nINT_LITERAL|1|1|1\nCOLON|:|1\n")
+
+    def test_ast_das_atribuicoes_compostas(self):
+        for operador in ("+=", "-=", "*=", "/="):
+            with self.subTest(operador=operador):
+                resultado = self.executar(self.parser, f"int x = 1; x {operador} 2 + 3;")
+                self.conferir_sucesso(resultado)
+                self.assertIn(f"  {operador}\n    x\n    +\n      2\n      3\n", resultado.stdout)
+
+    def test_ast_do_for_e_declaracoes_na_tabela(self):
+        resultado = self.executar(self.parser,
+            "for (int i = 0; i < 10; i++) { int dobro = i * 2; }")
+        self.conferir_sucesso(resultado)
+        ast = resultado.stdout.split("AST:\n", 1)[1].split("\nTabela de simbolos", 1)[0]
+        self.assertEqual(ast, "Bloco\n  For\n    Declaracao\n      int\n      i\n      0\n"
+            "    <\n      i\n      10\n    ++\n      i\n    Bloco\n"
+            "      Declaracao\n        int\n        dobro\n        *\n          i\n          2\n")
+        tabela = resultado.stdout.split("Tabela de simbolos", 1)[1]
+        for nome in ("i", "dobro"):
+            self.assertRegex(tabela, rf"(?m)^{nome}\s+\| int\s+\| .*\| local$")
+
+    def test_for_com_clausulas_opcionais_e_atualizacoes(self):
+        for cabecalho in (";;", "int i = 0;;", ";true;", "int i = 3;i > 0;i--",
+                          "int i = 0;i < 3;i += 1", "i = 0;i < 3;i = i + 1"):
+            with self.subTest(cabecalho=cabecalho):
+                resultado = self.executar(self.parser, f"int i; for ({cabecalho}) {{}}")
+                self.conferir_sucesso(resultado)
+                self.assertIn("  For\n", resultado.stdout)
+        resultado = self.executar(self.parser, "for (;;) {}")
+        self.assertIn("  For\n    Vazio\n    Vazio\n    Vazio\n    Bloco\n", resultado.stdout)
+
+    def test_switch_com_cases_agrupados_default_e_break(self):
+        resultado = self.executar(self.parser,
+            "int x = 1; switch (x) { case 0: case 1: x += 2; break; "
+            "default: int outro = 3; System.out.println(outro); }")
+        self.conferir_sucesso(resultado)
+        self.assertIn("  Switch\n    x\n    Casos\n      Case\n        0\n        Bloco\n"
+                      "      Case\n        1\n        Bloco\n          +=\n", resultado.stdout)
+        self.assertIn("          Break\n      Default\n        Bloco\n", resultado.stdout)
+        self.assertRegex(resultado.stdout, r"(?m)^outro\s+\| int\s+\| 3\s+\| local$")
+
+    def test_switch_vazio_e_estruturas_aninhadas(self):
+        for entrada in ("switch (1) {}", "switch (1) { default: case 1: break; }",
+                        "for (int i = 0; i < 2; i++) { switch (i) { case 1: "
+                        "{ int n = i; } while (false) { break; } default: break; } }"):
+            with self.subTest(entrada=entrada):
+                self.conferir_sucesso(self.executar(self.parser, entrada))
+
+    def test_rejeita_novas_estruturas_malformadas(self):
+        entradas = ["int x; x +=;", "int x += 1;", "for (int i = 0 i < 2; i++) {}",
+                    "for (int i = 0; i < 2; i++;) {}", "for (;;) int x;",
+                    "switch (1) { case 1 break; }", "switch (1) { default break; }",
+                    "case 1: int x;", "switch (1) { int x; }", "break"]
+        for entrada in entradas:
+            with self.subTest(entrada=entrada):
+                resultado = self.executar(self.parser, entrada)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertIn("Erro sintatico", resultado.stderr)
+                self.assertNotIn(SUCESSO, resultado.stdout)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

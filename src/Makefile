@@ -16,6 +16,10 @@ FLEX_C    = lex.yy.c
 AST_C     = ast.c
 AST_H     = ast.h
 
+# Modulo da tabela de simbolos e analise semantica
+TABELA_C  = tabela_simbolos.c
+TABELA_H  = tabela_simbolos.h
+
 # Parâmetros opcionais ao Bison e Flex
 BISON_FLAGS = -d # -d gera o arquivo .h (token definitions)
 FLEX_FLAGS  =       # deixe vazio ou acrescente opções se necessário
@@ -28,9 +32,9 @@ LDFLAGS = -lfl     # biblioteca do Flex
 # Regra padrão (alvo "all" vai gerar o executável)
 all: $(EXEC)
 
-# Regra para gerar o executável: inclui o modulo da AST
-$(EXEC): $(BISON_C) $(FLEX_C) $(AST_C) $(AST_H)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_C) $(LDFLAGS)
+# Regra para gerar o executável: inclui a AST e a tabela de simbolos
+$(EXEC): $(BISON_C) $(FLEX_C) $(AST_C) $(AST_H) $(TABELA_C) $(TABELA_H)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_C) $(TABELA_C) $(LDFLAGS)
 
 # Regra para rodar o Bison: gera exemplo.tab.c e exemplo.tab.h
 $(BISON_C) $(BISON_H): $(BISON_FILE)

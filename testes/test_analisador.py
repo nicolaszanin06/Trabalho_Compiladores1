@@ -23,7 +23,7 @@ class AnalisadorTest(unittest.TestCase):
         cls.addClassCleanup(cls.temporario.cleanup)
         pasta = Path(cls.temporario.name)
         for nome in ("jtoc.l", "jtoc.y", "jtoc.tab.c", "jtoc.tab.h", "lex.yy.c",
-                     "ast.c", "ast.h"):
+                     "ast.c", "ast.h", "tabela_simbolos.c", "tabela_simbolos.h"):
             shutil.copy2(SRC / nome, pasta / nome)
 
         def compilar(*comando):
@@ -39,7 +39,8 @@ class AnalisadorTest(unittest.TestCase):
         cls.parser = pasta / ("parser" + sufixo)
         cls.lexer = pasta / ("lexer" + sufixo)
         cc = os.environ.get("CC", "gcc")
-        compilar(cc, "-o", str(cls.parser), "jtoc.tab.c", "lex.yy.c", "ast.c")
+        compilar(cc, "-o", str(cls.parser), "jtoc.tab.c", "lex.yy.c", "ast.c",
+                 "tabela_simbolos.c")
         compilar(cc, "-I", str(pasta), "-o", str(cls.lexer),
                  str(TESTES / "lexer_driver.c"), "lex.yy.c")
 

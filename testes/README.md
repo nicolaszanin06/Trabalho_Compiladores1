@@ -33,8 +33,9 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Execução sem dumps por padrão, opção `--debug` e preservação dos diagnósticos
   quando a impressão de AST e tabela está desativada.
 
-Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo o
-módulo da AST (`ast.c` e `ast.h`). Ao alterar
+Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo os
+módulos da AST (`ast.c` e `ast.h`) e da tabela de símbolos (`tabela_simbolos.c` e
+`tabela_simbolos.h`). Ao alterar
 `jtoc.l` ou `jtoc.y`, instale Flex e Bison e execute:
 
 ```powershell

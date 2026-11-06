@@ -20,7 +20,7 @@ As ações da gramática constroem a AST usando as funções declaradas em `src/
 
 O nó `For` tem quatro filhos: inicialização, condição, atualização e corpo. As cláusulas omitidas geram nós `Vazio`. O nó `Switch` guarda a expressão e uma lista `Casos`; cada `Case` guarda o rótulo e seu bloco de comandos, enquanto `Default` guarda apenas o bloco. `Break` é um comando sem filhos.
 
-A tabela de símbolos permanece em `jtoc.y` e percorre a AST na ordem dos comandos para registrar declarações e validar usos de variáveis. Cada escopo tem um identificador e uma referência ao pai durante a visita. A inserção rejeita nomes repetidos no mesmo escopo, e a busca sobe pelos ancestrais para resolver usos. O campo `identificador` do nó distingue variáveis de literais e dos textos dos operadores.
+A tabela de símbolos é declarada em `src/tabela_simbolos.h` e implementada em `src/tabela_simbolos.c`. O arquivo `jtoc.y` inclui esse cabeçalho e chama o módulo para montar, imprimir e liberar a tabela. O módulo percorre a AST na ordem dos comandos para registrar declarações e validar usos de variáveis. Cada escopo tem um identificador e uma referência ao pai durante a visita. A inserção rejeita nomes repetidos no mesmo escopo, e a busca sobe pelos ancestrais para resolver usos. O campo `identificador` do nó distingue variáveis de literais e dos textos dos operadores.
 
 Cada bloco abre um escopo. O `for` abre um escopo para o cabeçalho e outro para o corpo; os `case` compartilham o escopo do `switch`, salvo blocos explícitos. A análise informa `Variável já declarada` ou `Variável não declarada` em stderr e impede a mensagem de sucesso em caso de erro.
 

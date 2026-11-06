@@ -72,6 +72,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tabela_simbolos.h"
 
 extern int yylex();
 extern int yylineno;
@@ -81,7 +82,7 @@ extern int erros_lexicos;
 int yywrap(void);
 void yyerror(const char *s);
 
-#line 85 "jtoc.tab.c"
+#line 86 "jtoc.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -202,41 +203,13 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Unqualified %code blocks.  */
-#line 21 "jtoc.y"
+#line 22 "jtoc.y"
 
-/* Uma entrada para cada declaracao encontrada no programa. */
-typedef struct Simbolo {
-    char *simbolo;
-    char *tipo;
-    char *valor;
-    const char *escopo;
-    int id_escopo;
-    struct Simbolo *proximo;
-} Simbolo;
-
-/* Os pais ficam na pilha durante a visita da AST; a tabela guarda apenas o id. */
-typedef struct Escopo {
-    int id;
-    struct Escopo *pai;
-} Escopo;
-
-Simbolo *buscar_no_escopo(const char *nome, int id_escopo);
-Simbolo *buscar_simbolo(const char *nome, Escopo *escopo);
-void inserir_simbolo(NoAST *declaracao, Escopo *escopo);
-void verificar_expressao(NoAST *no, Escopo *escopo);
-void analisar_comando(NoAST *comando, Escopo *escopo);
-void analisar_comandos(NoAST *bloco, Escopo *escopo);
-void montar_tabela(NoAST *bloco, Escopo *pai);
-void imprimir_tabela(void);
-void liberar_tabela(void);
 void debug_compiler(void);
 
 NoAST *raiz = NULL;
-Simbolo *tabela_simbolos = NULL;
-int proximo_escopo = 0;
-int erros_semanticos = 0;
 
-#line 240 "jtoc.tab.c"
+#line 213 "jtoc.tab.c"
 
 #ifdef short
 # undef short
@@ -624,13 +597,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   105,   105,   109,   110,   114,   115,   116,   117,   118,
-     119,   120,   124,   125,   126,   127,   131,   135,   136,   140,
-     148,   149,   150,   151,   152,   156,   157,   162,   163,   164,
-     168,   169,   173,   174,   178,   179,   183,   184,   188,   189,
-     190,   191,   192,   194,   195,   196,   197,   198,   199,   200,
-     201,   202,   203,   205,   207,   208,   210,   211,   212,   213,
-     214,   215,   216,   220,   221,   222,   223,   224,   228,   229
+       0,    78,    78,    82,    83,    87,    88,    89,    90,    91,
+      92,    93,    97,    98,    99,   100,   104,   108,   109,   113,
+     121,   122,   123,   124,   125,   129,   130,   135,   136,   137,
+     141,   142,   146,   147,   151,   152,   156,   157,   161,   162,
+     163,   164,   165,   167,   168,   169,   170,   171,   172,   173,
+     174,   175,   176,   178,   180,   181,   183,   184,   185,   186,
+     187,   188,   189,   193,   194,   195,   196,   197,   201,   202
 };
 #endif
 
@@ -1068,123 +1041,123 @@ yydestruct (const char *yymsg,
   switch (yykind)
     {
     case YYSYMBOL_IDENTIFIER: /* IDENTIFIER  */
-#line 68 "jtoc.y"
+#line 41 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1074 "jtoc.tab.c"
+#line 1047 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_STRING_LITERAL: /* STRING_LITERAL  */
-#line 68 "jtoc.y"
+#line 41 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1080 "jtoc.tab.c"
+#line 1053 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_CHAR_LITERAL: /* CHAR_LITERAL  */
-#line 68 "jtoc.y"
+#line 41 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1086 "jtoc.tab.c"
+#line 1059 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_FLOAT_LITERAL: /* FLOAT_LITERAL  */
-#line 68 "jtoc.y"
+#line 41 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1092 "jtoc.tab.c"
+#line 1065 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_INT_LITERAL: /* INT_LITERAL  */
-#line 68 "jtoc.y"
+#line 41 "jtoc.y"
             { free(((*yyvaluep).stringValue)); }
-#line 1098 "jtoc.tab.c"
+#line 1071 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_programa: /* programa  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1104 "jtoc.tab.c"
+#line 1077 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_comando: /* comando  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1110 "jtoc.tab.c"
+#line 1083 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_bloco: /* bloco  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1116 "jtoc.tab.c"
+#line 1089 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_declaracao: /* declaracao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1122 "jtoc.tab.c"
+#line 1095 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_atribuicao: /* atribuicao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1128 "jtoc.tab.c"
+#line 1101 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_operador_atribuicao: /* operador_atribuicao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1134 "jtoc.tab.c"
+#line 1107 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_atualizacao: /* atualizacao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1140 "jtoc.tab.c"
+#line 1113 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_inicializacao_for: /* inicializacao_for  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1146 "jtoc.tab.c"
+#line 1119 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_condicao_for: /* condicao_for  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1152 "jtoc.tab.c"
+#line 1125 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_atualizacao_for: /* atualizacao_for  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1158 "jtoc.tab.c"
+#line 1131 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_casos: /* casos  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1164 "jtoc.tab.c"
+#line 1137 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_caso: /* caso  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1170 "jtoc.tab.c"
+#line 1143 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_expressao: /* expressao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1176 "jtoc.tab.c"
+#line 1149 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_tipo: /* tipo  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1182 "jtoc.tab.c"
+#line 1155 "jtoc.tab.c"
         break;
 
     case YYSYMBOL_incrementacao: /* incrementacao  */
-#line 69 "jtoc.y"
+#line 42 "jtoc.y"
             { liberar_ast(((*yyvaluep).no)); }
-#line 1188 "jtoc.tab.c"
+#line 1161 "jtoc.tab.c"
         break;
 
       default:
@@ -1452,422 +1425,422 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* inicio: programa  */
-#line 105 "jtoc.y"
+#line 78 "jtoc.y"
                { raiz = (yyvsp[0].no); }
-#line 1458 "jtoc.tab.c"
+#line 1431 "jtoc.tab.c"
     break;
 
   case 3: /* programa: %empty  */
-#line 109 "jtoc.y"
+#line 82 "jtoc.y"
              { (yyval.no) = criar_no("Bloco"); }
-#line 1464 "jtoc.tab.c"
+#line 1437 "jtoc.tab.c"
     break;
 
   case 4: /* programa: programa comando  */
-#line 110 "jtoc.y"
+#line 83 "jtoc.y"
                        { adicionar_filho((yyvsp[-1].no), (yyvsp[0].no)); (yyval.no) = (yyvsp[-1].no); }
-#line 1470 "jtoc.tab.c"
+#line 1443 "jtoc.tab.c"
     break;
 
   case 5: /* comando: declaracao SEMI  */
-#line 114 "jtoc.y"
+#line 87 "jtoc.y"
                       { (yyval.no) = (yyvsp[-1].no); }
-#line 1476 "jtoc.tab.c"
+#line 1449 "jtoc.tab.c"
     break;
 
   case 6: /* comando: atualizacao SEMI  */
-#line 115 "jtoc.y"
+#line 88 "jtoc.y"
                        { (yyval.no) = (yyvsp[-1].no); }
-#line 1482 "jtoc.tab.c"
+#line 1455 "jtoc.tab.c"
     break;
 
   case 7: /* comando: bloco  */
-#line 116 "jtoc.y"
+#line 89 "jtoc.y"
             { (yyval.no) = (yyvsp[0].no); }
-#line 1488 "jtoc.tab.c"
+#line 1461 "jtoc.tab.c"
     break;
 
   case 8: /* comando: IF LPAREN expressao RPAREN bloco ELSE bloco  */
-#line 117 "jtoc.y"
+#line 90 "jtoc.y"
                                                   { (yyval.no) = montar_no("If", (yyvsp[-4].no), (yyvsp[-2].no), (yyvsp[0].no)); }
-#line 1494 "jtoc.tab.c"
+#line 1467 "jtoc.tab.c"
     break;
 
   case 9: /* comando: IF LPAREN expressao RPAREN bloco  */
-#line 118 "jtoc.y"
+#line 91 "jtoc.y"
                                        { (yyval.no) = montar_no("If", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1500 "jtoc.tab.c"
+#line 1473 "jtoc.tab.c"
     break;
 
   case 10: /* comando: WHILE LPAREN expressao RPAREN bloco  */
-#line 119 "jtoc.y"
+#line 92 "jtoc.y"
                                           { (yyval.no) = montar_no("While", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1506 "jtoc.tab.c"
+#line 1479 "jtoc.tab.c"
     break;
 
   case 11: /* comando: FOR LPAREN inicializacao_for SEMI condicao_for SEMI atualizacao_for RPAREN bloco  */
-#line 120 "jtoc.y"
+#line 93 "jtoc.y"
                                                                                        {
           (yyval.no) = montar_no("For", (yyvsp[-6].no), (yyvsp[-4].no), (yyvsp[-2].no));
           adicionar_filho((yyval.no), (yyvsp[0].no));
       }
-#line 1515 "jtoc.tab.c"
+#line 1488 "jtoc.tab.c"
     break;
 
   case 12: /* comando: SWITCH LPAREN expressao RPAREN LBRACE casos RBRACE  */
-#line 124 "jtoc.y"
+#line 97 "jtoc.y"
                                                          { (yyval.no) = montar_no("Switch", (yyvsp[-4].no), (yyvsp[-1].no), NULL); }
-#line 1521 "jtoc.tab.c"
+#line 1494 "jtoc.tab.c"
     break;
 
   case 13: /* comando: BREAK SEMI  */
-#line 125 "jtoc.y"
+#line 98 "jtoc.y"
                  { (yyval.no) = criar_no("Break"); }
-#line 1527 "jtoc.tab.c"
+#line 1500 "jtoc.tab.c"
     break;
 
   case 14: /* comando: PRINTLN LPAREN expressao RPAREN SEMI  */
-#line 126 "jtoc.y"
+#line 99 "jtoc.y"
                                            { (yyval.no) = montar_no("Println", (yyvsp[-2].no), NULL, NULL); }
-#line 1533 "jtoc.tab.c"
+#line 1506 "jtoc.tab.c"
     break;
 
   case 15: /* comando: PRINT LPAREN expressao RPAREN SEMI  */
-#line 127 "jtoc.y"
+#line 100 "jtoc.y"
                                          { (yyval.no) = montar_no("Print", (yyvsp[-2].no), NULL, NULL); }
-#line 1539 "jtoc.tab.c"
+#line 1512 "jtoc.tab.c"
     break;
 
   case 16: /* bloco: LBRACE programa RBRACE  */
-#line 131 "jtoc.y"
+#line 104 "jtoc.y"
                              { (yyval.no) = (yyvsp[-1].no); }
-#line 1545 "jtoc.tab.c"
+#line 1518 "jtoc.tab.c"
     break;
 
   case 17: /* declaracao: tipo IDENTIFIER ASSIGN expressao  */
-#line 135 "jtoc.y"
+#line 108 "jtoc.y"
                                        { (yyval.no) = montar_no("Declaracao", (yyvsp[-3].no), criar_identificador((yyvsp[-2].stringValue)), (yyvsp[0].no)); }
-#line 1551 "jtoc.tab.c"
+#line 1524 "jtoc.tab.c"
     break;
 
   case 18: /* declaracao: tipo IDENTIFIER  */
-#line 136 "jtoc.y"
+#line 109 "jtoc.y"
                       { (yyval.no) = montar_no("Declaracao", (yyvsp[-1].no), criar_identificador((yyvsp[0].stringValue)), NULL); }
-#line 1557 "jtoc.tab.c"
+#line 1530 "jtoc.tab.c"
     break;
 
   case 19: /* atribuicao: IDENTIFIER operador_atribuicao expressao  */
-#line 140 "jtoc.y"
+#line 113 "jtoc.y"
                                                {
           adicionar_filho((yyvsp[-1].no), criar_identificador((yyvsp[-2].stringValue)));
           adicionar_filho((yyvsp[-1].no), (yyvsp[0].no));
           (yyval.no) = (yyvsp[-1].no);
       }
-#line 1567 "jtoc.tab.c"
+#line 1540 "jtoc.tab.c"
     break;
 
   case 20: /* operador_atribuicao: ASSIGN  */
-#line 148 "jtoc.y"
+#line 121 "jtoc.y"
              { (yyval.no) = criar_no("="); }
-#line 1573 "jtoc.tab.c"
+#line 1546 "jtoc.tab.c"
     break;
 
   case 21: /* operador_atribuicao: ADD_ASSIGN  */
-#line 149 "jtoc.y"
+#line 122 "jtoc.y"
                  { (yyval.no) = criar_no("+="); }
-#line 1579 "jtoc.tab.c"
+#line 1552 "jtoc.tab.c"
     break;
 
   case 22: /* operador_atribuicao: SUB_ASSIGN  */
-#line 150 "jtoc.y"
+#line 123 "jtoc.y"
                  { (yyval.no) = criar_no("-="); }
-#line 1585 "jtoc.tab.c"
+#line 1558 "jtoc.tab.c"
     break;
 
   case 23: /* operador_atribuicao: MUL_ASSIGN  */
-#line 151 "jtoc.y"
+#line 124 "jtoc.y"
                  { (yyval.no) = criar_no("*="); }
-#line 1591 "jtoc.tab.c"
+#line 1564 "jtoc.tab.c"
     break;
 
   case 24: /* operador_atribuicao: DIV_ASSIGN  */
-#line 152 "jtoc.y"
+#line 125 "jtoc.y"
                  { (yyval.no) = criar_no("/="); }
-#line 1597 "jtoc.tab.c"
+#line 1570 "jtoc.tab.c"
     break;
 
   case 25: /* atualizacao: atribuicao  */
-#line 156 "jtoc.y"
+#line 129 "jtoc.y"
                  { (yyval.no) = (yyvsp[0].no); }
-#line 1603 "jtoc.tab.c"
+#line 1576 "jtoc.tab.c"
     break;
 
   case 26: /* atualizacao: IDENTIFIER incrementacao  */
-#line 157 "jtoc.y"
+#line 130 "jtoc.y"
                                { adicionar_filho((yyvsp[0].no), criar_identificador((yyvsp[-1].stringValue))); (yyval.no) = (yyvsp[0].no); }
-#line 1609 "jtoc.tab.c"
+#line 1582 "jtoc.tab.c"
     break;
 
   case 27: /* inicializacao_for: %empty  */
-#line 162 "jtoc.y"
+#line 135 "jtoc.y"
              { (yyval.no) = criar_no("Vazio"); }
-#line 1615 "jtoc.tab.c"
+#line 1588 "jtoc.tab.c"
     break;
 
   case 28: /* inicializacao_for: declaracao  */
-#line 163 "jtoc.y"
+#line 136 "jtoc.y"
                  { (yyval.no) = (yyvsp[0].no); }
-#line 1621 "jtoc.tab.c"
+#line 1594 "jtoc.tab.c"
     break;
 
   case 29: /* inicializacao_for: atribuicao  */
-#line 164 "jtoc.y"
+#line 137 "jtoc.y"
                  { (yyval.no) = (yyvsp[0].no); }
-#line 1627 "jtoc.tab.c"
+#line 1600 "jtoc.tab.c"
     break;
 
   case 30: /* condicao_for: %empty  */
-#line 168 "jtoc.y"
+#line 141 "jtoc.y"
              { (yyval.no) = criar_no("Vazio"); }
-#line 1633 "jtoc.tab.c"
+#line 1606 "jtoc.tab.c"
     break;
 
   case 31: /* condicao_for: expressao  */
-#line 169 "jtoc.y"
+#line 142 "jtoc.y"
                 { (yyval.no) = (yyvsp[0].no); }
-#line 1639 "jtoc.tab.c"
+#line 1612 "jtoc.tab.c"
     break;
 
   case 32: /* atualizacao_for: %empty  */
-#line 173 "jtoc.y"
+#line 146 "jtoc.y"
              { (yyval.no) = criar_no("Vazio"); }
-#line 1645 "jtoc.tab.c"
+#line 1618 "jtoc.tab.c"
     break;
 
   case 33: /* atualizacao_for: atualizacao  */
-#line 174 "jtoc.y"
+#line 147 "jtoc.y"
                   { (yyval.no) = (yyvsp[0].no); }
-#line 1651 "jtoc.tab.c"
+#line 1624 "jtoc.tab.c"
     break;
 
   case 34: /* casos: %empty  */
-#line 178 "jtoc.y"
+#line 151 "jtoc.y"
              { (yyval.no) = criar_no("Casos"); }
-#line 1657 "jtoc.tab.c"
+#line 1630 "jtoc.tab.c"
     break;
 
   case 35: /* casos: casos caso  */
-#line 179 "jtoc.y"
+#line 152 "jtoc.y"
                  { adicionar_filho((yyvsp[-1].no), (yyvsp[0].no)); (yyval.no) = (yyvsp[-1].no); }
-#line 1663 "jtoc.tab.c"
+#line 1636 "jtoc.tab.c"
     break;
 
   case 36: /* caso: CASE expressao COLON programa  */
-#line 183 "jtoc.y"
+#line 156 "jtoc.y"
                                     { (yyval.no) = montar_no("Case", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1669 "jtoc.tab.c"
+#line 1642 "jtoc.tab.c"
     break;
 
   case 37: /* caso: DEFAULT COLON programa  */
-#line 184 "jtoc.y"
+#line 157 "jtoc.y"
                              { (yyval.no) = montar_no("Default", (yyvsp[0].no), NULL, NULL); }
-#line 1675 "jtoc.tab.c"
+#line 1648 "jtoc.tab.c"
     break;
 
   case 38: /* expressao: expressao PLUS expressao  */
-#line 188 "jtoc.y"
+#line 161 "jtoc.y"
                                { (yyval.no) = montar_no("+", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1681 "jtoc.tab.c"
+#line 1654 "jtoc.tab.c"
     break;
 
   case 39: /* expressao: expressao MINUS expressao  */
-#line 189 "jtoc.y"
+#line 162 "jtoc.y"
                                 { (yyval.no) = montar_no("-", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1687 "jtoc.tab.c"
+#line 1660 "jtoc.tab.c"
     break;
 
   case 40: /* expressao: expressao MULT expressao  */
-#line 190 "jtoc.y"
+#line 163 "jtoc.y"
                                { (yyval.no) = montar_no("*", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1693 "jtoc.tab.c"
+#line 1666 "jtoc.tab.c"
     break;
 
   case 41: /* expressao: expressao DIV expressao  */
-#line 191 "jtoc.y"
+#line 164 "jtoc.y"
                               { (yyval.no) = montar_no("/", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1699 "jtoc.tab.c"
+#line 1672 "jtoc.tab.c"
     break;
 
   case 42: /* expressao: expressao MOD expressao  */
-#line 192 "jtoc.y"
+#line 165 "jtoc.y"
                               { (yyval.no) = montar_no("%", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1705 "jtoc.tab.c"
+#line 1678 "jtoc.tab.c"
     break;
 
   case 43: /* expressao: expressao AND expressao  */
-#line 194 "jtoc.y"
+#line 167 "jtoc.y"
                               { (yyval.no) = montar_no("&&", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1711 "jtoc.tab.c"
+#line 1684 "jtoc.tab.c"
     break;
 
   case 44: /* expressao: expressao OR expressao  */
-#line 195 "jtoc.y"
+#line 168 "jtoc.y"
                              { (yyval.no) = montar_no("||", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1717 "jtoc.tab.c"
+#line 1690 "jtoc.tab.c"
     break;
 
   case 45: /* expressao: MINUS expressao  */
-#line 196 "jtoc.y"
+#line 169 "jtoc.y"
                                 { (yyval.no) = montar_no("-", (yyvsp[0].no), NULL, NULL); }
-#line 1723 "jtoc.tab.c"
+#line 1696 "jtoc.tab.c"
     break;
 
   case 46: /* expressao: NOT expressao  */
-#line 197 "jtoc.y"
+#line 170 "jtoc.y"
                     { (yyval.no) = montar_no("!", (yyvsp[0].no), NULL, NULL); }
-#line 1729 "jtoc.tab.c"
+#line 1702 "jtoc.tab.c"
     break;
 
   case 47: /* expressao: expressao EQ expressao  */
-#line 198 "jtoc.y"
+#line 171 "jtoc.y"
                              { (yyval.no) = montar_no("==", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1735 "jtoc.tab.c"
+#line 1708 "jtoc.tab.c"
     break;
 
   case 48: /* expressao: expressao NEQ expressao  */
-#line 199 "jtoc.y"
+#line 172 "jtoc.y"
                               { (yyval.no) = montar_no("!=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1741 "jtoc.tab.c"
+#line 1714 "jtoc.tab.c"
     break;
 
   case 49: /* expressao: expressao LT expressao  */
-#line 200 "jtoc.y"
+#line 173 "jtoc.y"
                              { (yyval.no) = montar_no("<", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1747 "jtoc.tab.c"
+#line 1720 "jtoc.tab.c"
     break;
 
   case 50: /* expressao: expressao LE expressao  */
-#line 201 "jtoc.y"
+#line 174 "jtoc.y"
                              { (yyval.no) = montar_no("<=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1753 "jtoc.tab.c"
+#line 1726 "jtoc.tab.c"
     break;
 
   case 51: /* expressao: expressao GT expressao  */
-#line 202 "jtoc.y"
+#line 175 "jtoc.y"
                              { (yyval.no) = montar_no(">", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1759 "jtoc.tab.c"
+#line 1732 "jtoc.tab.c"
     break;
 
   case 52: /* expressao: expressao GE expressao  */
-#line 203 "jtoc.y"
+#line 176 "jtoc.y"
                              { (yyval.no) = montar_no(">=", (yyvsp[-2].no), (yyvsp[0].no), NULL); }
-#line 1765 "jtoc.tab.c"
+#line 1738 "jtoc.tab.c"
     break;
 
   case 53: /* expressao: LPAREN expressao RPAREN  */
-#line 205 "jtoc.y"
+#line 178 "jtoc.y"
                               { (yyval.no) = (yyvsp[-1].no); }
-#line 1771 "jtoc.tab.c"
+#line 1744 "jtoc.tab.c"
     break;
 
   case 54: /* expressao: MATH_SQRT LPAREN expressao RPAREN  */
-#line 207 "jtoc.y"
+#line 180 "jtoc.y"
                                         { (yyval.no) = montar_no("Math.sqrt", (yyvsp[-1].no), NULL, NULL); }
-#line 1777 "jtoc.tab.c"
+#line 1750 "jtoc.tab.c"
     break;
 
   case 55: /* expressao: MATH_POW LPAREN expressao COMMA expressao RPAREN  */
-#line 208 "jtoc.y"
+#line 181 "jtoc.y"
                                                        { (yyval.no) = montar_no("Math.pow", (yyvsp[-3].no), (yyvsp[-1].no), NULL); }
-#line 1783 "jtoc.tab.c"
+#line 1756 "jtoc.tab.c"
     break;
 
   case 56: /* expressao: IDENTIFIER  */
-#line 210 "jtoc.y"
+#line 183 "jtoc.y"
                  { (yyval.no) = criar_identificador((yyvsp[0].stringValue)); }
-#line 1789 "jtoc.tab.c"
+#line 1762 "jtoc.tab.c"
     break;
 
   case 57: /* expressao: FLOAT_LITERAL  */
-#line 211 "jtoc.y"
+#line 184 "jtoc.y"
                     { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1795 "jtoc.tab.c"
+#line 1768 "jtoc.tab.c"
     break;
 
   case 58: /* expressao: INT_LITERAL  */
-#line 212 "jtoc.y"
+#line 185 "jtoc.y"
                   { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1801 "jtoc.tab.c"
+#line 1774 "jtoc.tab.c"
     break;
 
   case 59: /* expressao: CHAR_LITERAL  */
-#line 213 "jtoc.y"
+#line 186 "jtoc.y"
                    { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1807 "jtoc.tab.c"
+#line 1780 "jtoc.tab.c"
     break;
 
   case 60: /* expressao: STRING_LITERAL  */
-#line 214 "jtoc.y"
+#line 187 "jtoc.y"
                      { (yyval.no) = criar_folha((yyvsp[0].stringValue)); }
-#line 1813 "jtoc.tab.c"
+#line 1786 "jtoc.tab.c"
     break;
 
   case 61: /* expressao: TOKEN_TRUE  */
-#line 215 "jtoc.y"
+#line 188 "jtoc.y"
                  { (yyval.no) = criar_no("true"); }
-#line 1819 "jtoc.tab.c"
+#line 1792 "jtoc.tab.c"
     break;
 
   case 62: /* expressao: TOKEN_FALSE  */
-#line 216 "jtoc.y"
+#line 189 "jtoc.y"
                   { (yyval.no) = criar_no("false"); }
-#line 1825 "jtoc.tab.c"
+#line 1798 "jtoc.tab.c"
     break;
 
   case 63: /* tipo: INT  */
-#line 220 "jtoc.y"
+#line 193 "jtoc.y"
           { (yyval.no) = criar_no("int"); }
-#line 1831 "jtoc.tab.c"
+#line 1804 "jtoc.tab.c"
     break;
 
   case 64: /* tipo: FLOAT  */
-#line 221 "jtoc.y"
+#line 194 "jtoc.y"
             { (yyval.no) = criar_no("float"); }
-#line 1837 "jtoc.tab.c"
+#line 1810 "jtoc.tab.c"
     break;
 
   case 65: /* tipo: CHAR  */
-#line 222 "jtoc.y"
+#line 195 "jtoc.y"
            { (yyval.no) = criar_no("char"); }
-#line 1843 "jtoc.tab.c"
+#line 1816 "jtoc.tab.c"
     break;
 
   case 66: /* tipo: BOOLEAN  */
-#line 223 "jtoc.y"
+#line 196 "jtoc.y"
               { (yyval.no) = criar_no("boolean"); }
-#line 1849 "jtoc.tab.c"
+#line 1822 "jtoc.tab.c"
     break;
 
   case 67: /* tipo: STRING_TYPE  */
-#line 224 "jtoc.y"
+#line 197 "jtoc.y"
                   { (yyval.no) = criar_no("String"); }
-#line 1855 "jtoc.tab.c"
+#line 1828 "jtoc.tab.c"
     break;
 
   case 68: /* incrementacao: INC  */
-#line 228 "jtoc.y"
+#line 201 "jtoc.y"
           { (yyval.no) = criar_no("++"); }
-#line 1861 "jtoc.tab.c"
+#line 1834 "jtoc.tab.c"
     break;
 
   case 69: /* incrementacao: DEC  */
-#line 229 "jtoc.y"
+#line 202 "jtoc.y"
           { (yyval.no) = criar_no("--"); }
-#line 1867 "jtoc.tab.c"
+#line 1840 "jtoc.tab.c"
     break;
 
 
-#line 1871 "jtoc.tab.c"
+#line 1844 "jtoc.tab.c"
 
       default: break;
     }
@@ -2060,160 +2033,8 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 232 "jtoc.y"
+#line 205 "jtoc.y"
 
-
-/* Escopos diferentes podem ter a mesma profundidade, mas nunca o mesmo id. */
-Simbolo *buscar_no_escopo(const char *nome, int id_escopo) {
-    Simbolo *atual = tabela_simbolos;
-    while (atual != NULL) {
-        if (atual->id_escopo == id_escopo && strcmp(atual->simbolo, nome) == 0) {
-            return atual;
-        }
-        atual = atual->proximo;
-    }
-    return NULL;
-}
-
-Simbolo *buscar_simbolo(const char *nome, Escopo *escopo) {
-    while (escopo != NULL) {
-        Simbolo *simbolo = buscar_no_escopo(nome, escopo->id);
-        if (simbolo != NULL) return simbolo;
-        escopo = escopo->pai;
-    }
-    return NULL;
-}
-
-void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
-    NoAST *tipo = declaracao->filho;
-    NoAST *nome = tipo->irmao;
-    Simbolo *atual;
-    Simbolo *novo;
-    if (buscar_no_escopo(nome->texto, escopo->id) != NULL) {
-        fprintf(stderr, "Erro semântico: Variável já declarada '%s'.\n", nome->texto);
-        erros_semanticos++;
-        return;
-    }
-    novo = malloc(sizeof(Simbolo));
-    if (novo == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
-        exit(EXIT_FAILURE);
-    }
-    novo->simbolo = strdup(nome->texto);
-    novo->tipo = strdup(tipo->texto);
-    novo->valor = texto_expressao(nome->irmao);
-    novo->escopo = escopo->pai == NULL ? "global" : "local";
-    novo->id_escopo = escopo->id;
-    novo->proximo = NULL;
-    if (novo->simbolo == NULL || novo->tipo == NULL || novo->valor == NULL) {
-        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (tabela_simbolos == NULL) {
-        tabela_simbolos = novo;
-    } else {
-        atual = tabela_simbolos;
-        while (atual->proximo != NULL) atual = atual->proximo;
-        atual->proximo = novo;
-    }
-}
-
-/* Visita somente a expressao recebida; seus irmaos pertencem ao comando pai. */
-void verificar_expressao(NoAST *no, Escopo *escopo) {
-    NoAST *filho;
-    if (no == NULL) return;
-    if (no->identificador && buscar_simbolo(no->texto, escopo) == NULL) {
-        fprintf(stderr, "Erro semântico: Variável não declarada '%s'.\n", no->texto);
-        erros_semanticos++;
-    }
-    filho = no->filho;
-    while (filho != NULL) {
-        verificar_expressao(filho, escopo);
-        filho = filho->irmao;
-    }
-}
-
-void analisar_comando(NoAST *comando, Escopo *escopo) {
-    if (strcmp(comando->texto, "Declaracao") == 0) {
-        inserir_simbolo(comando, escopo);
-        verificar_expressao(comando->filho->irmao->irmao, escopo);
-    } else if (strcmp(comando->texto, "Bloco") == 0) {
-        montar_tabela(comando, escopo);
-    } else if (strcmp(comando->texto, "If") == 0 ||
-               strcmp(comando->texto, "While") == 0) {
-        NoAST *condicao = comando->filho;
-        NoAST *corpo = condicao->irmao;
-        verificar_expressao(condicao, escopo);
-        while (corpo != NULL) {
-            montar_tabela(corpo, escopo);
-            corpo = corpo->irmao;
-        }
-    } else if (strcmp(comando->texto, "For") == 0) {
-        Escopo escopo_for = {proximo_escopo++, escopo};
-        NoAST *inicializacao = comando->filho;
-        NoAST *condicao = inicializacao->irmao;
-        NoAST *atualizacao = condicao->irmao;
-        NoAST *corpo = atualizacao->irmao;
-        analisar_comando(inicializacao, &escopo_for);
-        verificar_expressao(condicao, &escopo_for);
-        analisar_comando(atualizacao, &escopo_for);
-        montar_tabela(corpo, &escopo_for);
-    } else if (strcmp(comando->texto, "Switch") == 0) {
-        Escopo escopo_switch = {proximo_escopo++, escopo};
-        NoAST *expressao = comando->filho;
-        NoAST *caso = expressao->irmao->filho;
-        verificar_expressao(expressao, escopo);
-        while (caso != NULL) {
-            NoAST *corpo = caso->filho;
-            if (strcmp(caso->texto, "Case") == 0) {
-                verificar_expressao(corpo, &escopo_switch);
-                corpo = corpo->irmao;
-            }
-            /* Case nao abre escopo; apenas chaves explicitas abrem outro. */
-            analisar_comandos(corpo, &escopo_switch);
-            caso = caso->irmao;
-        }
-    } else {
-        /* Atribuicoes, incrementos e impressao: todos os usos sao filhos. */
-        verificar_expressao(comando, escopo);
-    }
-}
-
-void analisar_comandos(NoAST *bloco, Escopo *escopo) {
-    NoAST *comando = bloco->filho;
-    while (comando != NULL) {
-        analisar_comando(comando, escopo);
-        comando = comando->irmao;
-    }
-}
-
-void montar_tabela(NoAST *bloco, Escopo *pai) {
-    Escopo escopo = {proximo_escopo++, pai};
-    analisar_comandos(bloco, &escopo);
-}
-
-void imprimir_tabela(void) {
-    Simbolo *atual = tabela_simbolos;
-    printf("\nTabela de simbolos (valor de inicializacao):\n");
-    printf("%-20s | %-10s | %-30s | %s\n", "Simbolo", "Tipo", "Valor", "Escopo");
-    while (atual != NULL) {
-        printf("%-20s | %-10s | %-30s | %s\n",
-               atual->simbolo, atual->tipo, atual->valor, atual->escopo);
-        atual = atual->proximo;
-    }
-}
-
-void liberar_tabela(void) {
-    while (tabela_simbolos != NULL) {
-        Simbolo *proximo = tabela_simbolos->proximo;
-        free(tabela_simbolos->simbolo);
-        free(tabela_simbolos->tipo);
-        free(tabela_simbolos->valor);
-        free(tabela_simbolos);
-        tabela_simbolos = proximo;
-    }
-}
 
 /* Toda a saida de inspecao fica aqui; a analise nao depende desta funcao. */
 void debug_compiler(void) {

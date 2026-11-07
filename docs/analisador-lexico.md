@@ -13,3 +13,10 @@ O scanner registra erros para strings não encerradas, comentários de bloco nã
 O scanner reconhece os operadores de atribuição composta `+=`, `-=`, `*=` e `/=`, além de `:` para os rótulos de `switch`. Reconhecimento de tokens e suporte sintático são etapas distintas: palavras-chave como `class`, `do`, `continue` e `return` ainda não têm regras na gramática.
 
 Após a análise sintática, o módulo `tabela_simbolos.c` valida declarações, visibilidade de variáveis e contexto de `break` na AST. A tradução para C permanece planejada.
+
+## **Histórico de Versões**
+
+| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
+| ------ | --------- | ---- | ----- |
+| 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |

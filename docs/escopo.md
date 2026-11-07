@@ -120,7 +120,10 @@ Para manter o escopo alinhado com os objetivos da disciplina, este compilador **
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
-| --- | --- | --- | --- |
-| 1.0 | Criação do documento de escopo e definições | 24/09/2026 | [Henrique](https://github.com/henryqma) |
+| ------ | --------- | ---- | ----- |
+| 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |
 
 ---
+
+

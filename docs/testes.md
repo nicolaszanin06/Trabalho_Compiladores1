@@ -56,3 +56,10 @@ Os três últimos exemplos escrevem, respectivamente, `Variável já declarada '
 No PowerShell, com GCC instalado no Windows, execute `./testes/executar.ps1` a partir da raiz. Esse verificador cobre os 14 arquivos com `--debug`, comparando stdout, stderr e código de saída. Os casos adicionais de semântica e contexto de `break` são cobertos pela suíte Python. Alterações em `jtoc.l` ou `jtoc.y` exigem regenerar os arquivos C antes de usar o script PowerShell.
 
 A aceitação indica aprovação nas verificações atuais; compatibilidade de tipos, inicialização antes da leitura e constantes/unicidade dos rótulos de `switch` ainda não são verificadas. O analisador não executa a entrada nem gera C. O roteiro completo e a descrição de cada arquivo estão no [README de testes no repositório](https://github.com/nicolaszanin06/Trabalho_Compiladores1/blob/develop/testes/README.md).
+
+## **Histórico de Versões**
+
+| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
+| ------ | --------- | ---- | ----- |
+| 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |

@@ -31,3 +31,10 @@ Não há avaliação de expressões, validação de tipos ou geração de códig
 `yyerror` informa linha e token perto da falha sintática. O programa verifica o resultado de `yyparse` e os contadores de erros léxicos e semânticos antes de imprimir sucesso. Retorna `0` em caso de sucesso e `1` em caso de erro.
 
 As chamadas de `imprimir_ast()` e `imprimir_tabela()` ficam em `debug_compiler()`. O `main` só chama essa função se `imprimir_debug` estiver ativo, por meio da opção `--debug`. Sem essa opção, a análise completa é executada e apenas a mensagem de sucesso é impressa. A montagem da tabela e a validação semântica não dependem da impressão de debug.
+
+## **Histórico de Versões**
+
+| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
+| ------ | --------- | ---- | ----- |
+| 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |

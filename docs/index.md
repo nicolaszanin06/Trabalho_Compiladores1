@@ -31,3 +31,4 @@ Consulte [Como rodar](como-rodar.md), [Escopo do projeto](escopo.md), [Analisado
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | ------ | --------- | ---- | ----- |
 | 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |

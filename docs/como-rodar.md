@@ -36,3 +36,10 @@ O segundo exemplo escreve `Erro semântico: 'break' fora de laço ou switch.` em
 No PowerShell, com GCC instalado no Windows, rode `./testes/executar.ps1` na raiz. Esse script verifica os 14 arquivos de entrada usando os arquivos C já gerados; alterações em Flex/Bison precisam ser regeneradas antes. Para executar os 45 testes, incluindo as regras semânticas e o contexto de `break`, use `python testes/test_analisador.py` na raiz. Veja [Testes e validação](testes.md).
 
 Para limpar os arquivos gerados, execute `make clean` dentro de `src/`.
+
+## **Histórico de Versões**
+
+| VERSÃO | DESCRIÇÃO | DATA | AUTOR |
+| ------ | --------- | ---- | ----- |
+| 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |

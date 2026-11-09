@@ -18,11 +18,12 @@ O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano
 | [Sprint 4](#sprint-4) | 31/08/2026 - 06/09/2026 | Início da Análise Sintática |
 | [Sprint 5](#sprint-5) | 07/09/2026 - 13/09/2026 | Estruturação do Parser |
 | [Sprint 6](#sprint-6) | 14/09/2026 - 27/09/2026 | Conclusão da Análise Sintática |
-| Sprint 7 | 05/10/2026 - 11/10/2026 | Integração da Análise Semântica |
-| Sprint 8 | 12/10/2026 - 18/10/2026 | Geração de Código Intermediário |
-| Sprint 9 | 19/10/2026 - 25/10/2026 | Otimização de Código |
-| Sprint 10 | 26/10/2026 - 10/11/2026 | Geração de Código Final |
-| Sprint 11 | 16/11/2026 - 29/11/2026 | Implementação Final |
+| [Sprint 7](#sprint-7) | 05/10/2026 - 11/10/2026 | Implementação de Testes Automatizados |
+| [Sprint 8](#sprint-8) | 12/10/2026 - 18/10/2026 | Implementação da Árvore Sintática |
+| [Sprint 9](#sprint-9) | 19/10/2026 - 25/10/2026 | Estruturação da Tabela de Símbolos |
+| [Sprint 10](#sprint-10) | 26/10/2026 - 10/11/2026 | Início da Análise Semântica |
+| Sprint 11 | 16/11/2026 - 22/11/2026 | Conclusão da Análise Semântica |
+| Sprint 12 | 23/11/2026 - 29/11/2026 | Geração de Código |
 
 ---
 
@@ -100,8 +101,61 @@ O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano
 
 ---
 
+### Sprint 7
+
+**Objetivo:** Implementação de Testes Automatizados
+
+**Período:** 05/10/2026 - 11/10/2026
+
+**Descrição:** 
+
+* Implementação de casos de testes válidos (atribuição na declaração, comentários, condições com identificador, declarações, ifs aninhados e arquivo vazio).
+* Implementação de casos de testes inválidos para capturar erros léxicos e sintáticos (caractere inválido, char/string multilinha ou não encerrada, comentário aberto, falta de ponto e vírgula, expressão ausente e texto solto).
+
+---
+
+### Sprint 8
+
+**Objetivo:** Implementação da Árvore Sintática
+
+**Período:** 12/10/2026 - 18/10/2026
+
+**Descrição:**
+
+* Construção da Árvore Sintática Abstrata utilizando o modelo filho-irmão.
+* Estruturação em C para permitir a representação hierárquica do código-fonte do subconjunto Java analisado.
+
+---
+
+### Sprint 9
+
+**Objetivo:** Estruturação da Tabela de Símbolos
+
+**Período:** 19/10/2026 - 25/10/2026
+
+**Descrição:**
+
+* Desenvolvimento da Tabela de Símbolos em C.
+* Implementação do armazenamento de identificadores, registrando com sucesso os seus respectivos tipos, valores de inicialização e controle de escopos.
+
+---
+
+### Sprint 10
+
+**Objetivo:** Início da Análise Semântica
+
+**Período:** 26/10/2026 - 10/112026
+
+**Descrição:** 
+
+* Integração da Árvore Sintática Abstrata com a Tabela de Símbolos.
+* Início das validações semânticas do compilador, focando na checagem de escopo e validação de tipos.
+
+---
+
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | ------ | --------- | ---- | ----- |
 | 1.0 | Documentação do planejamento | 24/09/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização das sprints para o P2 | 06/11/2026 | [Henrique](https://github.com/henryqma) |

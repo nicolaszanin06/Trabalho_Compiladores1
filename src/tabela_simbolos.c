@@ -80,11 +80,68 @@ void verificar_expressao(NoAST *no, Escopo *escopo) {
     }
 }
 
+/* continuação da implementação da analise semantica */
+static const char *tipo_inicializador_simples(NoAST *no, Escopo *escopo) {
+    if (no == NULL || no->filho != NULL) {
+        return NULL;
+    }
+
+    if (no->identificador) {
+        Simbolo *simbolo = buscar_simbolo(no->texto, escopo);
+        if (simbolo == NULL) {
+            return NULL;
+        }
+        return simbolo->tipo;
+    }
+
+    const char *texto = no->texto;
+
+    if (strcmp(texto, "true") == 0 || strcmp(texto, "false") == 0) {
+        return "boolean";
+    }
+    if (texto[0] == '\'') {
+        return "char";
+    }
+    if (texto[0] == '"') {
+        return "String";
+    }
+    if (texto[0] >= '0' && texto[0] <= '9') {
+        if (strchr(texto, '.') != NULL) {
+            return "float";
+        }
+        return "int";
+    }
+
+    return NULL;
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
-        inserir_simbolo(comando, escopo);
-        verificar_expressao(comando->filho->irmao->irmao, escopo);
-    } else if (strcmp(comando->texto, "Bloco") == 0) {
+    NoAST *tipo = comando->filho;
+    NoAST *nome = tipo->irmao;
+    NoAST *inicializador = nome->irmao;
+
+    inserir_simbolo(comando, escopo);
+    verificar_expressao(inicializador, escopo);
+
+    const char *tipo_inicializador =
+        tipo_inicializador_simples(inicializador, escopo);
+
+    if (tipo_inicializador != NULL) {
+        int mesmo_tipo = strcmp(tipo->texto, tipo_inicializador) == 0;
+        int permite_conversao = strcmp(tipo->texto, "float") == 0
+            && strcmp(tipo_inicializador, "int") == 0;
+
+        if (!mesmo_tipo && !permite_conversao) {
+            fprintf(stderr,
+                    "Erro semântico: inicializador de '%s' tem tipo '%s'; "
+                    "esperado '%s'.\n",
+                    nome->texto, tipo_inicializador, tipo->texto);
+            erros_semanticos++;
+        }
+    }
+}
+     else if (strcmp(comando->texto, "Bloco") == 0) {
         montar_tabela(comando, escopo);
     } else if (strcmp(comando->texto, "If") == 0 ||
                strcmp(comando->texto, "While") == 0) {

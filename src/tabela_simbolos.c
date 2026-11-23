@@ -127,7 +127,7 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
             erros_semanticos++;
             return NULL;
         }
-        
+
             if (operador_relacional(no->texto)) {
             return "boolean";
         }
@@ -169,6 +169,23 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
     return NULL;
 }
 
+static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
+    if (strcmp(condicao->texto, "Vazio") == 0) {
+        return;
+    }
+
+    verificar_expressao(condicao, escopo);
+
+    const char *tipo = inferir_tipo_expressao(condicao, escopo);
+
+    if (tipo != NULL && strcmp(tipo, "boolean") != 0) {
+        fprintf(stderr,
+                "Erro semântico: condição deve ser boolean, recebeu '%s'.\n",
+                tipo);
+        erros_semanticos++;
+    }
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
     NoAST *tipo = comando->filho;
@@ -177,7 +194,6 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
 
     inserir_simbolo(comando, escopo);
     verificar_expressao(inicializador, escopo);
-
     const char *tipo_inicializador =
         inferir_tipo_expressao(inicializador, escopo);
 
@@ -202,7 +218,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         NoAST *condicao = comando->filho;
         NoAST *corpo = condicao->irmao;
         int laco = strcmp(comando->texto, "While") == 0;
-        verificar_expressao(condicao, escopo);
+        verificar_condicao(condicao, escopo);
         if (laco) contextos_break++;
         while (corpo != NULL) {
             montar_tabela(corpo, escopo);
@@ -216,7 +232,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         NoAST *atualizacao = condicao->irmao;
         NoAST *corpo = atualizacao->irmao;
         analisar_comando(inicializacao, &escopo_for);
-        verificar_expressao(condicao, &escopo_for);
+        verificar_condicao(condicao, &escopo_for);
         analisar_comando(atualizacao, &escopo_for);
         contextos_break++;
         montar_tabela(corpo, &escopo_for);

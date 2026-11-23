@@ -243,6 +243,35 @@ static void verificar_atribuicao(NoAST *comando, Escopo *escopo) {
     }
 }
 
+static int operador_atualizacao(const char *texto) {
+    return strcmp(texto, "+=") == 0
+        || strcmp(texto, "-=") == 0
+        || strcmp(texto, "*=") == 0
+        || strcmp(texto, "/=") == 0
+        || strcmp(texto, "++") == 0
+        || strcmp(texto, "--") == 0;
+}
+
+static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
+    NoAST *nome = comando->filho;
+    NoAST *expressao = nome->irmao;
+
+    verificar_expressao(comando, escopo);
+
+    Simbolo *destino = buscar_simbolo(nome->texto, escopo);
+    const char *origem = inferir_tipo_expressao(expressao, escopo);
+    if (destino == NULL || (expressao != NULL && origem == NULL)) {
+        return;
+    }
+
+    if (!tipo_numerico(destino->tipo) || (origem != NULL && !tipo_numerico(origem))) {
+        fprintf(stderr,
+                "Erro semântico: operador '%s' exige operandos numéricos.\n",
+                comando->texto);
+        erros_semanticos++;
+    }
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
         NoAST *tipo = comando->filho;
@@ -262,6 +291,8 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         }
     } else if (strcmp(comando->texto, "=") == 0) {
         verificar_atribuicao(comando, escopo);
+    } else if (operador_atualizacao(comando->texto)) {
+        verificar_atualizacao(comando, escopo);
     } else if (strcmp(comando->texto, "Bloco") == 0) {
         montar_tabela(comando, escopo);
     } else if (strcmp(comando->texto, "If") == 0 ||
@@ -311,7 +342,6 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
             erros_semanticos++;
         }
     } else {
-        /* Atribuicoes, incrementos e impressao: todos os usos sao filhos. */
         verificar_expressao(comando, escopo);
     }
 }

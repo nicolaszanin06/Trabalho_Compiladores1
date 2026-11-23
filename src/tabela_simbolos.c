@@ -80,10 +80,53 @@ void verificar_expressao(NoAST *no, Escopo *escopo) {
     }
 }
 
+static int operador_aritmetico(const char *texto) {
+    return strcmp(texto, "+") == 0
+        || strcmp(texto, "-") == 0
+        || strcmp(texto, "*") == 0
+        || strcmp(texto, "/") == 0
+        || strcmp(texto, "%") == 0;
+}
+
+static int tipo_numerico(const char *tipo) {
+    return strcmp(tipo, "int") == 0 || strcmp(tipo, "float") == 0;
+}
+
 /* continuação da implementação da analise semantica */
-static const char *tipo_inicializador_simples(NoAST *no, Escopo *escopo) {
-    if (no == NULL || no->filho != NULL) {
+static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
+      if (no == NULL) {
         return NULL;
+    }
+
+    if (no->filho != NULL) {
+        if (!operador_aritmetico(no->texto)) {
+            return NULL;
+        }
+
+        NoAST *esquerda = no->filho;
+        NoAST *direita = esquerda->irmao;
+        const char *tipo_esquerda = inferir_tipo_expressao(esquerda, escopo);
+        const char *tipo_direita = inferir_tipo_expressao(direita, escopo);
+
+        if (tipo_esquerda == NULL || (direita != NULL && tipo_direita == NULL)) {
+            return NULL;
+        }
+
+        if (!tipo_numerico(tipo_esquerda)
+                || (direita != NULL && !tipo_numerico(tipo_direita))) {
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' exige operandos numéricos.\n",
+                    no->texto);
+            erros_semanticos++;
+            return NULL;
+        }
+
+        if (strcmp(tipo_esquerda, "float") == 0
+                || (direita != NULL && strcmp(tipo_direita, "float") == 0)) {
+            return "float";
+        }
+
+        return "int";
     }
 
     if (no->identificador) {
@@ -125,7 +168,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
     verificar_expressao(inicializador, escopo);
 
     const char *tipo_inicializador =
-        tipo_inicializador_simples(inicializador, escopo);
+        inferir_tipo_expressao(inicializador, escopo);
 
     if (tipo_inicializador != NULL) {
         int mesmo_tipo = strcmp(tipo->texto, tipo_inicializador) == 0;

@@ -222,32 +222,47 @@ static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
     }
 }
 
+static int tipos_compativeis(const char *destino, const char *origem) {
+    return strcmp(destino, origem) == 0
+        || (strcmp(destino, "float") == 0 && strcmp(origem, "int") == 0);
+}
+
+static void verificar_atribuicao(NoAST *comando, Escopo *escopo) {
+    NoAST *nome = comando->filho;
+    NoAST *expressao = nome->irmao;
+
+    verificar_expressao(comando, escopo);
+
+    Simbolo *destino = buscar_simbolo(nome->texto, escopo);
+    const char *origem = inferir_tipo_expressao(expressao, escopo);
+    if (destino != NULL && origem != NULL && !tipos_compativeis(destino->tipo, origem)) {
+        fprintf(stderr,
+                "Erro semântico: atribuição a '%s' tem tipo '%s'; esperado '%s'.\n",
+                nome->texto, origem, destino->tipo);
+        erros_semanticos++;
+    }
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
-    NoAST *tipo = comando->filho;
-    NoAST *nome = tipo->irmao;
-    NoAST *inicializador = nome->irmao;
+        NoAST *tipo = comando->filho;
+        NoAST *nome = tipo->irmao;
+        NoAST *inicializador = nome->irmao;
 
-    inserir_simbolo(comando, escopo);
-    verificar_expressao(inicializador, escopo);
-    const char *tipo_inicializador =
-        inferir_tipo_expressao(inicializador, escopo);
+        inserir_simbolo(comando, escopo);
+        verificar_expressao(inicializador, escopo);
+        const char *tipo_inicializador = inferir_tipo_expressao(inicializador, escopo);
 
-    if (tipo_inicializador != NULL) {
-        int mesmo_tipo = strcmp(tipo->texto, tipo_inicializador) == 0;
-        int permite_conversao = strcmp(tipo->texto, "float") == 0
-            && strcmp(tipo_inicializador, "int") == 0;
-
-        if (!mesmo_tipo && !permite_conversao) {
+        if (tipo_inicializador != NULL && !tipos_compativeis(tipo->texto, tipo_inicializador)) {
             fprintf(stderr,
                     "Erro semântico: inicializador de '%s' tem tipo '%s'; "
                     "esperado '%s'.\n",
                     nome->texto, tipo_inicializador, tipo->texto);
             erros_semanticos++;
         }
-    }
-}
-     else if (strcmp(comando->texto, "Bloco") == 0) {
+    } else if (strcmp(comando->texto, "=") == 0) {
+        verificar_atribuicao(comando, escopo);
+    } else if (strcmp(comando->texto, "Bloco") == 0) {
         montar_tabela(comando, escopo);
     } else if (strcmp(comando->texto, "If") == 0 ||
                strcmp(comando->texto, "While") == 0) {

@@ -95,18 +95,30 @@ static int operador_relacional(const char *texto) {
         || strcmp(texto, ">=") == 0;
 }
 
+static int operador_logico(const char *texto) {
+    return strcmp(texto, "&&") == 0
+        || strcmp(texto, "||") == 0
+        || strcmp(texto, "!") == 0;
+}
+
+static int operador_igualdade(const char *texto) {
+    return strcmp(texto, "==") == 0 || strcmp(texto, "!=") == 0;
+}
+
 static int tipo_numerico(const char *tipo) {
     return strcmp(tipo, "int") == 0 || strcmp(tipo, "float") == 0;
 }
 
-/* continuação da implementação da analise semantica */
 static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
-      if (no == NULL) {
+    if (no == NULL) {
         return NULL;
     }
 
     if (no->filho != NULL) {
-        if (!operador_aritmetico(no->texto) && !operador_relacional(no->texto)) {
+        int logico = operador_logico(no->texto);
+        int igualdade = operador_igualdade(no->texto);
+        int relacional = operador_relacional(no->texto);
+        if (!logico && !igualdade && !relacional && !operador_aritmetico(no->texto)) {
             return NULL;
         }
 
@@ -119,6 +131,30 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
             return NULL;
         }
 
+        if (logico) {
+            if (strcmp(tipo_esquerda, "boolean") == 0
+                    && (direita == NULL || strcmp(tipo_direita, "boolean") == 0)) {
+                return "boolean";
+            }
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' exige operandos booleanos.\n",
+                    no->texto);
+            erros_semanticos++;
+            return NULL;
+        }
+
+        if (igualdade) {
+            if (strcmp(tipo_esquerda, tipo_direita) == 0
+                    || (tipo_numerico(tipo_esquerda) && tipo_numerico(tipo_direita))) {
+                return "boolean";
+            }
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' recebeu tipos incompatíveis '%s' e '%s'.\n",
+                    no->texto, tipo_esquerda, tipo_direita);
+            erros_semanticos++;
+            return NULL;
+        }
+
         if (!tipo_numerico(tipo_esquerda)
                 || (direita != NULL && !tipo_numerico(tipo_direita))) {
             fprintf(stderr,
@@ -128,7 +164,7 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
             return NULL;
         }
 
-            if (operador_relacional(no->texto)) {
+        if (relacional) {
             return "boolean";
         }
 

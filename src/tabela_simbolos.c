@@ -88,6 +88,13 @@ static int operador_aritmetico(const char *texto) {
         || strcmp(texto, "%") == 0;
 }
 
+static int operador_relacional(const char *texto) {
+    return strcmp(texto, "<") == 0
+        || strcmp(texto, "<=") == 0
+        || strcmp(texto, ">") == 0
+        || strcmp(texto, ">=") == 0;
+}
+
 static int tipo_numerico(const char *tipo) {
     return strcmp(tipo, "int") == 0 || strcmp(tipo, "float") == 0;
 }
@@ -99,7 +106,7 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
     }
 
     if (no->filho != NULL) {
-        if (!operador_aritmetico(no->texto)) {
+        if (!operador_aritmetico(no->texto) && !operador_relacional(no->texto)) {
             return NULL;
         }
 
@@ -119,6 +126,10 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
                     no->texto);
             erros_semanticos++;
             return NULL;
+        }
+        
+            if (operador_relacional(no->texto)) {
+            return "boolean";
         }
 
         if (strcmp(tipo_esquerda, "float") == 0

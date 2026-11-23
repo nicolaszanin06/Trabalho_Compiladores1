@@ -80,10 +80,219 @@ void verificar_expressao(NoAST *no, Escopo *escopo) {
     }
 }
 
+static int operador_aritmetico(const char *texto) {
+    return strcmp(texto, "+") == 0
+        || strcmp(texto, "-") == 0
+        || strcmp(texto, "*") == 0
+        || strcmp(texto, "/") == 0
+        || strcmp(texto, "%") == 0;
+}
+
+static int operador_relacional(const char *texto) {
+    return strcmp(texto, "<") == 0
+        || strcmp(texto, "<=") == 0
+        || strcmp(texto, ">") == 0
+        || strcmp(texto, ">=") == 0;
+}
+
+static int operador_logico(const char *texto) {
+    return strcmp(texto, "&&") == 0
+        || strcmp(texto, "||") == 0
+        || strcmp(texto, "!") == 0;
+}
+
+static int operador_igualdade(const char *texto) {
+    return strcmp(texto, "==") == 0 || strcmp(texto, "!=") == 0;
+}
+
+static int tipo_numerico(const char *tipo) {
+    return strcmp(tipo, "int") == 0 || strcmp(tipo, "float") == 0;
+}
+
+static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
+    if (no == NULL) {
+        return NULL;
+    }
+
+    if (no->filho != NULL) {
+        int logico = operador_logico(no->texto);
+        int igualdade = operador_igualdade(no->texto);
+        int relacional = operador_relacional(no->texto);
+        if (!logico && !igualdade && !relacional && !operador_aritmetico(no->texto)) {
+            return NULL;
+        }
+
+        NoAST *esquerda = no->filho;
+        NoAST *direita = esquerda->irmao;
+        const char *tipo_esquerda = inferir_tipo_expressao(esquerda, escopo);
+        const char *tipo_direita = inferir_tipo_expressao(direita, escopo);
+
+        if (tipo_esquerda == NULL || (direita != NULL && tipo_direita == NULL)) {
+            return NULL;
+        }
+
+        if (logico) {
+            if (strcmp(tipo_esquerda, "boolean") == 0
+                    && (direita == NULL || strcmp(tipo_direita, "boolean") == 0)) {
+                return "boolean";
+            }
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' exige operandos booleanos.\n",
+                    no->texto);
+            erros_semanticos++;
+            return NULL;
+        }
+
+        if (igualdade) {
+            if (strcmp(tipo_esquerda, tipo_direita) == 0
+                    || (tipo_numerico(tipo_esquerda) && tipo_numerico(tipo_direita))) {
+                return "boolean";
+            }
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' recebeu tipos incompatíveis '%s' e '%s'.\n",
+                    no->texto, tipo_esquerda, tipo_direita);
+            erros_semanticos++;
+            return NULL;
+        }
+
+        if (!tipo_numerico(tipo_esquerda)
+                || (direita != NULL && !tipo_numerico(tipo_direita))) {
+            fprintf(stderr,
+                    "Erro semântico: operador '%s' exige operandos numéricos.\n",
+                    no->texto);
+            erros_semanticos++;
+            return NULL;
+        }
+
+        if (relacional) {
+            return "boolean";
+        }
+
+        if (strcmp(tipo_esquerda, "float") == 0
+                || (direita != NULL && strcmp(tipo_direita, "float") == 0)) {
+            return "float";
+        }
+
+        return "int";
+    }
+
+    if (no->identificador) {
+        Simbolo *simbolo = buscar_simbolo(no->texto, escopo);
+        if (simbolo == NULL) {
+            return NULL;
+        }
+        return simbolo->tipo;
+    }
+
+    const char *texto = no->texto;
+
+    if (strcmp(texto, "true") == 0 || strcmp(texto, "false") == 0) {
+        return "boolean";
+    }
+    if (texto[0] == '\'') {
+        return "char";
+    }
+    if (texto[0] == '"') {
+        return "String";
+    }
+    if (texto[0] >= '0' && texto[0] <= '9') {
+        if (strchr(texto, '.') != NULL) {
+            return "float";
+        }
+        return "int";
+    }
+
+    return NULL;
+}
+
+static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
+    if (strcmp(condicao->texto, "Vazio") == 0) {
+        return;
+    }
+
+    verificar_expressao(condicao, escopo);
+
+    const char *tipo = inferir_tipo_expressao(condicao, escopo);
+
+    if (tipo != NULL && strcmp(tipo, "boolean") != 0) {
+        fprintf(stderr,
+                "Erro semântico: condição deve ser boolean, recebeu '%s'.\n",
+                tipo);
+        erros_semanticos++;
+    }
+}
+
+static int tipos_compativeis(const char *destino, const char *origem) {
+    return strcmp(destino, origem) == 0
+        || (strcmp(destino, "float") == 0 && strcmp(origem, "int") == 0);
+}
+
+static void verificar_atribuicao(NoAST *comando, Escopo *escopo) {
+    NoAST *nome = comando->filho;
+    NoAST *expressao = nome->irmao;
+
+    verificar_expressao(comando, escopo);
+
+    Simbolo *destino = buscar_simbolo(nome->texto, escopo);
+    const char *origem = inferir_tipo_expressao(expressao, escopo);
+    if (destino != NULL && origem != NULL && !tipos_compativeis(destino->tipo, origem)) {
+        fprintf(stderr,
+                "Erro semântico: atribuição a '%s' tem tipo '%s'; esperado '%s'.\n",
+                nome->texto, origem, destino->tipo);
+        erros_semanticos++;
+    }
+}
+
+static int operador_atualizacao(const char *texto) {
+    return strcmp(texto, "+=") == 0
+        || strcmp(texto, "-=") == 0
+        || strcmp(texto, "*=") == 0
+        || strcmp(texto, "/=") == 0
+        || strcmp(texto, "++") == 0
+        || strcmp(texto, "--") == 0;
+}
+
+static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
+    NoAST *nome = comando->filho;
+    NoAST *expressao = nome->irmao;
+
+    verificar_expressao(comando, escopo);
+
+    Simbolo *destino = buscar_simbolo(nome->texto, escopo);
+    const char *origem = inferir_tipo_expressao(expressao, escopo);
+    if (destino == NULL || (expressao != NULL && origem == NULL)) {
+        return;
+    }
+
+    if (!tipo_numerico(destino->tipo) || (origem != NULL && !tipo_numerico(origem))) {
+        fprintf(stderr,
+                "Erro semântico: operador '%s' exige operandos numéricos.\n",
+                comando->texto);
+        erros_semanticos++;
+    }
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
+        NoAST *tipo = comando->filho;
+        NoAST *nome = tipo->irmao;
+        NoAST *inicializador = nome->irmao;
+
         inserir_simbolo(comando, escopo);
-        verificar_expressao(comando->filho->irmao->irmao, escopo);
+        verificar_expressao(inicializador, escopo);
+        const char *tipo_inicializador = inferir_tipo_expressao(inicializador, escopo);
+
+        if (tipo_inicializador != NULL && !tipos_compativeis(tipo->texto, tipo_inicializador)) {
+            fprintf(stderr,
+                    "Erro semântico: inicializador de '%s' tem tipo '%s'; "
+                    "esperado '%s'.\n",
+                    nome->texto, tipo_inicializador, tipo->texto);
+            erros_semanticos++;
+        }
+    } else if (strcmp(comando->texto, "=") == 0) {
+        verificar_atribuicao(comando, escopo);
+    } else if (operador_atualizacao(comando->texto)) {
+        verificar_atualizacao(comando, escopo);
     } else if (strcmp(comando->texto, "Bloco") == 0) {
         montar_tabela(comando, escopo);
     } else if (strcmp(comando->texto, "If") == 0 ||
@@ -91,7 +300,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         NoAST *condicao = comando->filho;
         NoAST *corpo = condicao->irmao;
         int laco = strcmp(comando->texto, "While") == 0;
-        verificar_expressao(condicao, escopo);
+        verificar_condicao(condicao, escopo);
         if (laco) contextos_break++;
         while (corpo != NULL) {
             montar_tabela(corpo, escopo);
@@ -105,7 +314,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         NoAST *atualizacao = condicao->irmao;
         NoAST *corpo = atualizacao->irmao;
         analisar_comando(inicializacao, &escopo_for);
-        verificar_expressao(condicao, &escopo_for);
+        verificar_condicao(condicao, &escopo_for);
         analisar_comando(atualizacao, &escopo_for);
         contextos_break++;
         montar_tabela(corpo, &escopo_for);
@@ -133,7 +342,6 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
             erros_semanticos++;
         }
     } else {
-        /* Atribuicoes, incrementos e impressao: todos os usos sao filhos. */
         verificar_expressao(comando, escopo);
     }
 }

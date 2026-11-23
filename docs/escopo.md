@@ -8,7 +8,7 @@ O compilador e analisador léxico estão sendo desenvolvidos para a linguagem **
 
 ### Linguagem Alvo e Tradução
 
-O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica, sintática e semântica inicial, constrói a AST e a tabela de símbolos, mas ainda não traduz para C nem executa a entrada. A análise semântica verifica redeclarações no mesmo escopo, declaração antes do uso, visibilidade de variáveis e contexto de `break`.
+O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica, sintática e semântica, constrói a AST e a tabela de símbolos, mas ainda não traduz para C nem executa a entrada. A análise semântica verifica redeclarações no mesmo escopo, declaração antes do uso, visibilidade de variáveis e contexto de `break`. Também verifica tipos em inicializadores, atribuições, atualizações e condições de `if`, `while` e `for`.
 
 A entrada atual é uma sequência de comandos, sem classe ou método `main`. São aceitos os tipos `int`, `float`, `char`, `boolean` e `String`, atribuições simples e compostas, incremento e decremento, `if`/`else`, `while`, `for`, `switch`, impressão e expressões. O corpo de `if`, `while` e `for` exige chaves. `break` só é válido dentro de `while`, `for` ou `switch`, inclusive em blocos aninhados.
 
@@ -99,9 +99,10 @@ O analisador foi desenhado para ignorar de forma correta:
 
 ## **Limitações**
 
-Para manter o escopo alinhado com os objetivos da disciplina, este compilador **não suporta** os seguintes recursos do Java padrão:
+O subconjunto implementado tem os seguintes limites:
 
-* **Validações ainda pendentes:** Compatibilidade de tipos, inicialização antes da leitura e constantes/unicidade dos rótulos de `switch`. Nomes iguais em escopos diferentes são aceitos.
+* **Tipos:** Inicializadores e atribuições simples aceitam tipos iguais e conversão de `int` para `float`. Atribuições compostas, incremento e decremento operam sobre `int` e `float`. As condições de `if`, `while` e `for` devem ser booleanas quando presentes. A inferência cobre literais, identificadores e operadores aritméticos, relacionais, lógicos e de igualdade nesses contextos.
+* **Validações fora do escopo atual:** Inicialização antes da leitura, verificação de que os rótulos de `switch` são constantes e únicos, inferência dos tipos de `Math.sqrt` e `Math.pow` e checagem de tipos em expressões de impressão e de `switch`. Nomes iguais em escopos diferentes são aceitos.
 
 * **Limites do `for`:** Inicialização por declaração ou atribuição e atualização por atribuição, incremento ou decremento, com cláusulas opcionais. Listas separadas por vírgulas não estão implementadas.
 

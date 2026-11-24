@@ -425,7 +425,7 @@ class AnalisadorTest(unittest.TestCase):
                 resultado = self.executar_parser(argumentos=argumentos, debug=False)
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
-                self.assertIn("[--debug] [arquivo.java]", resultado.stderr)
+                self.assertIn("[--debug] [--ir] [arquivo.java]", resultado.stderr)
 
 
 if __name__ == "__main__":

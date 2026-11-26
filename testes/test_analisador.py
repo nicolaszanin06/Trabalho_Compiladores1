@@ -419,13 +419,38 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertNotIn("AST:", sem_debug.stdout)
                 self.assertNotIn("Tabela de simbolos", sem_debug.stdout)
 
+    def test_gera_codigo_intermediario_de_declaracoes_inteiras(self):
+        resultado = self.executar_parser(
+            "int x = 3 + 4; int y = -(2 + 3 * 4);",
+            argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0)
+        self.assertEqual(resultado.stderr, "")
+        self.assertEqual(resultado.stdout.splitlines(), [
+            "LOAD_CONST 3", "LOAD_CONST 4", "ADD", "STORE x",
+            "LOAD_CONST 2", "LOAD_CONST 3", "LOAD_CONST 4",
+            "MUL", "ADD", "NEG", "STORE y",
+        ])
+
+    def test_codigo_intermediario_falha_sem_emitir_saida_parcial(self):
+        casos = (
+            ("int x = 3 + 4; float y = 2.5;", "Geracao intermediaria"),
+            ("int x = 3 + 4; int y = true;", "inicializador"),
+        )
+        for entrada, mensagem in casos:
+            with self.subTest(entrada=entrada):
+                resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn(mensagem, resultado.stderr)
+
+
     def test_rejeita_opcoes_desconhecidas_e_multiplos_arquivos(self):
         for argumentos in (("--desconhecido",), ("um.java", "dois.java")):
             with self.subTest(argumentos=argumentos):
                 resultado = self.executar_parser(argumentos=argumentos, debug=False)
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
-                self.assertIn("[--debug] [arquivo.java]", resultado.stderr)
+                self.assertIn("[--debug] [--ir] [arquivo.java]", resultado.stderr)
 
 
 if __name__ == "__main__":

@@ -2053,13 +2053,16 @@ int yywrap(void) {
 
 int main(int argc, char **argv) {
     int imprimir_debug = 0;
+    int gerar_ir = 0;
     const char *arquivo = NULL;
     int i;
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--debug") == 0) {
             imprimir_debug = 1;
+        } else if (strcmp(argv[i], "--ir") == 0) {
+            gerar_ir = 1;
         } else if (argv[i][0] == '-' || arquivo != NULL) {
-            fprintf(stderr, "Uso: %s [--debug] [arquivo.java]\n", argv[0]);
+            fprintf(stderr, "Uso: %s [--debug] [--ir] [arquivo.java]\n", argv[0]);
             return EXIT_FAILURE;
         } else {
             arquivo = argv[i];
@@ -2078,8 +2081,12 @@ int main(int argc, char **argv) {
     if (resultado == 0 && erros_lexicos == 0) {
         montar_tabela(raiz, NULL);
         if (erros_semanticos == 0) {
-            printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
-            if (imprimir_debug) debug_compiler();
+            if (gerar_ir) {
+                if (!imprimir_codigo_intermediario(raiz)) resultado = 1;
+            } else {
+                printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
+            }
+            if (resultado == 0 && imprimir_debug) debug_compiler();
         }
     }
 

@@ -607,6 +607,39 @@ class AnalisadorTest(unittest.TestCase):
         self.assertEqual(resultado.stdout, "")
         self.assertIn("Erro lexico", resultado.stderr)
 
+    def test_ir_rejeita_leituras_sem_inicializacao(self):
+        for entrada in (
+            "int x; System.out.print(x);",
+            "int x = x;",
+            "int x; x++;",
+            "int x; for (boolean Vazio = false; Vazio;) { x = 1; } System.out.print(x);",
+            "int x; boolean b = true; if (b) { x = 1; } System.out.print(x);",
+            "int x; boolean b = false; while (b) { x = 1; } System.out.print(x);",
+            "int x; switch (1) { case 0: x = 1; default: x++; }",
+            "int x = 1; { int x; System.out.print(x); }",
+            "int x; while (true) { break; x = 1; } System.out.print(x);",
+            "int x; for (;; x++) {}",
+        ):
+            with self.subTest(entrada=entrada):
+                resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn("Variável não inicializada 'x'", resultado.stderr)
+
+    def test_ir_aceita_inicializacao_nos_caminhos_de_saida(self):
+        for entrada in (
+            "int x; x = 2; System.out.print(x);",
+            "int x; boolean b = true; if (b) { x = 1; } else { x = 2; } x++;",
+            "int x; boolean b = true; while (true) { if (b) { x = 1; break; } x = 2; break; } x++;",
+            "int x; for (;; x++) { x = 1; break; } x++;",
+            "int x; switch (1) { case 0: x = 1; break; default: x = 2; } x++;",
+            "int x; boolean b = false && (x == 1); boolean c = true || (x == 1);",
+        ):
+            with self.subTest(entrada=entrada):
+                resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                self.assertIn("STORE ", resultado.stdout)
+
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(
             "int x = 3 + 4;",

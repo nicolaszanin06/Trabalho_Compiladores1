@@ -252,6 +252,7 @@ int main(int argc, char **argv) {
     int resultado = yyparse();
     if (resultado == 0 && erros_lexicos == 0) {
         montar_tabela(raiz, NULL);
+        if (gerar_ir && erros_semanticos == 0) verificar_inicializacao(raiz);
         if (erros_semanticos == 0) {
             if (gerar_ir) {
                 if (!imprimir_codigo_intermediario(raiz)) resultado = 1;

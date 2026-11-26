@@ -10,7 +10,7 @@ typedef struct Gerador {
 } Gerador;
 
 static int eh(const NoAST *no, const char *texto) {
-    return no != NULL && strcmp(no->texto, texto) == 0;
+    return no != NULL && !no->identificador && strcmp(no->texto, texto) == 0;
 }
 
 static const NoAST *irmao(const NoAST *no) {

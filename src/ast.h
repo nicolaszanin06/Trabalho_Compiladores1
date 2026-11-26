@@ -9,6 +9,7 @@ typedef struct NoAST {
     char *texto;
     int identificador;
     int id_escopo;
+    size_t id_simbolo;
     int32_t valor_caso;
     const char *tipo; /* Tipo resolvido pela analise semantica. */
     struct NoAST *filho;

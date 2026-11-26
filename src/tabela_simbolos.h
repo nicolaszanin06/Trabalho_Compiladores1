@@ -10,6 +10,7 @@ typedef struct Simbolo {
     char *valor;
     const char *escopo;
     int id_escopo;
+    size_t id;
     struct Simbolo *proximo;
 } Simbolo;
 
@@ -25,6 +26,7 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo);
 void analisar_comando(NoAST *comando, Escopo *escopo);
 void analisar_comandos(NoAST *bloco, Escopo *escopo);
 void montar_tabela(NoAST *bloco, Escopo *pai);
+void verificar_inicializacao(const NoAST *bloco);
 void imprimir_tabela(FILE *saida);
 void liberar_tabela(void);
 /* Contador consultado pelo programa apos montar a tabela e validar a AST. */

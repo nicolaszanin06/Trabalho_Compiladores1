@@ -6,6 +6,7 @@
 
 static Simbolo *tabela_simbolos = NULL;
 static int proximo_escopo = 0;
+static size_t quantidade_simbolos = 0;
 /* Quantidade de lacos e switches envolventes durante a visita da AST. */
 static int contextos_break = 0;
 int erros_semanticos = 0;
@@ -50,6 +51,8 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
     novo->tipo = tipo->texto;
     nome->tipo = novo->tipo;
     nome->id_escopo = escopo->id;
+    novo->id = quantidade_simbolos++;
+    nome->id_simbolo = novo->id;
     novo->valor = texto_expressao(nome->irmao);
     novo->escopo = escopo->pai == NULL ? "global" : "local";
     novo->id_escopo = escopo->id;
@@ -186,6 +189,7 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
             return NULL;
         }
         no->id_escopo = simbolo->id_escopo;
+        no->id_simbolo = simbolo->id;
         return simbolo->tipo;
     }
 
@@ -217,7 +221,7 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
 }
 
 static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
-    if (strcmp(condicao->texto, "Vazio") == 0) {
+    if (!condicao->identificador && strcmp(condicao->texto, "Vazio") == 0) {
         return;
     }
 
@@ -452,6 +456,178 @@ void montar_tabela(NoAST *bloco, Escopo *pai) {
     analisar_comandos(bloco, &escopo);
 }
 
+/* Estado nos caminhos que realmente chegam a um ponto do comando. */
+typedef struct Fluxo {
+    unsigned char *inicializados;
+    int alcancavel;
+} Fluxo;
+
+static Fluxo criar_fluxo(const Fluxo *origem, int alcancavel) {
+    Fluxo fluxo = {calloc(quantidade_simbolos ? quantidade_simbolos : 1, 1), alcancavel};
+    if (fluxo.inicializados == NULL) {
+        fprintf(stderr, "Memoria insuficiente para validar inicializacao.\n");
+        erros_semanticos++;
+    } else if (origem != NULL) {
+        memcpy(fluxo.inicializados, origem->inicializados, quantidade_simbolos);
+    }
+    return fluxo;
+}
+
+static void unir_fluxos(Fluxo *destino, const Fluxo *origem) {
+    if (!origem->alcancavel) return;
+    if (!destino->alcancavel) {
+        memcpy(destino->inicializados, origem->inicializados, quantidade_simbolos);
+        destino->alcancavel = 1;
+        return;
+    }
+    /* Uma variável só está inicializada se todos os caminhos a escreveram. */
+    for (size_t i = 0; i < quantidade_simbolos; i++)
+        destino->inicializados[i] &= origem->inicializados[i];
+}
+
+typedef enum Condicao { DESCONHECIDA, FALSA, VERDADEIRA } Condicao;
+
+/* Reconhece apenas condições que podem ser decididas por literais booleanos. */
+static Condicao condicao_constante(const NoAST *no) {
+    if (no->identificador) return DESCONHECIDA;
+    if (strcmp(no->texto, "true") == 0 || strcmp(no->texto, "Vazio") == 0) return VERDADEIRA;
+    if (strcmp(no->texto, "false") == 0) return FALSA;
+    if (strcmp(no->texto, "!") == 0) {
+        Condicao operando = condicao_constante(no->filho);
+        if (operando != DESCONHECIDA) return operando == FALSA ? VERDADEIRA : FALSA;
+    }
+    if (strcmp(no->texto, "&&") == 0 || strcmp(no->texto, "||") == 0) {
+        int conjuncao = strcmp(no->texto, "&&") == 0;
+        Condicao esquerda = condicao_constante(no->filho);
+        if (esquerda == (conjuncao ? FALSA : VERDADEIRA)) return esquerda;
+        if (esquerda != DESCONHECIDA) return condicao_constante(no->filho->irmao);
+    }
+    return DESCONHECIDA;
+}
+
+static void verificar_leituras(const NoAST *no, const Fluxo *fluxo) {
+    if (no == NULL) return;
+    if (no->identificador && !fluxo->inicializados[no->id_simbolo]) {
+        fprintf(stderr, "Erro semântico: Variável não inicializada '%s'.\n", no->texto);
+        erros_semanticos++;
+    }
+
+    const NoAST *a = no->filho;
+    verificar_leituras(a, fluxo);
+    if (a == NULL || a->irmao == NULL) return;
+    if (strcmp(no->texto, "&&") == 0 && condicao_constante(a) == FALSA) return;
+    if (strcmp(no->texto, "||") == 0 && condicao_constante(a) == VERDADEIRA) return;
+    verificar_leituras(a->irmao, fluxo);
+}
+
+static void verificar_fluxo(const NoAST *no, Fluxo *fluxo, Fluxo *saida_break);
+
+static void verificar_fluxo_if(const NoAST *condicao, Fluxo *fluxo, Fluxo *saida_break) {
+    const NoAST *verdadeiro = condicao->irmao;
+    const NoAST *falso = verdadeiro->irmao;
+    verificar_leituras(condicao, fluxo);
+    Condicao valor = condicao_constante(condicao);
+    if (valor != DESCONHECIDA) {
+        verificar_fluxo(valor == VERDADEIRA ? verdadeiro : falso, fluxo, saida_break);
+        return;
+    }
+
+    Fluxo alternativo = criar_fluxo(fluxo, 1);
+    if (alternativo.inicializados == NULL) return;
+    verificar_fluxo(verdadeiro, fluxo, saida_break);
+    verificar_fluxo(falso, &alternativo, saida_break);
+    unir_fluxos(fluxo, &alternativo);
+    free(alternativo.inicializados);
+}
+
+static void substituir_fluxo(Fluxo *destino, Fluxo origem) {
+    free(destino->inicializados);
+    *destino = origem;
+}
+
+static void verificar_fluxo_laco(const NoAST *no, Fluxo *fluxo) {
+    const NoAST *condicao = no->filho;
+    const NoAST *atualizacao = NULL;
+    if (strcmp(no->texto, "For") == 0) {
+        verificar_fluxo(no->filho, fluxo, NULL);
+        condicao = no->filho->irmao;
+        atualizacao = condicao->irmao;
+    }
+    verificar_leituras(condicao, fluxo);
+    Condicao valor = condicao_constante(condicao);
+    if (valor == FALSA) return;
+
+    /* A condição pode falhar na primeira passagem; break também pode sair. */
+    Fluxo fim = criar_fluxo(fluxo, valor != VERDADEIRA);
+    if (fim.inicializados == NULL) return;
+    const NoAST *corpo = atualizacao != NULL ? atualizacao->irmao : condicao->irmao;
+    verificar_fluxo(corpo, fluxo, &fim);
+    verificar_fluxo(atualizacao, fluxo, NULL);
+    substituir_fluxo(fluxo, fim);
+}
+
+static void verificar_fluxo_switch(const NoAST *seletor, Fluxo *fluxo) {
+    verificar_leituras(seletor, fluxo);
+    const NoAST *primeiro = seletor->irmao->filho;
+    int tem_default = 0;
+    for (const NoAST *caso = primeiro; caso != NULL; caso = caso->irmao) {
+        if (strcmp(caso->texto, "Default") == 0) tem_default = 1;
+    }
+
+    Fluxo entrada = criar_fluxo(fluxo, 1);
+    if (entrada.inicializados == NULL) return;
+    Fluxo fim = criar_fluxo(fluxo, !tem_default);
+    if (fim.inicializados == NULL) {
+        free(entrada.inicializados);
+        return;
+    }
+    for (const NoAST *caso = primeiro; caso != NULL; caso = caso->irmao) {
+        /* É sempre possível entrar diretamente pelo rótulo deste caso. */
+        unir_fluxos(fluxo, &entrada);
+        const NoAST *corpo = strcmp(caso->texto, "Default") == 0
+            ? caso->filho : caso->filho->irmao;
+        verificar_fluxo(corpo, fluxo, &fim);
+    }
+    unir_fluxos(&fim, fluxo);
+    substituir_fluxo(fluxo, fim);
+    free(entrada.inicializados);
+}
+
+static void verificar_fluxo(const NoAST *no, Fluxo *fluxo, Fluxo *saida_break) {
+    if (no == NULL || !fluxo->alcancavel) return;
+    const NoAST *a = no->filho;
+    if (strcmp(no->texto, "Bloco") == 0) {
+        for (const NoAST *comando = a; comando != NULL; comando = comando->irmao)
+            verificar_fluxo(comando, fluxo, saida_break);
+    } else if (strcmp(no->texto, "If") == 0) {
+        verificar_fluxo_if(a, fluxo, saida_break);
+    } else if (strcmp(no->texto, "For") == 0 || strcmp(no->texto, "While") == 0) {
+        verificar_fluxo_laco(no, fluxo);
+    } else if (strcmp(no->texto, "Switch") == 0) {
+        verificar_fluxo_switch(a, fluxo);
+    } else if (strcmp(no->texto, "Break") == 0) {
+        unir_fluxos(saida_break, fluxo);
+        fluxo->alcancavel = 0;
+    } else if (strcmp(no->texto, "Declaracao") == 0) {
+        const NoAST *nome = a->irmao;
+        verificar_leituras(nome->irmao, fluxo);
+        fluxo->inicializados[nome->id_simbolo] = nome->irmao != NULL;
+    } else if (strcmp(no->texto, "=") == 0 || operador_atualizacao(no->texto)) {
+        if (operador_atualizacao(no->texto)) verificar_leituras(a, fluxo);
+        verificar_leituras(a->irmao, fluxo);
+        fluxo->inicializados[a->id_simbolo] = 1;
+    } else {
+        verificar_leituras(a, fluxo);
+    }
+}
+
+void verificar_inicializacao(const NoAST *bloco) {
+    Fluxo fluxo = criar_fluxo(NULL, 1);
+    if (fluxo.inicializados == NULL) return;
+    verificar_fluxo(bloco, &fluxo, NULL);
+    free(fluxo.inicializados);
+}
+
 void imprimir_tabela(FILE *saida) {
     Simbolo *atual = tabela_simbolos;
     fprintf(saida, "\nTabela de simbolos (valor de inicializacao):\n");
@@ -465,6 +641,7 @@ void imprimir_tabela(FILE *saida) {
 
 void liberar_tabela(void) {
     proximo_escopo = 0;
+    quantidade_simbolos = 0;
     while (tabela_simbolos != NULL) {
         Simbolo *proximo = tabela_simbolos->proximo;
         free(tabela_simbolos->simbolo);

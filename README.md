@@ -1,6 +1,6 @@
 # Java Procedural — Analisador Léxico e Sintático
 
-Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual verifica a sintaxe e faz análise semântica inicial de declarações, usos de variáveis e contexto de `break`; ainda não executa o programa nem gera C.
+Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual analisa a entrada e oferece geração de código intermediário de pilha.
 
 ## Compilar e executar no WSL/Linux
 
@@ -53,7 +53,7 @@ O parser aceita:
 
 O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `final`, `byte`, `short`, `long`, `double`, `do`, `continue`, `return` e `null`. Reconhecer um token não significa que o parser já aceite construções que o utilizam. Classes, métodos e esses comandos/tipos adicionais ainda não fazem parte da gramática.
 
-No cabeçalho do `for`, a inicialização aceita uma declaração ou atribuição; a atualização aceita uma atribuição, incremento ou decremento. Listas separadas por vírgulas não estão implementadas. O `switch` usa a forma tradicional com `:`; não há validação de tipos ou constantes dos rótulos nesta etapa.
+No cabeçalho do `for`, a inicialização aceita uma declaração ou atribuição; a atualização aceita uma atribuição, incremento ou decremento. Listas separadas por vírgulas não estão implementadas. O `switch` usa a forma tradicional com `:`, seletor `int`, casos constantes inteiros distintos e até um `default`.
 
 Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não podem conter quebras de linha reais; sequências de escape continuam sendo reconhecidas.
 
@@ -83,7 +83,24 @@ A tabela rejeita uma variável já declarada no mesmo escopo e verifica os usos 
 
 O comando `break` só é permitido dentro de `while`, `for` ou `switch`, inclusive em condicionais e blocos aninhados nessas estruturas. Por exemplo, `while (true) { if (true) { break; } }` é aceito, enquanto `if (true) { break; }` gera `Erro semântico: 'break' fora de laço ou switch.`. A validação também rejeita um `break` depois do fechamento do laço ou `switch`.
 
-Essa análise inicial permite nomes repetidos em escopos diferentes e não verifica compatibilidade de tipos, inicialização antes da leitura, constantes ou unicidade dos rótulos de `switch`, nem todas as restrições semânticas do Java. A tradução para C está planejada para etapas futuras.
+## Código intermediário
+
+Use `--ir` para escrever as instruções em stdout após a validação semântica.
+
+```bash
+printf 'int x = 3 + 4;\n' | ./jtoc --ir
+```
+
+```text
+LOAD_CONST 3
+LOAD_CONST 4
+ADD
+STORE x
+```
+
+Com `--ir --debug`, a AST e a tabela de símbolos saem em stderr. O modo
+`--ir` também verifica inicialização antes da leitura e envia os diagnósticos léxicos a stderr.
+As [convenções da IR](docs/codigo-intermediario.md) descrevem os tipos e as instruções.
 
 ## Testes e arquivos
 
@@ -93,9 +110,8 @@ Na raiz, com Python 3 e GCC disponíveis, execute:
 python testes/test_analisador.py
 ```
 
-A suíte contém 45 testes, com subcasos para os 14 arquivos de entrada, tokens,
-diagnósticos, precedência na AST, tabela de símbolos, visibilidade de variáveis e
-contexto de `break`, com e sem `--debug`. Com Flex e Bison instalados,
+A suíte cobre os 14 arquivos de entrada, o analisador léxico, a AST, a semântica
+e a geração de IR. Com Flex e Bison instalados,
 use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
 uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada
 push e pull request.
@@ -114,6 +130,7 @@ O script compila os arquivos C gerados e verifica mensagens e códigos de saída
 | `src/jtoc.y` | Gramática do Bison, entrada do programa e chamadas dos módulos |
 | `src/ast.h` e `src/ast.c` | Estrutura da AST, criação, impressão, liberação e representação textual de expressões |
 | `src/tabela_simbolos.h` e `src/tabela_simbolos.c` | Tabela de símbolos, escopos, validação semântica, impressão e liberação |
+| `src/gerador_intermediario.h` e `src/gerador_intermediario.c` | Validação estrutural e emissão das instruções de pilha |
 | `src/Makefile` | Compilação e limpeza |
 | `testes/` | Entradas e verificador |
 | `docs/` | Documentação do projeto |

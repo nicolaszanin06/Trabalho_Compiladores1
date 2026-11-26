@@ -8,7 +8,7 @@ Na raiz do repositório, com Python 3 e GCC no `PATH`, execute:
 python testes/test_analisador.py
 ```
 
-No Linux, o comando pode ser `python3`. Os 45 testes compilam o analisador e um observador de tokens em uma pasta temporária, sem alterar os arquivos de `src/`. A suíte cobre tokens e diagnósticos, precedência na AST, tabela de símbolos, atribuições compostas, `for`, `switch`, escopos, declaração antes do uso e comportamento com e sem `--debug`.
+No Linux, o comando pode ser `python3`. Os testes compilam o analisador e um observador de tokens em uma pasta temporária, sem alterar os arquivos de `src/`. A suíte cobre tokens e diagnósticos, precedência na AST, tabela de símbolos, atribuições compostas, `for`, `switch`, escopos, declaração antes do uso e comportamento com e sem `--debug`.
 
 Os testes de `break` verificam a rejeição fora de laços e `switch`, inclusive depois do fechamento dessas estruturas. Também verificam a aceitação em `while`, `for` e `switch`, com condicionais, blocos e estruturas aninhadas.
 

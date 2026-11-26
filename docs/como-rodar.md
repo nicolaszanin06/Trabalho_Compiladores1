@@ -33,7 +33,7 @@ echo $? # 1: break fora de laço ou switch
 
 O segundo exemplo escreve `Erro semântico: 'break' fora de laço ou switch.` em stderr. Nenhum dump ou mensagem de sucesso é impresso, mesmo com `--debug`.
 
-No PowerShell, com GCC instalado no Windows, rode `./testes/executar.ps1` na raiz. Esse script verifica os 14 arquivos de entrada usando os arquivos C já gerados; alterações em Flex/Bison precisam ser regeneradas antes. Para executar os 45 testes, incluindo as regras semânticas e o contexto de `break`, use `python testes/test_analisador.py` na raiz. Veja [Testes e validação](testes.md).
+No PowerShell, com GCC instalado no Windows, rode `./testes/executar.ps1` na raiz. Esse script verifica os 14 arquivos de entrada usando os arquivos C já gerados; alterações em Flex/Bison precisam ser regeneradas antes. Para executar a suíte Python, incluindo as regras semânticas e o contexto de `break`, use `python testes/test_analisador.py` na raiz. Veja [Testes e validação](testes.md).
 
 Para limpar os arquivos gerados, execute `make clean` dentro de `src/`.
 

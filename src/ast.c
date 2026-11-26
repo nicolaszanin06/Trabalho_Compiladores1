@@ -108,3 +108,64 @@ char *texto_expressao(NoAST *no) {
     free(direita);
     return texto;
 }
+
+static const char *instrucao_aritmetica(const char *operador, int unario) {
+    if (strcmp(operador, "-") == 0) return unario ? "NEG" : "SUB";
+    if (unario) return NULL;
+    if (strcmp(operador, "+") == 0) return "ADD";
+    if (strcmp(operador, "*") == 0) return "MUL";
+    if (strcmp(operador, "/") == 0) return "DIV";
+    if (strcmp(operador, "%") == 0) return "MOD";
+    return NULL;
+}
+
+static int gerar_expressao_inteira(const NoAST *no, int emitir) {
+    if (no == NULL) return 0;
+
+    const NoAST *esquerda = no->filho;
+    if (esquerda == NULL) {
+        if (no->identificador || no->texto[0] == '\0'
+                || no->texto[strspn(no->texto, "0123456789")] != '\0') {
+            return 0;
+        }
+        if (emitir) printf("LOAD_CONST %s\n", no->texto);
+        return 1;
+    }
+
+    const NoAST *direita = esquerda->irmao;
+    const char *instrucao = instrucao_aritmetica(no->texto, direita == NULL);
+    if (instrucao == NULL || !gerar_expressao_inteira(esquerda, emitir)
+            || (direita != NULL && !gerar_expressao_inteira(direita, emitir))) {
+        return 0;
+    }
+
+    if (emitir) puts(instrucao);
+    return 1;
+}
+
+static int gerar_declaracoes_inteiras(const NoAST *bloco, int emitir) {
+    for (const NoAST *no = bloco->filho; no != NULL; no = no->irmao) {
+        if (strcmp(no->texto, "Declaracao") != 0) return 0;
+
+        const NoAST *tipo = no->filho;
+        const NoAST *nome = tipo->irmao;
+        if (strcmp(tipo->texto, "int") != 0
+                || !gerar_expressao_inteira(nome->irmao, emitir)) {
+            return 0;
+        }
+
+        if (emitir) printf("STORE %s\n", nome->texto);
+    }
+
+    return 1;
+}
+
+int imprimir_codigo_intermediario(const NoAST *bloco) {
+    if (!gerar_declaracoes_inteiras(bloco, 0)) {
+        fprintf(stderr,
+                "Geracao intermediaria: esperadas declaracoes int com expressoes de literais inteiros.\n");
+        return 0;
+    }
+
+    return gerar_declaracoes_inteiras(bloco, 1);
+}

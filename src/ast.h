@@ -22,5 +22,6 @@ void imprimir_ast(NoAST *no, int nivel);
 void liberar_ast(NoAST *no);
 /* O chamador deve liberar o texto retornado com free. */
 char *texto_expressao(NoAST *no);
+int imprimir_codigo_intermediario(const NoAST *bloco);
 
 #endif

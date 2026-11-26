@@ -1,11 +1,14 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdint.h>
+
 /* Cada no guarda seu texto, o primeiro filho e o proximo irmao. */
 typedef struct NoAST {
     char *texto;
     int identificador;
     int id_escopo;
+    int32_t valor_caso;
     const char *tipo; /* Tipo resolvido pela analise semantica. */
     struct NoAST *filho;
     struct NoAST *irmao;

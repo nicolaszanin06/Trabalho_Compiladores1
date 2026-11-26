@@ -519,6 +519,56 @@ class AnalisadorTest(unittest.TestCase):
                           "GE", "NOT", "STORE b", "LOAD_CONST 'a'", "STORE c",
                           'LOAD_CONST "a%"', "STORE s"])
 
+    def test_ir_controle_de_fluxo_e_break_mais_proximo(self):
+        self.conferir_ir(
+            "for (;;) { while (false) { break; } if (true) { break; } else {} }",
+            ["LABEL L0", "LABEL L2", "LOAD_CONST false", "JUMP_IF_FALSE L3",
+             "JUMP L3", "JUMP L2", "LABEL L3", "LOAD_CONST true",
+             "JUMP_IF_FALSE L4", "JUMP L1", "JUMP L5", "LABEL L4",
+             "LABEL L5", "JUMP L0", "LABEL L1"])
+
+    def test_ir_for_com_atualizacao_e_if_sem_else(self):
+        self.conferir_ir(
+            "for (int i = 0; i < 3; i++) { if (i == 2) { break; } }",
+            ["LOAD_CONST 0", "STORE @1:i", "LABEL L0", "LOAD @1:i", "LOAD_CONST 3",
+             "LT", "JUMP_IF_FALSE L1", "LOAD @1:i", "LOAD_CONST 2", "EQ",
+             "JUMP_IF_FALSE L2", "JUMP L1", "LABEL L2", "LABEL L3", "LOAD @1:i",
+             "LOAD_CONST 1", "ADD", "STORE @1:i", "JUMP L0", "LABEL L1"])
+
+    def test_ir_curto_circuito(self):
+        self.conferir_ir(
+            "int x = 0; boolean b = x != 0 && 10 / x > 1; boolean c = b || true;",
+            ["LOAD_CONST 0", "STORE x", "LOAD x", "LOAD_CONST 0", "NE",
+             "JUMP_IF_FALSE L0", "LOAD_CONST 10", "LOAD x", "DIV", "LOAD_CONST 1",
+             "GT", "JUMP L1", "LABEL L0", "LOAD_CONST false", "LABEL L1", "STORE b",
+             "LOAD b", "NOT", "JUMP_IF_FALSE L2", "LOAD_CONST true", "JUMP L3",
+             "LABEL L2", "LOAD_CONST true", "LABEL L3", "STORE c"])
+
+    def test_ir_switch_casos_agrupados_e_fall_through(self):
+        entrada = "int x = 2; switch (x) { case 1 + 1: case -1: x++; default: break; }"
+        linhas = ["LOAD_CONST 2", "STORE x", "LOAD x", "STORE @tmp0",
+                  "LOAD @tmp0", "LOAD_CONST 2", "NE", "JUMP_IF_FALSE L1",
+                  "LOAD @tmp0", "LOAD_CONST -1", "NE", "JUMP_IF_FALSE L2", "JUMP L3",
+                  "LABEL L1", "LABEL L2", "LOAD x", "LOAD_CONST 1", "ADD", "STORE x",
+                  "LABEL L3", "JUMP L0", "LABEL L0"]
+        for _ in range(2):
+            self.conferir_ir(entrada, linhas)
+
+    def test_ir_switch_rejeita_seletor_e_casos_invalidos(self):
+        for comando, erro in (
+            ("switch (true) {}", "seletor"),
+            ("switch (x) { case x: }", "constante"),
+            ("switch (x) { case 2: case 1 + 1: }", "case duplicado"),
+            ("switch (x) { case 1 / 0: }", "constante"),
+            ("switch (x) { default: default: }", "default duplicado"),
+        ):
+            with self.subTest(comando=comando):
+                resultado = self.executar_parser("int x = 1; " + comando,
+                                                 argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn(erro, resultado.stderr)
+
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(
             "int x = 3 + 4;",

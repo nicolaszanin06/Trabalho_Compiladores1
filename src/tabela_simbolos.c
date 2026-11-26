@@ -1,4 +1,5 @@
 #include "tabela_simbolos.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -289,6 +290,103 @@ static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
     }
 }
 
+/* Expressões constantes int seguem a aritmética de 32 bits. */
+static int32_t inteiro32(int64_t valor) {
+    uint32_t bits = (uint32_t)valor;
+    return bits <= INT32_MAX ? (int32_t)bits : (int32_t)((int64_t)bits - INT64_C(4294967296));
+}
+
+static int constante_inteira(const NoAST *no, int32_t *resultado) {
+    if (no->tipo == NULL || strcmp(no->tipo, "int") != 0 || no->identificador) return 0;
+    const NoAST *a = no->filho;
+    if (a == NULL) {
+        errno = 0;
+        char *fim;
+        long long valor = strtoll(no->texto, &fim, 10);
+        if (errno != 0 || *fim != '\0' || valor > INT32_MAX) return 0;
+        *resultado = (int32_t)valor;
+        return 1;
+    }
+
+    int32_t esquerda, direita;
+    const NoAST *b = a->irmao;
+    if (b == NULL && strcmp(no->texto, "-") == 0 && a->filho == NULL
+            && !a->identificador) {
+        errno = 0;
+        char *fim;
+        long long valor = strtoll(a->texto, &fim, 10);
+        if (errno != 0 || *fim != '\0' || valor > -(int64_t)INT32_MIN) return 0;
+        *resultado = (int32_t)-valor;
+        return 1;
+    }
+    if (!constante_inteira(a, &esquerda)) return 0;
+    if (b == NULL) {
+        if (strcmp(no->texto, "-") != 0) return 0;
+        *resultado = inteiro32(-(int64_t)esquerda);
+        return 1;
+    }
+    if (!constante_inteira(b, &direita)) return 0;
+
+    switch (no->texto[0]) {
+        case '+': *resultado = inteiro32((int64_t)esquerda + direita); break;
+        case '-': *resultado = inteiro32((int64_t)esquerda - direita); break;
+        case '*': *resultado = inteiro32((int64_t)esquerda * direita); break;
+        case '/':
+            if (direita == 0) return 0;
+            *resultado = inteiro32((int64_t)esquerda / direita);
+            break;
+        case '%':
+            if (direita == 0) return 0;
+            *resultado = (int32_t)((int64_t)esquerda % direita);
+            break;
+        default: return 0;
+    }
+    return 1;
+}
+
+static void analisar_switch(NoAST *comando, Escopo *escopo) {
+    Escopo escopo_switch = {proximo_escopo++, escopo};
+    NoAST *seletor = comando->filho;
+    NoAST *primeiro = seletor->irmao->filho;
+    verificar_expressao(seletor, escopo);
+    const char *tipo = inferir_tipo_expressao(seletor, escopo);
+    if (tipo != NULL && strcmp(tipo, "int") != 0) {
+        fprintf(stderr, "Erro semântico: seletor de switch deve ser int.\n");
+        erros_semanticos++;
+    }
+
+    int tem_default = 0;
+    contextos_break++;
+    for (NoAST *caso = primeiro; caso != NULL; caso = caso->irmao) {
+        NoAST *corpo = caso->filho;
+        if (strcmp(caso->texto, "Case") == 0) {
+            verificar_expressao(corpo, &escopo_switch);
+            inferir_tipo_expressao(corpo, &escopo_switch);
+            caso->tipo = NULL;
+            if (!constante_inteira(corpo, &caso->valor_caso)) {
+                fprintf(stderr, "Erro semântico: case deve ser uma expressão constante int.\n");
+                erros_semanticos++;
+            } else {
+                caso->tipo = "int";
+                for (NoAST *anterior = primeiro; anterior != caso; anterior = anterior->irmao) {
+                    if (anterior->tipo != NULL && anterior->valor_caso == caso->valor_caso) {
+                        fprintf(stderr, "Erro semântico: valor de case duplicado.\n");
+                        erros_semanticos++;
+                        break;
+                    }
+                }
+            }
+            corpo = corpo->irmao;
+        } else if (tem_default++) {
+            fprintf(stderr, "Erro semântico: default duplicado.\n");
+            erros_semanticos++;
+        }
+        /* Case nao abre escopo; apenas chaves explicitas abrem outro. */
+        analisar_comandos(corpo, &escopo_switch);
+    }
+    contextos_break--;
+}
+
 void analisar_comando(NoAST *comando, Escopo *escopo) {
     if (strcmp(comando->texto, "Declaracao") == 0) {
         NoAST *tipo = comando->filho;
@@ -337,22 +435,7 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         montar_tabela(corpo, &escopo_for);
         contextos_break--;
     } else if (strcmp(comando->texto, "Switch") == 0) {
-        Escopo escopo_switch = {proximo_escopo++, escopo};
-        NoAST *expressao = comando->filho;
-        NoAST *caso = expressao->irmao->filho;
-        verificar_expressao(expressao, escopo);
-        contextos_break++;
-        while (caso != NULL) {
-            NoAST *corpo = caso->filho;
-            if (strcmp(caso->texto, "Case") == 0) {
-                verificar_expressao(corpo, &escopo_switch);
-                corpo = corpo->irmao;
-            }
-            /* Case nao abre escopo; apenas chaves explicitas abrem outro. */
-            analisar_comandos(corpo, &escopo_switch);
-            caso = caso->irmao;
-        }
-        contextos_break--;
+        analisar_switch(comando, escopo);
     } else if (strcmp(comando->texto, "Break") == 0) {
         if (contextos_break == 0) {
             fprintf(stderr, "Erro semântico: 'break' fora de laço ou switch.\n");

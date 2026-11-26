@@ -46,7 +46,9 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
         exit(EXIT_FAILURE);
     }
     novo->simbolo = strdup(nome->texto);
-    novo->tipo = strdup(tipo->texto);
+    novo->tipo = tipo->texto;
+    nome->tipo = novo->tipo;
+    nome->id_escopo = escopo->id;
     novo->valor = texto_expressao(nome->irmao);
     novo->escopo = escopo->pai == NULL ? "global" : "local";
     novo->id_escopo = escopo->id;
@@ -109,7 +111,9 @@ static int tipo_numerico(const char *tipo) {
     return strcmp(tipo, "int") == 0 || strcmp(tipo, "float") == 0;
 }
 
-static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
+static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo);
+
+static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
     if (no == NULL) {
         return NULL;
     }
@@ -181,6 +185,7 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
         if (simbolo == NULL) {
             return NULL;
         }
+        no->id_escopo = simbolo->id_escopo;
         return simbolo->tipo;
     }
 
@@ -203,6 +208,12 @@ static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
     }
 
     return NULL;
+}
+
+static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo) {
+    if (no == NULL) return NULL;
+    no->tipo = calcular_tipo(no, escopo);
+    return no->tipo;
 }
 
 static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
@@ -233,6 +244,7 @@ static void verificar_atribuicao(NoAST *comando, Escopo *escopo) {
 
     verificar_expressao(comando, escopo);
 
+    inferir_tipo_expressao(nome, escopo);
     Simbolo *destino = buscar_simbolo(nome->texto, escopo);
     const char *origem = inferir_tipo_expressao(expressao, escopo);
     if (destino != NULL && origem != NULL && !tipos_compativeis(destino->tipo, origem)) {
@@ -258,6 +270,7 @@ static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
 
     verificar_expressao(comando, escopo);
 
+    inferir_tipo_expressao(nome, escopo);
     Simbolo *destino = buscar_simbolo(nome->texto, escopo);
     const char *origem = inferir_tipo_expressao(expressao, escopo);
     if (destino == NULL || (expressao != NULL && origem == NULL)) {
@@ -268,6 +281,10 @@ static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
         fprintf(stderr,
                 "Erro semântico: operador '%s' exige operandos numéricos.\n",
                 comando->texto);
+        erros_semanticos++;
+    } else if (origem != NULL && !tipos_compativeis(destino->tipo, origem)) {
+        fprintf(stderr, "Erro semântico: atualização de '%s' tem tipo incompatível '%s'.\n",
+                nome->texto, origem);
         erros_semanticos++;
     }
 }
@@ -371,10 +388,10 @@ void imprimir_tabela(void) {
 }
 
 void liberar_tabela(void) {
+    proximo_escopo = 0;
     while (tabela_simbolos != NULL) {
         Simbolo *proximo = tabela_simbolos->proximo;
         free(tabela_simbolos->simbolo);
-        free(tabela_simbolos->tipo);
         free(tabela_simbolos->valor);
         free(tabela_simbolos);
         tabela_simbolos = proximo;

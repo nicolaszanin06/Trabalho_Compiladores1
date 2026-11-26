@@ -3,148 +3,122 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Retorna a instrucao correspondente ao operador. */
-static const char *instrucao_aritmetica(
-    const char *operador,
-    int unario
-) {
-    if (strcmp(operador, "-") == 0)
-        return unario ? "NEG" : "SUB";
+typedef struct Gerador {
+    FILE *saida;
+} Gerador;
 
-    if (unario)
+static int eh(const NoAST *no, const char *texto) {
+    return no != NULL && strcmp(no->texto, texto) == 0;
+}
+
+static const NoAST *irmao(const NoAST *no) {
+    return no != NULL ? no->irmao : NULL;
+}
+
+static int tipo_eh(const NoAST *no, const char *tipo) {
+    return no != NULL && no->tipo != NULL && strcmp(no->tipo, tipo) == 0;
+}
+
+static const char *instrucao_operador(const char *operador, int unario) {
+    static const struct { const char *operador; const char *instrucao; } operacoes[] = {
+        {"+", "ADD"}, {"-", "SUB"}, {"*", "MUL"}, {"/", "DIV"}, {"%", "MOD"},
+        {"+=", "ADD"}, {"-=", "SUB"}, {"*=", "MUL"}, {"/=", "DIV"},
+        {"++", "ADD"}, {"--", "SUB"},
+        {"==", "EQ"}, {"!=", "NE"}, {"<", "LT"}, {"<=", "LE"}, {">", "GT"}, {">=", "GE"}
+    };
+    if (unario) {
+        if (strcmp(operador, "-") == 0) return "NEG";
+        if (strcmp(operador, "!") == 0) return "NOT";
         return NULL;
-
-    if (strcmp(operador, "+") == 0)
-        return "ADD";
-
-    if (strcmp(operador, "*") == 0)
-        return "MUL";
-
-    if (strcmp(operador, "/") == 0)
-        return "DIV";
-
-    if (strcmp(operador, "%") == 0)
-        return "MOD";
-
+    }
+    for (size_t i = 0; i < sizeof operacoes / sizeof operacoes[0]; i++) {
+        if (strcmp(operador, operacoes[i].operador) == 0) return operacoes[i].instrucao;
+    }
     return NULL;
 }
 
-/* Valida ou gera uma expressao de literais inteiros. */
-static int gerar_expressao_inteira(
-    const NoAST *no,
-    int emitir
-) {
-    if (no == NULL)
+static void instrucao(Gerador *g, const char *opcode) {
+    if (g->saida) fprintf(g->saida, "%s\n", opcode);
+}
+
+static void constante(Gerador *g, const char *lexema) {
+    if (g->saida) fprintf(g->saida, "LOAD_CONST %s\n", lexema);
+}
+
+static int variavel(Gerador *g, const char *opcode, const NoAST *nome) {
+    if (nome == NULL || !nome->identificador || nome->id_escopo < 0 || nome->tipo == NULL)
         return 0;
+    if (g->saida) {
+        if (nome->id_escopo == 0) fprintf(g->saida, "%s %s\n", opcode, nome->texto);
+        else fprintf(g->saida, "%s @%d:%s\n", opcode, nome->id_escopo, nome->texto);
+    }
+    return 1;
+}
 
-    const NoAST *esquerda = no->filho;
+static int gerar_expressao(Gerador *g, const NoAST *no) {
+    if (no == NULL || no->tipo == NULL) return 0;
+    if (no->identificador) return variavel(g, "LOAD", no);
 
-    /* Caso base: literal inteiro. */
-    if (esquerda == NULL) {
-        if (no->identificador ||
-            no->texto[0] == '\0' ||
-            no->texto[strspn(
-                no->texto, "0123456789"
-            )] != '\0') {
-            return 0;
-        }
-
-        if (emitir)
-            printf("LOAD_CONST %s\n", no->texto);
-
+    const NoAST *a = no->filho;
+    const NoAST *b = irmao(a);
+    if (a == NULL) {
+        constante(g, no->texto);
         return 1;
     }
 
-    const NoAST *direita = esquerda->irmao;
-
-    const char *instrucao = instrucao_aritmetica(
-        no->texto,
-        direita == NULL
-    );
-
-    if (instrucao == NULL)
-        return 0;
-
-    if (direita != NULL && direita->irmao != NULL)
-        return 0;
-
-    /* Primeiro, gera o operando esquerdo. */
-    if (!gerar_expressao_inteira(esquerda, emitir))
-        return 0;
-
-    /* Depois, gera o operando direito, se existir. */
-    if (direita != NULL &&
-        !gerar_expressao_inteira(direita, emitir)) {
-        return 0;
-    }
-
-    /* Por ultimo, gera a operacao. */
-    if (emitir)
-        puts(instrucao);
-
+    const char *opcode = instrucao_operador(no->texto, b == NULL);
+    if (opcode == NULL || irmao(b) != NULL || !gerar_expressao(g, a)) return 0;
+    if (tipo_eh(a, "int") && tipo_eh(b, "float")) instrucao(g, "I2F");
+    if (b != NULL && !gerar_expressao(g, b)) return 0;
+    if (tipo_eh(a, "float") && tipo_eh(b, "int")) instrucao(g, "I2F");
+    instrucao(g, opcode);
     return 1;
 }
 
-/* Percorre as declaracoes presentes no bloco. */
-static int gerar_declaracoes_inteiras(
-    const NoAST *bloco,
-    int emitir
-) {
-    if (bloco == NULL)
-        return 0;
+static int gerar_bloco(Gerador *g, const NoAST *bloco);
 
-    for (
-        const NoAST *no = bloco->filho;
-        no != NULL;
-        no = no->irmao
-    ) {
-        if (strcmp(no->texto, "Declaracao") != 0)
-            return 0;
+static int gerar_comando(Gerador *g, const NoAST *no) {
+    if (no == NULL) return 0;
+    const NoAST *a = no->filho;
+    if (eh(no, "Bloco")) return gerar_bloco(g, no);
+    if (eh(no, "Declaracao") || eh(no, "=")) {
+        const NoAST *nome = eh(no, "Declaracao") ? irmao(a) : a;
+        const NoAST *valor = irmao(nome);
+        if (valor == NULL) return nome != NULL && eh(no, "Declaracao");
+        if (!gerar_expressao(g, valor)) return 0;
+        if (tipo_eh(nome, "float") && tipo_eh(valor, "int")) instrucao(g, "I2F");
+        return variavel(g, "STORE", nome);
+    }
 
-        const NoAST *tipo = no->filho;
-
-        if (tipo == NULL)
-            return 0;
-
-        const NoAST *nome = tipo->irmao;
-
-        if (nome == NULL)
-            return 0;
-
-        const NoAST *expressao = nome->irmao;
-
-        if (strcmp(tipo->texto, "int") != 0)
-            return 0;
-
-        if (!gerar_expressao_inteira(
-                expressao, emitir
-            )) {
-            return 0;
+    if (eh(no, "+=") || eh(no, "-=") || eh(no, "*=") || eh(no, "/=")
+            || eh(no, "++") || eh(no, "--")) {
+        if (!variavel(g, "LOAD", a)) return 0;
+        const NoAST *valor = irmao(a);
+        if (eh(no, "++") || eh(no, "--")) constante(g, tipo_eh(a, "float") ? "1.0" : "1");
+        else {
+            if (!gerar_expressao(g, valor)) return 0;
+            if (tipo_eh(a, "float") && tipo_eh(valor, "int")) instrucao(g, "I2F");
         }
-
-        if (emitir)
-            printf("STORE %s\n", nome->texto);
+        instrucao(g, instrucao_operador(no->texto, 0));
+        return variavel(g, "STORE", a);
     }
+    return 0;
+}
 
+static int gerar_bloco(Gerador *g, const NoAST *bloco) {
+    if (!eh(bloco, "Bloco")) return 0;
+    for (const NoAST *no = bloco->filho; no != NULL; no = no->irmao) {
+        if (!gerar_comando(g, no)) return 0;
+    }
     return 1;
 }
 
-/* Interface publica do gerador. */
-int imprimir_codigo_intermediario(
-    const NoAST *bloco
-) {
-    /* Primeira passagem: somente validacao. */
-    if (!gerar_declaracoes_inteiras(bloco, 0)) {
-        fprintf(
-            stderr,
-            "Geracao intermediaria: esperadas "
-            "declaracoes int com expressoes "
-            "de literais inteiros.\n"
-        );
-
+int imprimir_codigo_intermediario(const NoAST *bloco) {
+    Gerador validacao = {NULL};
+    if (!gerar_bloco(&validacao, bloco)) {
+        fprintf(stderr, "Geracao intermediaria: instrucao ou expressao nao suportada.\n");
         return 0;
     }
-
-    /* Segunda passagem: emissao das instrucoes. */
-    return gerar_declaracoes_inteiras(bloco, 1);
+    Gerador emissao = {stdout};
+    return gerar_bloco(&emissao, bloco) && fflush(stdout) == 0;
 }

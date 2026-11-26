@@ -32,6 +32,8 @@ NoAST *criar_no(const char *texto) {
     no->filho = NULL;
     no->irmao = NULL;
     no->identificador = 0;
+    no->id_escopo = -1;
+    no->tipo = NULL;
 
     return no;
 }

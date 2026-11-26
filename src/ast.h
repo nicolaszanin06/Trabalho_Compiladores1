@@ -5,6 +5,8 @@
 typedef struct NoAST {
     char *texto;
     int identificador;
+    int id_escopo;
+    const char *tipo; /* Tipo resolvido pela analise semantica. */
     struct NoAST *filho;
     struct NoAST *irmao;
 } NoAST;

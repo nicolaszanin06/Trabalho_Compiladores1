@@ -6,7 +6,7 @@
 /* Uma entrada para cada declaracao encontrada no programa. */
 typedef struct Simbolo {
     char *simbolo;
-    char *tipo;
+    const char *tipo;
     char *valor;
     const char *escopo;
     int id_escopo;

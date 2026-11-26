@@ -479,7 +479,7 @@ class AnalisadorTest(unittest.TestCase):
 
     def test_codigo_intermediario_falha_sem_emitir_saida_parcial(self):
         casos = (
-            ("int x = 3 + 4; float y = 2.5;", "Geracao intermediaria"),
+            ("int x = 3 + 4; continue;", "Erro sintatico"),
             ("int x = 3 + 4; int y = true;", "inicializador"),
         )
         for entrada, mensagem in casos:
@@ -498,6 +498,26 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.stdout, "")
                 self.assertIn("[--debug] [--ir] [arquivo.java]", resultado.stderr)
 
+
+    def conferir_ir(self, entrada, linhas):
+        resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertEqual(resultado.stderr, "")
+        self.assertEqual(resultado.stdout.splitlines(), linhas)
+
+    def test_ir_operandos_atualizacoes_e_escopo(self):
+        self.conferir_ir("int x = 20 / 3 % 2 - 1; { int x = 3; x++; } x -= 2; int y;",
+                         ["LOAD_CONST 20", "LOAD_CONST 3", "DIV", "LOAD_CONST 2",
+                          "MOD", "LOAD_CONST 1", "SUB", "STORE x",
+                          "LOAD_CONST 3", "STORE @1:x", "LOAD @1:x",
+                          "LOAD_CONST 1", "ADD", "STORE @1:x",
+                          "LOAD x", "LOAD_CONST 2", "SUB", "STORE x"])
+
+    def test_ir_tipos_e_comparacoes(self):
+        self.conferir_ir('float x = 2; boolean b = !(x >= 2.5); char c = \'a\'; String s = "a%";',
+                         ["LOAD_CONST 2", "I2F", "STORE x", "LOAD x", "LOAD_CONST 2.5",
+                          "GE", "NOT", "STORE b", "LOAD_CONST 'a'", "STORE c",
+                          'LOAD_CONST "a%"', "STORE s"])
 
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 int erros_lexicos = 0;
+FILE *saida_lexica;
 int linha_comentario = 1;
 %}
 
@@ -123,7 +124,7 @@ SINGLE_COMMENT  "//".*
 {IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 
     /* Tratamento de erro para String não fechada */
-\"([^"\\\r\n]|\\[^\r\n])*\\?   { erros_lexicos++; printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }
+\"([^"\\\r\n]|\\[^\r\n])*\\?   { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: String nao encerrada\n", yylineno); }
 
     /* Descarte de Espaços e Comentários */
 {WHITESPACE}      { /* ignora */ }
@@ -132,8 +133,8 @@ SINGLE_COMMENT  "//".*
 <COMENTARIO>"*/"  { BEGIN(INITIAL); }
 <COMENTARIO>\n    { /* ignora; yylineno conta a quebra de linha */ }
 <COMENTARIO>.     { /* ignora */ }
-<COMENTARIO><<EOF>> { erros_lexicos++; printf("Erro lexico na linha %d: Comentario nao encerrado\n", linha_comentario); BEGIN(INITIAL); return 0; }
+<COMENTARIO><<EOF>> { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Comentario nao encerrado\n", linha_comentario); BEGIN(INITIAL); return 0; }
 
-.                 { erros_lexicos++; printf("Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
+.                 { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
 
 %%

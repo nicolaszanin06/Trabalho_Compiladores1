@@ -10,6 +10,7 @@ extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
 extern int erros_lexicos;
+extern FILE *saida_lexica;
 
 int yywrap(void);
 void yyerror(const char *s);
@@ -22,7 +23,7 @@ void yyerror(const char *s);
 
 /* Raiz usada pelas acoes da gramatica e impressao opcional de debug. */
 %code {
-void debug_compiler(void);
+static void debug_compiler(FILE *saida);
 
 NoAST *raiz = NULL;
 }
@@ -207,10 +208,10 @@ incrementacao:
 %%
 
 /* Toda a saida de inspecao fica aqui; a analise nao depende desta funcao. */
-void debug_compiler(void) {
-    printf("AST:\n");
-    imprimir_ast(raiz, 0);
-    imprimir_tabela();
+static void debug_compiler(FILE *saida) {
+    fprintf(saida, "AST:\n");
+    imprimir_ast(raiz, 0, saida);
+    imprimir_tabela(saida);
 }
 
 void yyerror(const char *s) {
@@ -247,6 +248,7 @@ int main(int argc, char **argv) {
         yyin = f;
     }
 
+    saida_lexica = gerar_ir ? stderr : stdout;
     int resultado = yyparse();
     if (resultado == 0 && erros_lexicos == 0) {
         montar_tabela(raiz, NULL);
@@ -256,7 +258,7 @@ int main(int argc, char **argv) {
             } else {
                 printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
             }
-            if (resultado == 0 && imprimir_debug) debug_compiler();
+            if (resultado == 0 && imprimir_debug) debug_compiler(gerar_ir ? stderr : stdout);
         }
     }
 

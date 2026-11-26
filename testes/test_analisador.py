@@ -569,6 +569,44 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.stdout, "")
                 self.assertIn(erro, resultado.stderr)
 
+    def test_ir_imprime_tipos_e_preserva_escapes(self):
+        texto = r'"a\"b\n%"'
+        caractere = r"'\t'"
+        self.conferir_ir(
+            f"System.out.print({texto}); System.out.println({caractere}); "
+            "System.out.println(true); System.out.print(2.5); System.out.print(2);",
+            [f"LOAD_CONST {texto}", "PRINT", f"LOAD_CONST {caractere}", "PRINTLN",
+             "LOAD_CONST true", "PRINTLN", "LOAD_CONST 2.5", "PRINT",
+             "LOAD_CONST 2", "PRINT"])
+
+    def test_ir_gera_funcoes_matematicas_e_valida_tipos(self):
+        self.conferir_ir(
+            "float x = Math.pow(2, Math.sqrt(9.0));",
+            ["LOAD_CONST 2", "I2F", "LOAD_CONST 9.0", "SQRT", "POW", "STORE x"])
+        for entrada, erro in (
+            ("int y = Math.sqrt(9);", "inicializador"),
+            ("System.out.print(Math.pow(2, false));", "numérico"),
+            ("System.out.print(Math.sqrt());", "Erro sintatico"),
+        ):
+            with self.subTest(entrada=entrada):
+                resultado = self.executar_parser("int x = 1; " + entrada,
+                                                 argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn(erro, resultado.stderr)
+
+    def test_debug_e_diagnostico_lexico_ficam_fora_da_ir(self):
+        resultado = self.executar_parser("int x = 4;", argumentos=("--ir",))
+        self.assertEqual(resultado.returncode, 0)
+        self.assertEqual(resultado.stdout, "LOAD_CONST 4\nSTORE x\n")
+        self.assertIn("AST:", resultado.stderr)
+        self.assertIn("Tabela de simbolos", resultado.stderr)
+
+        resultado = self.executar_parser("int x = 4; @", argumentos=("--ir",))
+        self.assertEqual(resultado.returncode, 1)
+        self.assertEqual(resultado.stdout, "")
+        self.assertIn("Erro lexico", resultado.stderr)
+
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(
             "int x = 3 + 4;",

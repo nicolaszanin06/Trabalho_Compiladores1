@@ -89,16 +89,17 @@ NoAST *criar_identificador(char *texto) {
     return no;
 }
 
-void imprimir_ast(NoAST *no, int nivel) {
+void imprimir_ast(const NoAST *no, int nivel, FILE *saida) {
     while (no != NULL) {
-        printf(
+        fprintf(
+            saida,
             "%*s%s\n",
             nivel * 2,
             "",
             no->texto
         );
 
-        imprimir_ast(no->filho, nivel + 1);
+        imprimir_ast(no->filho, nivel + 1, saida);
 
         no = no->irmao;
     }

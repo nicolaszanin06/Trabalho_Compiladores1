@@ -92,6 +92,19 @@ static int gerar_expressao(Gerador *g, const NoAST *no) {
 
     if (eh(no, "&&") || eh(no, "||")) return gerar_logica(g, no, a, b);
 
+    if (eh(no, "Math.sqrt") || eh(no, "Math.pow")) {
+        int potencia = eh(no, "Math.pow");
+        if ((b != NULL) != potencia || irmao(b) != NULL || !gerar_expressao(g, a))
+            return 0;
+        if (tipo_eh(a, "int")) instrucao(g, "I2F");
+        if (potencia) {
+            if (!gerar_expressao(g, b)) return 0;
+            if (tipo_eh(b, "int")) instrucao(g, "I2F");
+        }
+        instrucao(g, potencia ? "POW" : "SQRT");
+        return 1;
+    }
+
     const char *opcode = instrucao_operador(no->texto, b == NULL);
     if (opcode == NULL || irmao(b) != NULL || !gerar_expressao(g, a)) return 0;
     if (tipo_eh(a, "int") && tipo_eh(b, "float")) instrucao(g, "I2F");
@@ -202,6 +215,11 @@ static int gerar_comando(Gerador *g, const NoAST *no, const ContextoBreak *saida
     if (eh(no, "If")) return gerar_if(g, a, saida);
     if (eh(no, "While") || eh(no, "For")) return gerar_laco(g, no);
     if (eh(no, "Switch")) return gerar_switch(g, a);
+    if (eh(no, "Print") || eh(no, "Println")) {
+        if (!gerar_expressao(g, a)) return 0;
+        instrucao(g, eh(no, "Print") ? "PRINT" : "PRINTLN");
+        return 1;
+    }
     if (eh(no, "Vazio")) return 1;
     if (eh(no, "Break") && saida != NULL) {
         desvio(g, "JUMP", saida->fim);

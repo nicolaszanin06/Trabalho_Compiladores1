@@ -68,21 +68,6 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
     }
 }
 
-/* Visita somente a expressao recebida; seus irmaos pertencem ao comando pai. */
-void verificar_expressao(NoAST *no, Escopo *escopo) {
-    NoAST *filho;
-    if (no == NULL) return;
-    if (no->identificador && buscar_simbolo(no->texto, escopo) == NULL) {
-        fprintf(stderr, "Erro semântico: Variável não declarada '%s'.\n", no->texto);
-        erros_semanticos++;
-    }
-    filho = no->filho;
-    while (filho != NULL) {
-        verificar_expressao(filho, escopo);
-        filho = filho->irmao;
-    }
-}
-
 static int operador_aritmetico(const char *texto) {
     return strcmp(texto, "+") == 0
         || strcmp(texto, "-") == 0
@@ -123,9 +108,8 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
         int logico = operador_logico(no->texto);
         int igualdade = operador_igualdade(no->texto);
         int relacional = operador_relacional(no->texto);
-        if (!logico && !igualdade && !relacional && !operador_aritmetico(no->texto)) {
-            return NULL;
-        }
+        int sqrt = strcmp(no->texto, "Math.sqrt") == 0;
+        int pow = strcmp(no->texto, "Math.pow") == 0;
 
         NoAST *esquerda = no->filho;
         NoAST *direita = esquerda->irmao;
@@ -134,6 +118,20 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
 
         if (tipo_esquerda == NULL || (direita != NULL && tipo_direita == NULL)) {
             return NULL;
+        }
+
+        if (sqrt || pow) {
+            if ((pow && direita == NULL) || (sqrt && direita != NULL)
+                    || (direita != NULL && direita->irmao != NULL)
+                    || !tipo_numerico(tipo_esquerda)
+                    || (direita != NULL && !tipo_numerico(tipo_direita))) {
+                fprintf(stderr, "Erro semântico: '%s' exige %d argumento(s) numérico(s).\n",
+                        no->texto, pow ? 2 : 1);
+                erros_semanticos++;
+                return NULL;
+            }
+            /* O subconjunto não oferece double. */
+            return "float";
         }
 
         if (logico) {
@@ -169,9 +167,8 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
             return NULL;
         }
 
-        if (relacional) {
-            return "boolean";
-        }
+        if (relacional) return "boolean";
+        if (!operador_aritmetico(no->texto)) return NULL;
 
         if (strcmp(tipo_esquerda, "float") == 0
                 || (direita != NULL && strcmp(tipo_direita, "float") == 0)) {
@@ -184,6 +181,8 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
     if (no->identificador) {
         Simbolo *simbolo = buscar_simbolo(no->texto, escopo);
         if (simbolo == NULL) {
+            fprintf(stderr, "Erro semântico: Variável não declarada '%s'.\n", no->texto);
+            erros_semanticos++;
             return NULL;
         }
         no->id_escopo = simbolo->id_escopo;
@@ -222,7 +221,6 @@ static void verificar_condicao(NoAST *condicao, Escopo *escopo) {
         return;
     }
 
-    verificar_expressao(condicao, escopo);
 
     const char *tipo = inferir_tipo_expressao(condicao, escopo);
 
@@ -243,7 +241,6 @@ static void verificar_atribuicao(NoAST *comando, Escopo *escopo) {
     NoAST *nome = comando->filho;
     NoAST *expressao = nome->irmao;
 
-    verificar_expressao(comando, escopo);
 
     inferir_tipo_expressao(nome, escopo);
     Simbolo *destino = buscar_simbolo(nome->texto, escopo);
@@ -269,7 +266,6 @@ static void verificar_atualizacao(NoAST *comando, Escopo *escopo) {
     NoAST *nome = comando->filho;
     NoAST *expressao = nome->irmao;
 
-    verificar_expressao(comando, escopo);
 
     inferir_tipo_expressao(nome, escopo);
     Simbolo *destino = buscar_simbolo(nome->texto, escopo);
@@ -348,7 +344,6 @@ static void analisar_switch(NoAST *comando, Escopo *escopo) {
     Escopo escopo_switch = {proximo_escopo++, escopo};
     NoAST *seletor = comando->filho;
     NoAST *primeiro = seletor->irmao->filho;
-    verificar_expressao(seletor, escopo);
     const char *tipo = inferir_tipo_expressao(seletor, escopo);
     if (tipo != NULL && strcmp(tipo, "int") != 0) {
         fprintf(stderr, "Erro semântico: seletor de switch deve ser int.\n");
@@ -360,7 +355,6 @@ static void analisar_switch(NoAST *comando, Escopo *escopo) {
     for (NoAST *caso = primeiro; caso != NULL; caso = caso->irmao) {
         NoAST *corpo = caso->filho;
         if (strcmp(caso->texto, "Case") == 0) {
-            verificar_expressao(corpo, &escopo_switch);
             inferir_tipo_expressao(corpo, &escopo_switch);
             caso->tipo = NULL;
             if (!constante_inteira(corpo, &caso->valor_caso)) {
@@ -394,7 +388,6 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
         NoAST *inicializador = nome->irmao;
 
         inserir_simbolo(comando, escopo);
-        verificar_expressao(inicializador, escopo);
         const char *tipo_inicializador = inferir_tipo_expressao(inicializador, escopo);
 
         if (tipo_inicializador != NULL && !tipos_compativeis(tipo->texto, tipo_inicializador)) {
@@ -441,8 +434,8 @@ void analisar_comando(NoAST *comando, Escopo *escopo) {
             fprintf(stderr, "Erro semântico: 'break' fora de laço ou switch.\n");
             erros_semanticos++;
         }
-    } else {
-        verificar_expressao(comando, escopo);
+    } else if (strcmp(comando->texto, "Print") == 0 || strcmp(comando->texto, "Println") == 0) {
+        inferir_tipo_expressao(comando->filho, escopo);
     }
 }
 
@@ -459,12 +452,12 @@ void montar_tabela(NoAST *bloco, Escopo *pai) {
     analisar_comandos(bloco, &escopo);
 }
 
-void imprimir_tabela(void) {
+void imprimir_tabela(FILE *saida) {
     Simbolo *atual = tabela_simbolos;
-    printf("\nTabela de simbolos (valor de inicializacao):\n");
-    printf("%-20s | %-10s | %-30s | %s\n", "Simbolo", "Tipo", "Valor", "Escopo");
+    fprintf(saida, "\nTabela de simbolos (valor de inicializacao):\n");
+    fprintf(saida, "%-20s | %-10s | %-30s | %s\n", "Simbolo", "Tipo", "Valor", "Escopo");
     while (atual != NULL) {
-        printf("%-20s | %-10s | %-30s | %s\n",
+        fprintf(saida, "%-20s | %-10s | %-30s | %s\n",
                atual->simbolo, atual->tipo, atual->valor, atual->escopo);
         atual = atual->proximo;
     }

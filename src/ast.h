@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 /* Cada no guarda seu texto, o primeiro filho e o proximo irmao. */
 typedef struct NoAST {
@@ -23,7 +24,7 @@ NoAST *criar_folha(char *texto);
 NoAST *criar_identificador(char *texto);
 NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c);
 void adicionar_filho(NoAST *pai, NoAST *filho);
-void imprimir_ast(NoAST *no, int nivel);
+void imprimir_ast(const NoAST *no, int nivel, FILE *saida);
 void liberar_ast(NoAST *no);
 /* O chamador deve liberar o texto retornado com free. */
 char *texto_expressao(NoAST *no);

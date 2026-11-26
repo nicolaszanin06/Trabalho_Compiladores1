@@ -615,13 +615,14 @@ char *yytext;
 #include <stdlib.h>
 #include <string.h>
 int erros_lexicos = 0;
+FILE *saida_lexica;
 int linha_comentario = 1;
-#line 620 "lex.yy.c"
+#line 621 "lex.yy.c"
 #define YY_NO_INPUT 1
 
 /* Definições de Expressões Regulares */
 /* Regras para Char e String */
-#line 625 "lex.yy.c"
+#line 626 "lex.yy.c"
 
 #define INITIAL 0
 #define COMENTARIO 1
@@ -837,12 +838,12 @@ YY_DECL
 		}
 
 	{
-#line 37 "jtoc.l"
+#line 38 "jtoc.l"
 
 
-#line 40 "jtoc.l"
+#line 41 "jtoc.l"
     /* Estrutura do Arquivo */
-#line 846 "lex.yy.c"
+#line 847 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -911,401 +912,401 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 41 "jtoc.l"
+#line 42 "jtoc.l"
 { return PUBLIC; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 42 "jtoc.l"
+#line 43 "jtoc.l"
 { return CLASS; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 43 "jtoc.l"
+#line 44 "jtoc.l"
 { return STATIC; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 44 "jtoc.l"
+#line 45 "jtoc.l"
 { return VOID; }
 	YY_BREAK
 /* Tipos Primitivos */
 case 5:
 YY_RULE_SETUP
-#line 47 "jtoc.l"
+#line 48 "jtoc.l"
 { return BOOLEAN; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 48 "jtoc.l"
+#line 49 "jtoc.l"
 { return BYTE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 49 "jtoc.l"
+#line 50 "jtoc.l"
 { return CHAR; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 50 "jtoc.l"
+#line 51 "jtoc.l"
 { return DOUBLE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 51 "jtoc.l"
+#line 52 "jtoc.l"
 { return FLOAT; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 52 "jtoc.l"
+#line 53 "jtoc.l"
 { return INT; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 53 "jtoc.l"
+#line 54 "jtoc.l"
 { return LONG; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 54 "jtoc.l"
+#line 55 "jtoc.l"
 { return SHORT; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 55 "jtoc.l"
+#line 56 "jtoc.l"
 { return STRING_TYPE; }
 	YY_BREAK
 /* Controle de Fluxo */
 case 14:
 YY_RULE_SETUP
-#line 58 "jtoc.l"
+#line 59 "jtoc.l"
 { return IF; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 59 "jtoc.l"
+#line 60 "jtoc.l"
 { return ELSE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 60 "jtoc.l"
+#line 61 "jtoc.l"
 { return SWITCH; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 61 "jtoc.l"
+#line 62 "jtoc.l"
 { return CASE; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 62 "jtoc.l"
+#line 63 "jtoc.l"
 { return DEFAULT; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 63 "jtoc.l"
+#line 64 "jtoc.l"
 { return WHILE; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 64 "jtoc.l"
+#line 65 "jtoc.l"
 { return DO; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 65 "jtoc.l"
+#line 66 "jtoc.l"
 { return FOR; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 66 "jtoc.l"
+#line 67 "jtoc.l"
 { return BREAK; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 67 "jtoc.l"
+#line 68 "jtoc.l"
 { return CONTINUE; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 68 "jtoc.l"
+#line 69 "jtoc.l"
 { return RETURN; }
 	YY_BREAK
 /* Entrada e Saída */
 case 25:
 YY_RULE_SETUP
-#line 72 "jtoc.l"
+#line 73 "jtoc.l"
 { return PRINTLN; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 73 "jtoc.l"
+#line 74 "jtoc.l"
 { return PRINT; }
 	YY_BREAK
 /* Funções Matemáticas Nativas */
 case 27:
 YY_RULE_SETUP
-#line 76 "jtoc.l"
+#line 77 "jtoc.l"
 { return MATH_SQRT; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 77 "jtoc.l"
+#line 78 "jtoc.l"
 { return MATH_POW; }
 	YY_BREAK
 /* Modificadores e Literais Fixos */
 case 29:
 YY_RULE_SETUP
-#line 80 "jtoc.l"
+#line 81 "jtoc.l"
 { return FINAL; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 81 "jtoc.l"
+#line 82 "jtoc.l"
 { return TOKEN_TRUE; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 82 "jtoc.l"
+#line 83 "jtoc.l"
 { return TOKEN_FALSE; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 83 "jtoc.l"
+#line 84 "jtoc.l"
 { return NULL_LITERAL; }
 	YY_BREAK
 /* Operadores */
 case 33:
 YY_RULE_SETUP
-#line 86 "jtoc.l"
+#line 87 "jtoc.l"
 { return INC; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 87 "jtoc.l"
+#line 88 "jtoc.l"
 { return DEC; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 88 "jtoc.l"
+#line 89 "jtoc.l"
 { return ADD_ASSIGN; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 89 "jtoc.l"
+#line 90 "jtoc.l"
 { return SUB_ASSIGN; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 90 "jtoc.l"
+#line 91 "jtoc.l"
 { return MUL_ASSIGN; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 91 "jtoc.l"
+#line 92 "jtoc.l"
 { return DIV_ASSIGN; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 92 "jtoc.l"
+#line 93 "jtoc.l"
 { return PLUS; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 93 "jtoc.l"
+#line 94 "jtoc.l"
 { return MINUS; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 94 "jtoc.l"
+#line 95 "jtoc.l"
 { return MULT; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 95 "jtoc.l"
+#line 96 "jtoc.l"
 { return DIV; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 96 "jtoc.l"
+#line 97 "jtoc.l"
 { return MOD; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 97 "jtoc.l"
+#line 98 "jtoc.l"
 { return EQ; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 98 "jtoc.l"
+#line 99 "jtoc.l"
 { return NEQ; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 99 "jtoc.l"
+#line 100 "jtoc.l"
 { return LT; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 100 "jtoc.l"
+#line 101 "jtoc.l"
 { return LE; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 101 "jtoc.l"
+#line 102 "jtoc.l"
 { return GT; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 102 "jtoc.l"
+#line 103 "jtoc.l"
 { return GE; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 103 "jtoc.l"
+#line 104 "jtoc.l"
 { return AND; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 104 "jtoc.l"
+#line 105 "jtoc.l"
 { return OR; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 105 "jtoc.l"
+#line 106 "jtoc.l"
 { return NOT; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 106 "jtoc.l"
+#line 107 "jtoc.l"
 { return ASSIGN; }
 	YY_BREAK
 /* Delimitadores */
 case 54:
 YY_RULE_SETUP
-#line 109 "jtoc.l"
+#line 110 "jtoc.l"
 { return LBRACE; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 110 "jtoc.l"
+#line 111 "jtoc.l"
 { return RBRACE; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 111 "jtoc.l"
+#line 112 "jtoc.l"
 { return LPAREN; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 112 "jtoc.l"
+#line 113 "jtoc.l"
 { return RPAREN; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 113 "jtoc.l"
+#line 114 "jtoc.l"
 { return LBRACKET; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 114 "jtoc.l"
+#line 115 "jtoc.l"
 { return RBRACKET; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 115 "jtoc.l"
+#line 116 "jtoc.l"
 { return SEMI; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 116 "jtoc.l"
+#line 117 "jtoc.l"
 { return COMMA; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 117 "jtoc.l"
+#line 118 "jtoc.l"
 { return COLON; }
 	YY_BREAK
 /* Regras com Macros */
 case 63:
 YY_RULE_SETUP
-#line 120 "jtoc.l"
+#line 121 "jtoc.l"
 { yylval.stringValue = strdup(yytext); return FLOAT_LITERAL; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 121 "jtoc.l"
+#line 122 "jtoc.l"
 { yylval.stringValue = strdup(yytext); return INT_LITERAL; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 122 "jtoc.l"
+#line 123 "jtoc.l"
 { yylval.stringValue = strdup(yytext); return CHAR_LITERAL; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 123 "jtoc.l"
+#line 124 "jtoc.l"
 { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 124 "jtoc.l"
+#line 125 "jtoc.l"
 { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
 	YY_BREAK
 /* Tratamento de erro para String não fechada */
 case 68:
 YY_RULE_SETUP
-#line 127 "jtoc.l"
-{ erros_lexicos++; printf("Erro lexico na linha %d: String nao encerrada\n", yylineno); }
+#line 128 "jtoc.l"
+{ erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: String nao encerrada\n", yylineno); }
 	YY_BREAK
 /* Descarte de Espaços e Comentários */
 case 69:
 /* rule 69 can match eol */
 YY_RULE_SETUP
-#line 130 "jtoc.l"
+#line 131 "jtoc.l"
 { /* ignora */ }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 131 "jtoc.l"
+#line 132 "jtoc.l"
 { /* ignora */ }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 132 "jtoc.l"
+#line 133 "jtoc.l"
 { linha_comentario = yylineno; BEGIN(COMENTARIO); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 133 "jtoc.l"
+#line 134 "jtoc.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case 73:
 /* rule 73 can match eol */
 YY_RULE_SETUP
-#line 134 "jtoc.l"
+#line 135 "jtoc.l"
 { /* ignora; yylineno conta a quebra de linha */ }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 135 "jtoc.l"
+#line 136 "jtoc.l"
 { /* ignora */ }
 	YY_BREAK
 case YY_STATE_EOF(COMENTARIO):
-#line 136 "jtoc.l"
-{ erros_lexicos++; printf("Erro lexico na linha %d: Comentario nao encerrado\n", linha_comentario); BEGIN(INITIAL); return 0; }
+#line 137 "jtoc.l"
+{ erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Comentario nao encerrado\n", linha_comentario); BEGIN(INITIAL); return 0; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 138 "jtoc.l"
-{ erros_lexicos++; printf("Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
+#line 139 "jtoc.l"
+{ erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Caractere invalido '%s'\n", yylineno, yytext); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 140 "jtoc.l"
+#line 141 "jtoc.l"
 ECHO;
 	YY_BREAK
-#line 1309 "lex.yy.c"
+#line 1310 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2281,6 +2282,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 140 "jtoc.l"
+#line 141 "jtoc.l"
 
 

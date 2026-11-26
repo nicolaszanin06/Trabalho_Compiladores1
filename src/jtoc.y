@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tabela_simbolos.h"
+#include "gerador_intermediario.h"
 
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
 extern int erros_lexicos;
+
 int yywrap(void);
 void yyerror(const char *s);
 %}

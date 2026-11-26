@@ -19,30 +19,76 @@ if REGENERAR:
 class AnalisadorTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temporario = tempfile.TemporaryDirectory(prefix="compiladores-testes-")
+        cls.temporario = tempfile.TemporaryDirectory(
+            prefix="compiladores-testes-"
+        )
+
         cls.addClassCleanup(cls.temporario.cleanup)
+
         pasta = Path(cls.temporario.name)
-        for nome in ("jtoc.l", "jtoc.y", "jtoc.tab.c", "jtoc.tab.h", "lex.yy.c",
-                     "ast.c", "ast.h", "tabela_simbolos.c", "tabela_simbolos.h"):
+
+        for nome in (
+            "jtoc.l",
+            "jtoc.y",
+            "jtoc.tab.c",
+            "jtoc.tab.h",
+            "lex.yy.c",
+            "ast.c",
+            "ast.h",
+            "tabela_simbolos.c",
+            "tabela_simbolos.h",
+            "gerador_intermediario.c",
+            "gerador_intermediario.h"
+        ):
             shutil.copy2(SRC / nome, pasta / nome)
 
         def compilar(*comando):
-            resultado = subprocess.run(comando, cwd=pasta, capture_output=True,
-                                       text=True, timeout=60)
+            resultado = subprocess.run(
+                comando,
+                cwd=pasta,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
             if resultado.returncode:
-                raise RuntimeError(f"Falha em {comando}:\n{resultado.stdout}{resultado.stderr}")
+                raise RuntimeError(
+                    f"Falha em {comando}:\n"
+                    f"{resultado.stdout}"
+                    f"{resultado.stderr}"
+                )
 
         if REGENERAR:
             compilar("bison", "-d", "jtoc.y")
             compilar("flex", "jtoc.l")
+
         sufixo = ".exe" if os.name == "nt" else ""
+
         cls.parser = pasta / ("parser" + sufixo)
         cls.lexer = pasta / ("lexer" + sufixo)
+
         cc = os.environ.get("CC", "gcc")
-        compilar(cc, "-o", str(cls.parser), "jtoc.tab.c", "lex.yy.c", "ast.c",
-                 "tabela_simbolos.c")
-        compilar(cc, "-I", str(pasta), "-o", str(cls.lexer),
-                 str(TESTES / "lexer_driver.c"), "lex.yy.c")
+
+        compilar(
+            cc,
+            "-o",
+            str(cls.parser),
+            "jtoc.tab.c",
+            "lex.yy.c",
+            "ast.c",
+            "tabela_simbolos.c",
+            "gerador_intermediario.c"
+        )
+
+        compilar(
+            cc,
+            "-I",
+            str(pasta),
+            "-o",
+            str(cls.lexer),
+            str(TESTES / "lexer_driver.c"),
+            "lex.yy.c"
+        )
 
     def executar(self, executavel, entrada="", argumentos=()):
         return subprocess.run([str(executavel), *map(str, argumentos)], input=entrada,
@@ -451,6 +497,25 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
                 self.assertIn("[--debug] [--ir] [arquivo.java]", resultado.stderr)
+
+
+    def test_ir_modulo_declaracao_simples(self):
+        resultado = self.executar_parser(
+            "int x = 3 + 4;",
+            argumentos=["--ir"],
+            debug=False
+        )
+
+        self.assertEqual(resultado.returncode, 0)
+        self.assertEqual(resultado.stderr, "")
+
+        self.assertEqual(
+            resultado.stdout,
+            "LOAD_CONST 3\n"
+            "LOAD_CONST 4\n"
+            "ADD\n"
+            "STORE x\n"
+        )
 
 
 if __name__ == "__main__":

@@ -61,7 +61,38 @@ Os três exemplos de erro semântico escrevem, respectivamente, `Variável já d
 
 No PowerShell, com GCC instalado no Windows, execute `./testes/executar.ps1` a partir da raiz. Esse verificador cobre os 14 arquivos com `--debug` (comparando stdout, stderr e código de saída), cinco casos de geração de código intermediário (`--ir`) e um teste ponta a ponta de geração de código C, compilação via GCC e execução. Alterações em `jtoc.l` ou `jtoc.y` exigem regenerar os arquivos C antes de usar o script PowerShell.
 
-Todas as etapas previstas no escopo do compilador — análise léxica, sintática, semântica (incluindo compatibilidade de tipos, validação de `switch` e inicialização antes da leitura nos modos `--ir` e `--c`), geração de código intermediário e geração de código C compilável — são validadas continuamente pelas suítes automatizadas. O roteiro completo e a descrição de cada arquivo estão no [README de testes no repositório](https://github.com/nicolaszanin06/Trabalho_Compiladores1/blob/develop/testes/README.md).
+Todas as etapas previstas no escopo do compilador — análise léxica, sintática, semântica (incluindo compatibilidade de tipos, validação de `switch` e inicialização antes da leitura nos modos `--ir` e `--c`), geração de código intermediário e geração de código C compilável — são validadas continuamente pelas suítes automatizadas. O roteiro completo e a descrição de cada arquivo estão no [README de testes no repositório](https://github.com/nicolaszanin06/Trabalho_Compiladores1/blob/main/testes/README.md).
+
+## Cobertura numérica, CLI e memória
+
+A suíte do analisador cobre os limites de inteiros em expressões e `case`, o mínimo `-2147483648`, overflow de literais `float`, underflow de não zero para zero, zero e subnormais aceitos. Exercita os modos padrão, IR e C na validação de `float`. Condições constantes inteiras e booleanas são confrontadas com a análise de inicialização, incluindo curto-circuito e saídas por `break`.
+
+O driver `alocacao_driver.c` injeta falhas de alocação em `texto_expressao` e verifica a liberação de resultados parciais. Isso não é uma prova geral de ausência de vazamentos de todo o compilador. `lexer_driver.c` observa tokens e linhas sem executar o parser.
+
+A suíte C inclui overflow com wrap-around, divisão e resto especiais do mínimo inteiro, diagnóstico de divisão por zero em execução, limites e subnormais de `float`, strings UTF-8 e identidade de literais, escopos com nomes conflitantes em C, matemática aninhada, laços e `switch` com fall-through. Verifica também stdout separado de debug, arquivo existente preservado, ordem das flags, repetição do mesmo modo, exclusão IR/C, `-o` ausente ou repetido e ausência de destino após erro semântico. Os testes selecionados que exigem ausência de warnings não implicam que todo programa válido seja compilado sem avisos (variáveis não utilizadas podem gerar warnings).
+
+`test_analisador.py` compila seus próprios executáveis temporários com `CC` (padrão `gcc`), independentemente de `src/jtoc`. A suíte C usa `JTOC` para selecionar outro executável de tradução e `CC` para compilar o C. No Windows, o padrão é `src/jtoc.exe`; o script `executar.ps1` compila e remove seu próprio verificador, sem preparar esse executável para a suíte Python C. Veja [Como rodar](como-rodar.md).
+
+## Reprodução e alcance da validação
+
+`test_analisador.py` possui limites de tempo para compilação e chamadas aos drivers; `test_gerador_c.py` limita a tradução a 10 segundos, a compilação a 30 e a execução a 5. O executor auxiliar da IR limita passos e verifica pilha vazia ao terminar. Sua impressão de `float` usa a representação Python, distinta das seis casas do backend C.
+
+As suítes registram regressões específicas; não provam equivalência com Java completo ou cobertura exaustiva de ponto flutuante, domínio matemático e falhas de E/S. O workflow de testes executa as duas suítes em push/PR. O workflow da documentação publica via MkDocs apenas nos pushes às branches configuradas (`main` e `master`); build local não publica nada.
+
+## Registro da auditoria da documentação — 27/11/2026
+
+A revisão confrontou as páginas com as fontes e os testes locais do compilador final:
+
+| Fontes conferidas | Contrato documentado |
+| --- | --- |
+| `src/jtoc.l` | Lexemas, escapes, comentários, tokens reservados e canais dos erros léxicos |
+| `src/jtoc.y` e `src/Makefile` | Gramática, precedência, CLI, integração, publicação da saída e regeneração paralela |
+| `src/ast.*` e `src/tabela_simbolos.*` | Modelo filho-irmão, metadados, escopos, tipos, constantes, limites numéricos e inicialização por caminhos |
+| `src/gerador_intermediario.*` e `testes/executor_ir.py` | Instruções de pilha, conversões, nomes, saltos e limites do executor auxiliar |
+| `src/gerador_c.*` | C11 direto da AST, auxiliares inteiros, curto-circuito, strings, impressão, fall-through e limitações do alvo |
+| `testes/test_analisador.py`, `testes/test_gerador_c.py` e `testes/executar.ps1` | Dependências reais, executáveis temporários, cobertura, timeouts, configuração e reprodução |
+
+Na validação desta revisão, o build forçado e paralelo com Flex/Bison/GCC passou em cópia temporária, seguido de **71 testes do analisador/IR e 30 do backend C**, todos aprovados. O uso de cópias temporárias preservou os fontes e os testes do repositório. O script PowerShell foi inspecionado; sua execução nativa não fez parte dessa rodada Linux/WSL. Esses resultados registram esta revisão e não substituem novas execuções após futuras mudanças.
 
 ## **Histórico de Versões**
 

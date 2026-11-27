@@ -63,6 +63,47 @@ Veja [Testes e validação](testes.md) e [Geração de código C](geracao-c.md).
 
 Para limpar os arquivos gerados, execute `make clean` dentro de `src/`.
 
+## Referência da CLI e canais
+
+```text
+jtoc [--debug] [--ir | --c] [-o arquivo.c] [entrada.java]
+```
+
+| Execução | stdout em sucesso | stderr em sucesso |
+| --- | --- | --- |
+| Padrão | Mensagem de sucesso | Vazio |
+| Padrão com `--debug` | Sucesso, AST e tabela | Vazio |
+| `--ir` ou `--c` | Apenas código | Vazio, ou AST/tabela com `--debug` |
+| `-o novo.c` | Vazio | Vazio, ou AST/tabela com `--debug` |
+
+Erros sintáticos e semânticos usam stderr. Erros léxicos usam stdout no modo padrão e stderr nos modos de geração. Erros de uso, abertura e publicação usam stderr e retornam falha. A CLI aceita no máximo um arquivo de entrada; sem ele lê stdin. Não implementa `--help`, marcador `--` ou várias entradas. Opções desconhecidas são rejeitadas. Flags podem aparecer antes ou depois do arquivo; repetir o mesmo modo é permitido, mas repetir `-o` é erro.
+
+`-o` não aceita IR e seu destino deve ser novo. A mensagem de sucesso padrão é `Analise concluida com sucesso! Nenhum erro sintatico encontrado.`; ela também depende da validação semântica básica, apesar de mencionar apenas sintaxe.
+
+A validação dos literais `float` ocorre em todos os modos: overflow e underflow para zero de valores não nulos são erros; subnormais representáveis são aceitos. A sintaxe exige ponto com dígitos de ambos os lados, sem notação científica. Veja [Semântica](analisador-semantico.md).
+
+## Suíte C no Windows e documentação local
+
+`test_gerador_c.py` requer um compilador `jtoc` preparado previamente; o script PowerShell não o instala em `src/`. Para prepará-lo com GCC nativo, usando os arquivos Flex/Bison já gerados, execute na raiz:
+
+```powershell
+gcc -o src/jtoc.exe src/jtoc.tab.c src/lex.yy.c src/ast.c src/tabela_simbolos.c src/gerador_intermediario.c src/gerador_c.c
+python testes/test_analisador.py
+python testes/test_gerador_c.py
+```
+
+No backend C, `JTOC` seleciona outro executável do compilador e `CC` seleciona o compilador C; na suíte do analisador, `CC` seleciona o compilador dos drivers temporários. Não reutilize no Windows um binário Linux ou vice-versa.
+
+A documentação requer MkDocs Material, independentemente das dependências dos testes do compilador:
+
+```bash
+python3 -m pip install mkdocs-material
+python3 -m mkdocs build --strict
+python3 -m mkdocs serve
+```
+
+O build apenas gera o site local. A navegação está em `mkdocs.yml`; a versão publicada está no [GitHub Pages](https://nicolaszanin06.github.io/Trabalho_Compiladores1/).
+
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |

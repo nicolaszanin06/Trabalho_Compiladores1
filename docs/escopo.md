@@ -19,7 +19,7 @@ A tabela abaixo resume o mapeamento adotado na geração de código C (detalhado
 | Sequência de comandos na raiz | Envolvida em `int main(void)` |
 | `int`, `float`, `char` | `int`, `float`, `char`; `_Static_assert` exige `int` de 32 bits |
 | `boolean flag = true;` | `bool jtoc_v0 = true;` (`<stdbool.h>`) |
-| `String texto = "ola";` | `const char *jtoc_v1 = jtoc_s0;` (com agrupamento de literais) |
+| `String texto = "ola";` | `const char *jtoc_v1 = &jtoc_s0[0];` (com agrupamento de literais) |
 | `System.out.print` / `println` | `printf` (com formato adequado ao tipo) |
 | `Math.sqrt` / `Math.pow` | `sqrt` / `pow` (`<math.h>`), com argumentos convertidos para `float` e depois `double`, e resultado convertido para `float` |
 | Estruturas de controle (`if`, `while`, `for`, `switch`) | Tradução direta de blocos, laços e saltos |
@@ -56,7 +56,7 @@ O analisador léxico reconhece os elementos principais do Java procedural. A lis
 
 ### 3. Literais e Identificadores
 
-* **Identificadores:** Nomes de classes, métodos e variáveis (seguindo o padrão `[a-zA-Z_][a-zA-Z0-9_]*`).
+* **Identificadores:** Nomes de variáveis no subconjunto (seguindo o padrão `[a-zA-Z_][a-zA-Z0-9_]*`).
 
 
 * **Numéricos:** Inteiros decimais (`[0-9]+`) de 32 bits com sinal e ponto flutuante (`[0-9]+\.[0-9]+`). O sinal negativo é um operador; a magnitude `2147483648` só é aceita sob negação unária, formando `-2147483648`.
@@ -108,7 +108,7 @@ O subconjunto implementado tem os seguintes limites:
 
 * **Limites do `for`:** Inicialização por declaração ou atribuição e atualização por atribuição, incremento ou decremento, com cláusulas opcionais. Listas separadas por vírgulas não estão implementadas.
 
-* **Orientação a Objetos avançada:** Diretiva `new`, herança, polimorfismo e classes aninhadas.
+* **Orientação a Objetos:** Diretiva `new`, herança, polimorfismo e classes aninhadas.
 
 
 * **Tratamento de Exceções:** Palavras-chave como `try`, `catch`, `finally`, `throw` e `throws`.
@@ -119,6 +119,16 @@ O subconjunto implementado tem os seguintes limites:
 
 
 ---
+
+## Delimitações da entrega
+
+O projeto está concluído dentro deste subconjunto. Não há passes de otimização, conforme a orientação da disciplina; a avaliação de constantes serve à validação de `case` e da inicialização. A entrada é estritamente procedural: até a classe externa e o `main` de Java são omitidos. Classes múltiplas, herança, métodos de instância ou do usuário, sobrecarga e `return` foram excluídos intencionalmente.
+
+Os literais `float` são validados por `strtof`: overflow e underflow para zero de valores não nulos são rejeitados em todos os modos; subnormais representáveis e zero são aceitos. A sintaxe não inclui expoentes, sufixos, casts, hexadecimal ou separadores numéricos. Inteiros usam wrap-around de 32 bits nas operações, mas literais fora da faixa são erros.
+
+Arrays, `do`, `continue`, `final`, `null`, operador ternário, concatenação e leitura de entrada não fazem parte da gramática. `++`/`--` são comandos pós-fixados, não expressões; `print`/`println` exigem um argumento. O alvo C usa `char` de um byte e `%f` com seis casas para impressão de `float`, sem reproduzir toda a plataforma Java.
+
+A escolha de gerar C diretamente da AST, a ausência de otimização e as garantias numéricas estão detalhadas em [Arquitetura e decisões](arquitetura-decisoes.md). A organização da equipe está em [Organização e sprints](organizacao-sprints.md).
 
 ## **Histórico de Versões**
 

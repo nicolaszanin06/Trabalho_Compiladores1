@@ -29,6 +29,36 @@ Antes da geração de código intermediário (`--ir`) ou código C (`--c` ou `-o
 
 Essa verificação adicional de inicialização ocorre quando o compilador é executado com `--ir`, `--c` ou `-o` (independentemente de `--debug`), rejeitando leituras de variáveis não inicializadas antes da emissão de IR ou C. Já no modo padrão de validação do front-end, construções como `int x; System.out.print(x);` continuam sendo aceitas pela checagem básica de escopo e tipos. Consulte a documentação de [Código intermediário](codigo-intermediario.md) para detalhes sobre conversões numéricas e funções nativas.
 
+## Tipagem do subconjunto
+
+| Contexto | Regra implementada |
+| --- | --- |
+| Inicialização e `=` | Mesmo tipo ou promoção de `int` para `float`; não há conversão inversa implícita. |
+| `+`, `-`, `*`, `/`, `%` e menos unário | Apenas `int`/`float`; resultado `float` se algum operando for `float`, caso contrário `int`. |
+| `+=`, `-=`, `*=`, `/=`, `++`, `--` | Destino numérico; compostas seguem a compatibilidade de atribuição. `int += float` é rejeitado, sem o cast implícito do Java completo. |
+| `<`, `<=`, `>`, `>=` | Apenas números; resultado `boolean`. |
+| `==`, `!=` | Tipos iguais ou par numérico misto; resultado `boolean`. Em `String`, igualdade significa identidade de referência. |
+| `!`, `&&`, `\|\|` | Apenas booleanos; resultado `boolean`. |
+| `Math.sqrt`, `Math.pow` | Um e dois argumentos numéricos, respectivamente; resultado `float`. |
+
+`char` não participa de promoção numérica e `String` não admite concatenação. A inserção de uma declaração precede a análise de seu inicializador; `int x = x;` resolve o nome, mas é rejeitado pela checagem de inicialização nos modos de geração.
+
+## Faixa de literais float
+
+Em todos os modos, `validar_literal_float` usa `strtof` e exige consumo do lexema completo. Rejeita overflow para infinito/estouro e um literal decimal matematicamente não nulo convertido para `0.0f` por underflow. Zeros com muitas casas são válidos; subnormais representáveis não são rejeitados apenas por `ERANGE`.
+
+Em um alvo com `float` IEEE 754 de 32 bits, o maior valor finito é aproximadamente `3,402823466 × 10^38` e o menor subnormal positivo é aproximadamente `1,401298464 × 10^-45`. A aceitação considera o arredondamento de `strtof`: um decimal próximo do menor subnormal pode ser aceito se arredondar para um valor não nulo. A escrita científica serve aqui apenas para explicar os limites; o scanner não aceita expoentes.
+
+A faixa é a dos **literais**, não uma proibição geral de resultados não finitos durante a execução. Operações matemáticas e ponto flutuante gerado seguem o contrato do [backend C](geracao-c.md).
+
+## Precisão e limites da análise de caminhos
+
+O estado de fluxo combina um vetor de inicialização indexado por `id_simbolo` e uma marca de alcançabilidade. A junção faz interseção apenas entre caminhos que chegam ao ponto. `break` registra uma saída da estrutura mais próxima e encerra o caminho corrente. Atribuição simples verifica o lado direito antes de marcar o destino; compostas e incremento/decremento também leem o destino.
+
+Um laço com condição desconhecida pode executar zero vezes. Um laço comprovadamente verdadeiro só deixa saídas alcançáveis por `break`; o `for` considera inicialização e atualização na ordem de execução. Em `switch`, cada rótulo pode receber entrada direta, além de fall-through; sem `default`, existe ainda o caminho sem caso correspondente. O seletor constante não elimina essas alternativas na análise atual.
+
+Não há propagação de valores de variáveis: `boolean b = true; int x; if (b) { x = 1; } System.out.print(x);` é rejeitado na geração, embora trocar `b` por `true` torne o exemplo aceito. Leituras em operandos comprovadamente dispensados pelo curto-circuito e trechos inalcançáveis são ignoradas **na checagem de inicialização**. A análise básica de nomes e tipos ainda visita a árvore toda, inclusive esses trechos. Avaliar constantes para validar fluxo e `case` não é um passe de otimização.
+
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |

@@ -89,6 +89,22 @@ A suíte traduz programas pequenos, compila o C resultante com GCC em C11 e
 compara a saída do executável. Os testes usam diretórios temporários e possuem
 timeouts separados para compilação e execução.
 
+## Detalhes de emissão e publicação
+
+O gerador coleta literais `String` e a necessidade de `<math.h>`, emite cabeçalhos, auxiliares inteiros, arrays estáticos e `int main(void)`, com retorno zero no fim. A tradução é preparada em arquivo temporário. A CLI só publica o C após sucesso da geração; com `-o`, abre um destino novo em modo `wbx`. Erros de tradução não criam esse destino, e falhas de escrita no arquivo criado tentam removê-lo. Transmissões para stdout não podem ser desfeitas após uma falha de E/S.
+
+`jtoc_iadd`, `jtoc_isub`, `jtoc_imul` e `jtoc_ineg` evitam overflow de inteiro com sinal no C usando cálculo em `int64_t` e retorno explícito aos 32 bits. Essa política também vale para compostas e incremento/decremento. `jtoc_idiv` trunca em direção a zero e `jtoc_imod` preserva o sinal do dividendo no resto; para o mínimo inteiro com divisor `-1`, retornam respectivamente `INT32_MIN` e zero.
+
+Divisão **e resto** inteiro por zero chamam `jtoc_divisao_por_zero`, escrevem `Erro de execucao: divisao inteira por zero.` em stderr e terminam com `EXIT_FAILURE`. Isso ocorre no executável gerado: um programa contendo `1 / 0` pode ser traduzido com sucesso e falhar quando executado. O curto-circuito pode impedir que essa operação seja avaliada.
+
+Resto com `float` usa `fmodf`; literais levam sufixo `f` e inteiros com zeros à esquerda são normalizados em decimal, evitando interpretação octal em C. O mínimo inteiro é emitido como `INT32_MIN`. Os limites de `float` são checados na semântica, inclusive underflow para zero; subnormais representáveis são aceitos.
+
+Após cada rótulo de `switch`, emite-se uma instrução vazia `;`, permitindo declarações imediatamente após o rótulo em C11 sem criar outro escopo. Comentários `/* fall through */` preservam a queda entre casos e orientam os avisos do GCC. Para lógica, os operadores nativos `&&` e `||` preservam curto-circuito. Os demais operandos seguem as regras de avaliação do C; o subconjunto não permite atribuições ou incrementos dentro de expressões.
+
+Os bytes das strings são escritos como escapes octais de três dígitos no **C gerado**; isso não permite escapes octais na entrada Java Procedural. Literais de mesmo conteúdo decodificado compartilham referência, incluindo grafias com escapes equivalentes. `printf` usa `%d`, `%f`, `%c` ou `%s` conforme o tipo; booleanos são `true`/`false` e `println` acrescenta uma quebra de linha.
+
+A geração pode produzir avisos legítimos, como variável não utilizada; os testes exigem ausência de warnings apenas nos casos selecionados. Consulte [Arquitetura](arquitetura-decisoes.md) e [Testes](testes.md).
+
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |

@@ -30,7 +30,17 @@ A análise sintática constrói a AST; a validação de tipos e a geração de c
 
 `yyerror` informa linha e token perto da falha sintática. O programa verifica o resultado de `yyparse` e os contadores de erros léxicos e semânticos antes de imprimir sucesso. Retorna `0` em caso de sucesso e `1` em caso de erro.
 
-As chamadas de `imprimir_ast()` e `imprimir_tabela()` ficam em `debug_compiler()`. O `main` só chama essa função se `imprimir_debug` estiver ativo, por meio da opção `--debug`. Sem essa opção, a análise completa é executada e apenas a mensagem de sucesso é impressa. A montagem da tabela e a validação semântica não dependem da impressão de debug.
+As chamadas de `imprimir_ast()` e `imprimir_tabela()` ficam em `debug_compiler()`. O `main` só chama essa função se `imprimir_debug` estiver ativo, por meio da opção `--debug`. No modo padrão sem essa opção, a análise básica é executada e apenas a mensagem de sucesso é impressa. A montagem da tabela e a validação semântica não dependem da impressão de debug.
+
+## Restrições da gramática final
+
+`++` e `--` só aparecem após um identificador, como comandos ou atualização do `for`; não são expressões e não há forma prefixa. Atribuições também são comandos, sem encadeamento como `a = b = 1`. Não há `%=`, operador unário `+`, operador ternário ou operadores bit a bit.
+
+Cada declaração introduz um único identificador; `int a, b;` não é aceito. A vírgula aparece nos dois argumentos de `Math.pow`, mas não forma listas no cabeçalho do `for`. Não há comando vazio `;`; blocos e entrada vazios são válidos. `print` e `println` exigem exatamente uma expressão. `else if` precisa ser expresso por um `if` dentro de um bloco `else { ... }`.
+
+Os operadores binários são associativos à esquerda em cada faixa de precedência; `!` e menos unário usam a precedência mais alta. Parênteses mudam o agrupamento sem criar um nó específico na AST. O sinal de um literal negativo é inicialmente um nó unário, com tratamento semântico especial para o mínimo inteiro.
+
+O parser aceita expressões como rótulos de `case`; cabe à semântica restringi-las a constantes `int`, detectar duplicatas após avaliação e rejeitar mais de um `default`. Pode haver casos vazios, agrupados e `default` em qualquer posição. Veja [Semântica](analisador-semantico.md) e [Arquitetura](arquitetura-decisoes.md).
 
 ## **Histórico de Versões**
 

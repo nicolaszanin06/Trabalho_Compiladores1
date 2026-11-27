@@ -1,4 +1,5 @@
 site_name: Compiladores 1 - Grupo 7
+site_url: https://nicolaszanin06.github.io/Trabalho_Compiladores1/
 repo_url: https://github.com/nicolaszanin06/Trabalho_Compiladores1
 theme:
   name: material
@@ -23,6 +24,8 @@ theme:
 nav:
   - Início: index.md
   - Planejamento e Metodologia: planejamento.md
+  - Organização, Equipe e Sprints: organizacao-sprints.md
+  - Arquitetura e Decisões: arquitetura-decisoes.md
   - Como Rodar: como-rodar.md
   - Escopo do Projeto: escopo.md
   - Analisador Léxico: analisador-lexico.md

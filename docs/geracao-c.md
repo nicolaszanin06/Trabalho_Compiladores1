@@ -23,6 +23,11 @@ otimização.
 O modo padrão e `--ir` mantêm suas finalidades anteriores. `--ir` e `--c` são
 mutuamente exclusivos. O comando `--ir -o ...` é recusado.
 
+A ordem de `--c` e `-o` é livre: `./src/jtoc -o programa.c --c programa.java`
+equivale a `./src/jtoc --c -o programa.c programa.java`. Repetir `--c` ou
+`--ir` não muda o modo selecionado. Misturar C e IR, repetir `-o` ou omitir
+seu argumento resulta em erro de uso antes de criar qualquer saída.
+
 ## Compilar o C gerado
 
 ```bash
@@ -53,6 +58,8 @@ gcc -std=c11 -Wall -Wextra -Wpedantic programa.c -o programa -lm
   conteúdo, de modo que igualdade (`==`/`!=`) compara referências e literais
   iguais compartilham um único objeto estático. Strings são impressas com
   `printf("%s", ...)`, nunca como formato.
+  Referências aos literais usam o endereço explícito `&jtoc_s<ID>[0]`, evitando
+  warnings de comparação entre arrays sem mudar a identidade das strings.
 - Variáveis são nomeadas `jtoc_v<ID>` a partir de `id_simbolo`, preservando
   declarações homônimas em escopos diferentes e evitando palavras reservadas e
   nomes de funções da biblioteca C.

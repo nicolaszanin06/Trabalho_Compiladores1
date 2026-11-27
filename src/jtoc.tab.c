@@ -2121,16 +2121,12 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "--debug") == 0) {
             imprimir_debug = 1;
         } else if (strcmp(argv[i], "--ir") == 0) {
-            if (gerar_ir || gerar_c) goto uso_invalido;
             gerar_ir = 1;
         } else if (strcmp(argv[i], "--c") == 0) {
-            if (gerar_ir || gerar_c) goto uso_invalido;
             gerar_c = 1;
         } else if (strcmp(argv[i], "-o") == 0) {
             if (destino != NULL || i + 1 >= argc) goto uso_invalido;
             destino = argv[++i];
-            gerar_c = 1;
-            if (gerar_ir) goto uso_invalido;
         } else if (argv[i][0] == '-') {
             goto uso_invalido;
         } else if (arquivo != NULL) {
@@ -2140,7 +2136,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (gerar_ir && destino != NULL) goto uso_invalido;
+    /* Valida os modos depois de ler todas as opcoes, independentemente da ordem. */
+    if (gerar_ir && (gerar_c || destino != NULL)) goto uso_invalido;
+    if (destino != NULL) gerar_c = 1;
 
     if (arquivo != NULL) {
         FILE *f = fopen(arquivo, "r");

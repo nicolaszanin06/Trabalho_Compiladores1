@@ -18,11 +18,13 @@ class GeradorCTest(unittest.TestCase):
             [str(COMPILADOR), "--c"],
             input=fonte,
             text=True,
+            encoding="utf-8",
             capture_output=True,
             timeout=10,
         )
         self.assertEqual(traducao.returncode, 0, traducao.stderr)
         self.assertNotEqual(traducao.stdout, "")
+        self.assertEqual(traducao.stderr, "")
 
         with tempfile.TemporaryDirectory(prefix="jtoc-c-") as pasta:
             pasta = Path(pasta)
@@ -34,20 +36,25 @@ class GeradorCTest(unittest.TestCase):
                 [CC, "-std=c11", "-Wall", "-Wextra", "-Wpedantic",
                  str(arquivo_c), "-o", str(executavel), "-lm"],
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
                 timeout=30,
             )
             self.assertEqual(compilacao.returncode, 0,
                              compilacao.stdout + compilacao.stderr)
+            self.assertNotIn("-Warray-compare", compilacao.stderr)
 
             execucao = subprocess.run(
                 [str(executavel)],
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
                 timeout=5,
             )
             self.assertEqual(execucao.stdout, saida_esperada)
             self.assertEqual(execucao.returncode, retorno_esperado, execucao.stderr)
+            if retorno_esperado == 0:
+                self.assertEqual(execucao.stderr, "")
             return execucao
 
     def test_precedencia_e_println(self):
@@ -112,6 +119,106 @@ class GeradorCTest(unittest.TestCase):
             "1.500000\n3.000000\n",
         )
 
+    def test_comparacao_de_literais_string_sem_warning_de_arrays(self):
+        self.traduz_e_executa(
+            'System.out.println("x" == "x"); '
+            'System.out.println("x" != "y"); '
+            'System.out.println("x" == "y"); '
+            'String a = "x"; String b = a; '
+            'System.out.println(a == b); '
+            r'''System.out.println("a'b" == "a\'b"); '''
+            'String c = "y"; System.out.println(a == c); '
+            'System.out.println(a == "x"); System.out.println("x" == a);',
+            "true\ntrue\nfalse\ntrue\ntrue\nfalse\ntrue\ntrue\n",
+        )
+
+    def test_matematica_aninhada(self):
+        self.traduz_e_executa(
+            "System.out.println(Math.pow(2, 3)); "
+            "System.out.println(Math.pow(2, Math.sqrt(9))); "
+            "System.out.println(Math.sqrt(Math.pow(3, 2)));",
+            "8.000000\n8.000000\n3.000000\n",
+        )
+
+    def test_if_else_executa_ambos_os_ramos(self):
+        for condicao, esperado in (("true", "1\n"), ("false", "2\n")):
+            with self.subTest(condicao=condicao):
+                self.traduz_e_executa(
+                    f"boolean flag = {condicao}; "
+                    "if (flag) { System.out.println(1); } "
+                    "else { System.out.println(2); }",
+                    esperado,
+                )
+
+    def test_inicializacao_em_condicoes_constantes(self):
+        self.traduz_e_executa(
+            "int x; if (1 == 1) { x = 2; } System.out.println(x); "
+            "int y; while (2 > 1) { y = 3; break; } System.out.println(y);",
+            "2\n3\n",
+        )
+
+    def test_lacos_aninhados_com_break(self):
+        self.traduz_e_executa(
+            "int soma = 0; for (int i = 0; i < 3; i++) { int j = 0; "
+            "while (j < 4) { j++; if (j == 3) { break; } soma += i + j; } } "
+            "System.out.println(soma);",
+            "15\n",
+        )
+
+    def test_for_com_clausulas_opcionais(self):
+        self.traduz_e_executa(
+            "int i; for (i = 0; i < 2; i += 1) { System.out.print(i); } "
+            "for (; i > 0; i -= 1) {} for (;;) { break; } System.out.println(i);",
+            "010\n",
+        )
+
+    def test_escopos_e_nomes_reservados_no_alvo_c(self):
+        self.traduz_e_executa(
+            "int auto = 1; { int auto = 2; System.out.println(auto); } "
+            "{ int auto = 3; System.out.println(auto); } "
+            "int printf = 3; int Bloco = 4; System.out.println(auto + printf + Bloco);",
+            "2\n3\n8\n",
+        )
+
+    def test_switch_default_intermediario_e_cases_agrupados(self):
+        self.traduz_e_executa(
+            "switch (2) { default: System.out.print(0); break; "
+            "case 1: case 2: System.out.print(2); case 3: System.out.println(3); } "
+            "switch (9) { case 1: System.out.print(1); break; "
+            "default: System.out.print(9); case 2: System.out.println(2); }",
+            "23\n92\n",
+        )
+
+    def test_switch_preserva_escopo_entre_cases(self):
+        self.traduz_e_executa(
+            "switch (2) { case 1: int x = 1; "
+            "case 2: x = 2; System.out.println(x); break; }",
+            "2\n",
+        )
+
+    def test_break_em_switch_dentro_de_laco(self):
+        self.traduz_e_executa(
+            "for (int i = 0; i < 3; i++) { switch (i) { case 0: break; "
+            "default: System.out.print(i); } if (i == 1) { break; } } "
+            "switch (1) { case 1: switch (2) { case 2: System.out.print(2); break; } "
+            "System.out.println(1); break; }",
+            "121\n",
+        )
+
+    def test_texto_utf8_formatos_e_escapes(self):
+        self.traduz_e_executa(
+            r'''String texto = "a\"b\\c\n100% ç"; System.out.println(texto);
+                System.out.print('\t'); System.out.println('\'');''',
+            'a"b\\c\n100% ç\n\t\'\n',
+        )
+
+    def test_curto_circuito_com_disjuncao(self):
+        self.traduz_e_executa(
+            "int zero = 0; System.out.println(zero == 0 || 10 / zero > 1); "
+            "System.out.println(zero != 0 && 10 / zero > 1);",
+            "true\nfalse\n",
+        )
+
     def test_leitura_sem_inicializacao_nao_emite_c(self):
         resultado = subprocess.run(
             [str(COMPILADOR), "--c"],
@@ -165,16 +272,73 @@ class GeradorCTest(unittest.TestCase):
             self.assertNotEqual(resultado.returncode, 0)
             self.assertEqual(destino.read_text(encoding="utf-8"), "nao sobrescrever")
 
-    def test_opcoes_de_geracao_sao_exclusivas(self):
-        resultado = subprocess.run(
-            [str(COMPILADOR), "--c", "--ir"],
-            input="",
-            text=True,
-            capture_output=True,
-            timeout=10,
+    def test_opcoes_c_em_qualquer_ordem(self):
+        combinacoes = (
+            ("--c", "-o", "{destino}"),
+            ("-o", "{destino}", "--c"),
+            ("-o", "{destino}"),
+            ("--debug", "-o", "{destino}", "--c"),
+            ("--c", "--c", "-o", "{destino}"),
         )
-        self.assertNotEqual(resultado.returncode, 0)
-        self.assertEqual(resultado.stdout, "")
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-") as pasta:
+            codigos = []
+            for indice, combinacao in enumerate(combinacoes):
+                destino = Path(pasta) / f"programa-{indice}.c"
+                argumentos = [arg.format(destino=destino) for arg in combinacao]
+                with self.subTest(argumentos=argumentos):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR), *argumentos],
+                        input="System.out.println(7);", text=True,
+                        capture_output=True, timeout=10,
+                    )
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                    self.assertEqual(resultado.stdout, "")
+                    codigo = destino.read_text(encoding="utf-8")
+                    self.assertIn("int main(void)", codigo)
+                    codigos.append(codigo)
+                    if "--debug" in combinacao:
+                        self.assertIn("AST:", resultado.stderr)
+                        self.assertIn("Tabela de simbolos", resultado.stderr)
+                        self.assertNotIn("AST:", codigo)
+                    else:
+                        self.assertEqual(resultado.stderr, "")
+            self.assertTrue(all(codigo == codigos[0] for codigo in codigos))
+
+    def test_repeticao_do_mesmo_modo_e_idempotente(self):
+        for modo in ("--c", "--ir"):
+            with self.subTest(modo=modo):
+                resultados = [subprocess.run(
+                    [str(COMPILADOR), *([modo] * vezes)],
+                    input="int x = 1;", text=True, capture_output=True, timeout=10,
+                ) for vezes in (1, 2)]
+                for resultado in resultados:
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                    self.assertEqual(resultado.stderr, "")
+                self.assertEqual(resultados[0].stdout, resultados[1].stdout)
+
+    def test_opcoes_de_geracao_sao_exclusivas(self):
+        combinacoes = (
+            ("--c", "--ir"), ("--ir", "--c"),
+            ("--ir", "-o", "{destino}"),
+            ("-o", "{destino}", "--ir"),
+            ("--c", "-o", "{destino}", "--ir"),
+            ("-o",), ("--c", "-o"),
+            ("-o", "{destino}", "-o", "{destino}"),
+        )
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-invalida-") as pasta:
+            destino = Path(pasta) / "programa.c"
+            for combinacao in combinacoes:
+                argumentos = [arg.format(destino=destino) for arg in combinacao]
+                with self.subTest(argumentos=argumentos):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR), *argumentos],
+                        input="System.out.println(7);", text=True,
+                        capture_output=True, timeout=10,
+                    )
+                    self.assertNotEqual(resultado.returncode, 0)
+                    self.assertEqual(resultado.stdout, "")
+                    self.assertIn("Uso:", resultado.stderr)
+                    self.assertFalse(destino.exists())
 
     def test_debug_nao_contamina_stdout(self):
         resultado = subprocess.run(

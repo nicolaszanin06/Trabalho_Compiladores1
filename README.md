@@ -110,9 +110,11 @@ STORE x
 
 Com `--ir --debug`, a AST e a tabela de símbolos saem em stderr. O modo
 `--ir` também verifica inicialização antes da leitura e envia os diagnósticos léxicos a stderr.
-Sem `--ir`, a entrada é analisada e a mensagem de sucesso é impressa, mas não
-há verificação de inicialização antes da leitura. Nenhum dos modos executa a
-entrada ou gera código C. A análise de inicialização reconhece comparações entre
+No modo padrão, sem `--ir`, `--c` ou `-o`, a entrada é analisada e a mensagem
+de sucesso é impressa, mas não há verificação de inicialização antes da leitura.
+Os modos de geração (`--ir`, `--c` ou `-o`) fazem essa verificação adicional;
+`--ir` emite instruções intermediárias e `--c` ou `-o` gera C. Nenhum modo
+executa a entrada. A análise de inicialização reconhece comparações entre
 expressões constantes inteiras, como `if (1 == 1)` e `while (2 > 1)`.
 As [convenções da IR](docs/codigo-intermediario.md) descrevem os tipos e as instruções.
 
@@ -132,9 +134,17 @@ antes da leitura e não consome nem interpreta a IR textual.
 # -o sozinho também seleciona a geração C
 ./src/jtoc -o programa.c programa.java
 
+# A ordem de --c e -o não altera o resultado
+./src/jtoc -o programa.c --c programa.java
+
 # stdout contém apenas C; AST/tabela vão para stderr
 ./src/jtoc --c --debug programa.java
 ```
+
+Repetir o mesmo modo (`--c --c` ou `--ir --ir`) é permitido. Combinar `--ir`
+com `--c` ou `-o` continua sendo um erro, independentemente da ordem. No modo
+padrão, `--debug` acrescenta a AST e a tabela em stdout; nos modos de geração,
+essas informações ficam em stderr.
 
 Compile o arquivo gerado com GCC:
 

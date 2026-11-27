@@ -77,10 +77,39 @@ de strings, `%` em `float`, funções matemáticas, divisão inteira por zero,
 `--debug`, rejeição de leituras não inicializadas e proteção de destinos
 existentes. A compilação e a execução têm timeouts separados.
 
+Os casos do backend incluem também `Math.pow` aninhado com `Math.sqrt`, ambos
+os ramos de `if/else`, inicialização em condições constantes, laços aninhados,
+variáveis homônimas e nomes reservados em C. Os testes de `switch` cobrem
+`default` intermediário, casos agrupados, escopo compartilhado e `break` dentro
+de laços. Strings são verificadas com escapes e UTF-8, usando codificação
+explícita nos subprocessos. Os programas de sucesso devem deixar stderr vazio,
+e a compilação não pode apresentar o warning `-Warray-compare`.
+
+Os testes da CLI verificam a equivalência das ordens de `--c` e `-o`, a repetição
+do mesmo modo e a rejeição de combinações inválidas sem criar arquivos.
+
 No PowerShell, `testes/executar.ps1` também compila e executa um programa C que
 combina um `for`, atualização inteira, impressão e `Math.sqrt`. O programa
 fonte gerado é salvo sem BOM UTF-8 em uma pasta temporária, e os artefatos são
 removidos ao final.
+O teste exige tanto a saída esperada quanto código de retorno zero; em caso
+de falha, informa também o código retornado pelo programa.
+
+### Alerta da análise estática de memória
+
+Na validação com GCC 15.2.0, `-fanalyzer` apontou possível uso de bytes não
+inicializados no `memcpy` de `adicionar_string()`, em `src/gerador_c.c`.
+A inspeção do decodificador mostrou que ele preenche `resultado[0..usados)`
+antes de retornar esse mesmo tamanho ao chamador. Não foi confirmado um defeito
+nesse caminho; o alerta permanece registrado como provável falso positivo.
+
+As suítes passaram com AddressSanitizer/UBSan. Uma verificação auxiliar com
+falhas de `malloc`/`realloc` exercitou 38 caminhos de erro e sete de sucesso,
+sem alocações monitoradas pendentes nem saída parcial nos casos de erro.
+Essa injeção foi executada em um driver temporário, fora da suíte permanente.
+Não foram desativados warnings nem alteradas alocações apenas para silenciar
+o diagnóstico. Novas evidências devem ser investigadas antes de modificar o
+gerenciamento de memória.
 
 ## Arquivos de entrada
 

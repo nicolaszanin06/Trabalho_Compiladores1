@@ -40,7 +40,8 @@ $(EXEC): $(BISON_C) $(FLEX_C) $(AST_C) $(AST_H) $(TABELA_C) $(TABELA_H) $(GERADO
 	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_C) $(TABELA_C) $(GERADOR_C) $(LDFLAGS)
 
 # Regra para rodar o Bison: gera exemplo.tab.c e exemplo.tab.h
-$(BISON_C) $(BISON_H): $(BISON_FILE)
+# Alvos agrupados: uma unica receita produz os dois arquivos (GNU Make >= 4.3).
+$(BISON_C) $(BISON_H) &: $(BISON_FILE)
 	bison $(BISON_FLAGS) $(BISON_FILE)
 
 # Regra para rodar o Flex: gera lex.yy.c

@@ -1,0 +1,4 @@
+/src/jtoc
+/src/jtoc.exe
+__pycache__/
+*.pyc

@@ -1,5 +1,7 @@
 #include "tabela_simbolos.h"
 #include <errno.h>
+#include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,6 +129,21 @@ static const char *erro_inteiro(const char *texto) {
     return NULL;
 }
 
+static const char *validar_literal_float(const char *texto) {
+    char *fim;
+    errno = 0;
+    float valor = strtof(texto, &fim);
+    /* ERANGE tambem pode indicar um subnormal valido; nao basta rejeita-lo. */
+    int overflow = valor == HUGE_VALF || (errno == ERANGE && valor >= FLT_MAX);
+    int underflow_zero = valor == 0.0f && strpbrk(texto, "123456789") != NULL;
+    if (fim == texto || *fim != '\0' || overflow || underflow_zero) {
+        fprintf(stderr, "Erro semântico: literal float fora da faixa representavel: '%s'.\n", texto);
+        erros_semanticos++;
+        return NULL;
+    }
+    return "float";
+}
+
 static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
     if (no == NULL) {
         return NULL;
@@ -242,7 +259,7 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
     }
     if (texto[0] >= '0' && texto[0] <= '9') {
         if (strchr(texto, '.') != NULL) {
-            return "float";
+            return validar_literal_float(texto);
         }
         int32_t valor;
         return ler_inteiro(texto, 0, &valor) ? "int" : erro_inteiro(texto);

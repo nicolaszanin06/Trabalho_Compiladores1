@@ -13,7 +13,8 @@ CC = os.environ.get("CC", "gcc")
 
 
 class GeradorCTest(unittest.TestCase):
-    def traduz_e_executa(self, fonte, saida_esperada, retorno_esperado=0):
+    def traduz_e_executa(self, fonte, saida_esperada, retorno_esperado=0,
+                        exigir_sem_warnings=False):
         traducao = subprocess.run(
             [str(COMPILADOR), "--c"],
             input=fonte,
@@ -43,6 +44,8 @@ class GeradorCTest(unittest.TestCase):
             self.assertEqual(compilacao.returncode, 0,
                              compilacao.stdout + compilacao.stderr)
             self.assertNotIn("-Warray-compare", compilacao.stderr)
+            if exigir_sem_warnings:
+                self.assertEqual(compilacao.stderr, "")
 
             execucao = subprocess.run(
                 [str(executavel)],
@@ -61,6 +64,7 @@ class GeradorCTest(unittest.TestCase):
         self.traduz_e_executa(
             "int resultado = 2 + 3 * 4; System.out.println(resultado);",
             "14\n",
+            exigir_sem_warnings=True,
         )
 
     def test_normalizacao_decimal_e_overflow(self):
@@ -68,6 +72,7 @@ class GeradorCTest(unittest.TestCase):
             "int valor = 007; valor += 2147483647; valor++; "
             "System.out.println(valor);",
             "-2147483641\n",
+            exigir_sem_warnings=True,
         )
 
     def test_minimo_divisao_e_resto_especiais(self):
@@ -109,6 +114,7 @@ class GeradorCTest(unittest.TestCase):
             'String a = "mesmo"; String b = "mesmo"; '
             'System.out.println(a == b); System.out.println("100% pronto");',
             "true\n100% pronto\n",
+            exigir_sem_warnings=True,
         )
 
     def test_float_e_matematica(self):
@@ -117,6 +123,7 @@ class GeradorCTest(unittest.TestCase):
             "System.out.println(resto); "
             "System.out.println(Math.sqrt(9));",
             "1.500000\n3.000000\n",
+            exigir_sem_warnings=True,
         )
 
     def test_comparacao_de_literais_string_sem_warning_de_arrays(self):
@@ -138,7 +145,41 @@ class GeradorCTest(unittest.TestCase):
             "System.out.println(Math.pow(2, Math.sqrt(9))); "
             "System.out.println(Math.sqrt(Math.pow(3, 2)));",
             "8.000000\n8.000000\n3.000000\n",
+            exigir_sem_warnings=True,
         )
+
+    def test_float_limite_superior_e_subnormais_sem_warnings(self):
+        literais = ("340282346638528859811704183484516925440.0",
+                    "0." + "0" * 39 + "1", "0." + "0" * 44 + "1",
+                    "0." + "0" * 45 + "8")
+        for literal in literais:
+            with self.subTest(literal=literal):
+                self.traduz_e_executa(
+                    f"float x = {literal}; System.out.println(x > 0.0); "
+                    f"float y = -{literal}; System.out.println(y < 0.0);",
+                    "true\ntrue\n", exigir_sem_warnings=True)
+        self.traduz_e_executa(
+            "float x = 0." + "0" * 60 + "; System.out.println(x == 0.0);",
+            "true\n", exigir_sem_warnings=True)
+
+    def test_float_fora_da_faixa_nao_emite_c_nem_cria_destino(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-float-") as pasta:
+            destino = Path(pasta) / "programa.c"
+            for literal in ("9" * 45 + ".0", "0." + "0" * 60 + "1"):
+                for argumentos in (("--c",), ("-o", str(destino))):
+                    with self.subTest(literal=literal, argumentos=argumentos):
+                        resultado = subprocess.run(
+                            [str(COMPILADOR), *argumentos],
+                            input=f"float x = {literal};", text=True,
+                            capture_output=True, timeout=10)
+                        self.assertEqual(resultado.returncode, 1)
+                        self.assertEqual(resultado.stdout, "")
+                        self.assertIn("literal float fora da faixa", resultado.stderr)
+                        self.assertFalse(destino.exists())
+
+    def test_variavel_nao_utilizada_continua_compilavel(self):
+        # GCC pode avisar sobre x; esse programa nao exige stderr vazio no build.
+        self.traduz_e_executa("int x = 1;", "")
 
     def test_if_else_executa_ambos_os_ramos(self):
         for condicao, esperado in (("true", "1\n"), ("false", "2\n")):

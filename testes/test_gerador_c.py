@@ -39,6 +39,7 @@ class GeradorCTest(unittest.TestCase):
             )
             self.assertEqual(compilacao.returncode, 0,
                              compilacao.stdout + compilacao.stderr)
+            self.assertNotIn("-Warray-compare", compilacao.stderr)
 
             execucao = subprocess.run(
                 [str(executavel)],
@@ -110,6 +111,19 @@ class GeradorCTest(unittest.TestCase):
             "System.out.println(resto); "
             "System.out.println(Math.sqrt(9));",
             "1.500000\n3.000000\n",
+        )
+
+    def test_comparacao_de_literais_string_sem_warning_de_arrays(self):
+        self.traduz_e_executa(
+            'System.out.println("x" == "x"); '
+            'System.out.println("x" != "y"); '
+            'System.out.println("x" == "y"); '
+            'String a = "x"; String b = a; '
+            'System.out.println(a == b); '
+            r'''System.out.println("a'b" == "a\'b"); '''
+            'String c = "y"; System.out.println(a == c); '
+            'System.out.println(a == "x"); System.out.println("x" == a);',
+            "true\ntrue\nfalse\ntrue\ntrue\nfalse\ntrue\ntrue\n",
         )
 
     def test_leitura_sem_inicializacao_nao_emite_c(self):

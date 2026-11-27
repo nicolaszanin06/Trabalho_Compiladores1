@@ -265,7 +265,7 @@ static int emitir_literal(GeradorC *g, const NoAST *no) {
     if (texto[0] == '"') {
         size_t indice;
         if (!indice_string(g, texto, &indice)) return 0;
-        return escrever(g, "jtoc_s%zu", indice);
+        return escrever(g, "(&jtoc_s%zu[0])", indice);
     }
 
     if (texto[0] == '\'') {

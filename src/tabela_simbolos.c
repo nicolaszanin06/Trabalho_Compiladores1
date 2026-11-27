@@ -505,7 +505,7 @@ static void unir_fluxos(Fluxo *destino, const Fluxo *origem) {
 
 typedef enum Condicao { DESCONHECIDA, FALSA, VERDADEIRA } Condicao;
 
-/* Reconhece apenas condições que podem ser decididas por literais booleanos. */
+/* Reutiliza a aritmetica int dos cases; variaveis continuam desconhecidas. */
 static Condicao condicao_constante(const NoAST *no) {
     if (no->identificador) return DESCONHECIDA;
     if (strcmp(no->texto, "true") == 0 || strcmp(no->texto, "Vazio") == 0) return VERDADEIRA;
@@ -519,6 +519,29 @@ static Condicao condicao_constante(const NoAST *no) {
         Condicao esquerda = condicao_constante(no->filho);
         if (esquerda == (conjuncao ? FALSA : VERDADEIRA)) return esquerda;
         if (esquerda != DESCONHECIDA) return condicao_constante(no->filho->irmao);
+    }
+    if (operador_relacional(no->texto) || operador_igualdade(no->texto)) {
+        const NoAST *a = no->filho;
+        const NoAST *b = a->irmao;
+        int32_t esquerda, direita;
+        int resultado;
+        if (constante_inteira(a, &esquerda) && constante_inteira(b, &direita)) {
+            if (strcmp(no->texto, "<") == 0) resultado = esquerda < direita;
+            else if (strcmp(no->texto, "<=") == 0) resultado = esquerda <= direita;
+            else if (strcmp(no->texto, ">") == 0) resultado = esquerda > direita;
+            else if (strcmp(no->texto, ">=") == 0) resultado = esquerda >= direita;
+            else if (strcmp(no->texto, "==") == 0) resultado = esquerda == direita;
+            else resultado = esquerda != direita;
+            return resultado ? VERDADEIRA : FALSA;
+        }
+        if (operador_igualdade(no->texto) && strcmp(a->tipo, "boolean") == 0) {
+            Condicao ca = condicao_constante(a);
+            Condicao cb = condicao_constante(b);
+            if (ca != DESCONHECIDA && cb != DESCONHECIDA) {
+                resultado = strcmp(no->texto, "==") == 0 ? ca == cb : ca != cb;
+                return resultado ? VERDADEIRA : FALSA;
+            }
+        }
     }
     return DESCONHECIDA;
 }

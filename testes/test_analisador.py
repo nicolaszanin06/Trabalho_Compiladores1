@@ -658,6 +658,31 @@ class AnalisadorTest(unittest.TestCase):
         self.assertEqual(resultado.returncode, 0, resultado.stderr)
         self.assertNotIn("LOAD_CONST 2147483648", resultado.stdout)
 
+    def test_inicializacao_com_comparacoes_constantes(self):
+        for condicao in ("1 == 1", "2 > 1", "1 <= 1", "2 >= 1", "1 != 2",
+                         "1 < 2", "(2 + 3 * 4 == 14) && !(false == true)",
+                         "2147483647 + 1 == -2147483648",
+                         "-2147483648 / -1 == -2147483648"):
+            for comando in (f"if ({condicao}) {{ x = 2; }}",
+                            f"while ({condicao}) {{ x = 2; break; }}"):
+                with self.subTest(comando=comando):
+                    resultado = self.executar_parser(
+                        f"int x; {comando} System.out.print(x);",
+                        argumentos=("--ir",), debug=False)
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        for condicao in ("1 == 2", "1 > 2", "1 / 0 == 1", "b == true"):
+            with self.subTest(condicao=condicao):
+                resultado = self.executar_parser(
+                    f"boolean b = true; int x; if ({condicao}) {{ x = 2; }} x++;",
+                    argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn("não inicializada", resultado.stderr)
+        resultado = self.executar_parser(
+            "int x; boolean b = (1 == 2) && (x == 0);",
+            argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(
             "int x = 3 + 4;",

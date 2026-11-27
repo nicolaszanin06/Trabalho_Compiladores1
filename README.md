@@ -4,7 +4,7 @@ Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC p
 
 ## Compilar e executar no WSL/Linux
 
-Dependências: GCC, Make, Flex, Bison e biblioteca do Flex. No Ubuntu:
+Dependências: GCC, GNU Make 4.3 ou superior, Flex, Bison e biblioteca do Flex. No Ubuntu:
 
 ```bash
 sudo apt update
@@ -19,7 +19,11 @@ make -B
 ./jtoc < ../testes/validos/declaracoes.java
 ```
 
-O Makefile está em `src/`. `make -B` regenera os arquivos do Flex/Bison e recompila o executável, inclusive quando os arquivos gerados já vieram do Git.
+O executável não é versionado: compile antes de usar. O Makefile está em `src/`.
+`make -B` regenera os arquivos do Flex/Bison e recompila o executável, inclusive
+quando os arquivos gerados já vieram do Git. Também é possível executar
+`make -B -j4 -C src` a partir da raiz; uma única execução do Bison produz o par
+de arquivos `.tab.c` e `.tab.h`, inclusive em builds paralelos.
 
 Para demonstrar um erro:
 
@@ -55,7 +59,14 @@ O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `fi
 
 No cabeçalho do `for`, a inicialização aceita uma declaração ou atribuição; a atualização aceita uma atribuição, incremento ou decremento. Listas separadas por vírgulas não estão implementadas. O `switch` usa a forma tradicional com `:`, seletor `int`, casos constantes inteiros distintos e até um `default`.
 
-Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não podem conter quebras de linha reais; sequências de escape continuam sendo reconhecidas.
+Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não
+podem conter quebras de linha reais. Os escapes aceitos são `\b`, `\t`, `\n`,
+`\f`, `\r`, `\"`, `\'` e `\\`; outros, como `\q`, causam erro léxico.
+Escapes octais e Unicode não fazem parte deste subconjunto.
+
+Literais inteiros usam base decimal, inclusive com zeros à esquerda, e devem
+caber em 32 bits com sinal. `2147483648` é rejeitado; `-2147483648` é aceito
+como caso especial da negação unária. A mesma validação vale para `case`.
 
 ## Resultado e erros
 
@@ -100,6 +111,10 @@ STORE x
 
 Com `--ir --debug`, a AST e a tabela de símbolos saem em stderr. O modo
 `--ir` também verifica inicialização antes da leitura e envia os diagnósticos léxicos a stderr.
+Sem `--ir`, a entrada é analisada e a mensagem de sucesso é impressa, mas não
+há verificação de inicialização antes da leitura. Nenhum dos modos executa a
+entrada ou gera C. A análise de inicialização reconhece comparações entre
+expressões constantes inteiras, como `if (1 == 1)` e `while (2 > 1)`.
 As [convenções da IR](docs/codigo-intermediario.md) descrevem os tipos e as instruções.
 
 ## Testes e arquivos
@@ -111,7 +126,9 @@ python testes/test_analisador.py
 ```
 
 A suíte cobre os 14 arquivos de entrada, o analisador léxico, a AST, a semântica
-e a geração de IR. Com Flex e Bison instalados,
+e a geração e execução da IR em um interpretador exclusivo dos testes. Inclui
+regressões de faixa de inteiros, escapes, inicialização e falhas de alocação.
+Com Flex e Bison instalados,
 use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
 uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada
 push e pull request.
@@ -122,7 +139,10 @@ No PowerShell, com GCC disponível no Windows, execute na raiz:
 .\testes\executar.ps1
 ```
 
-O script compila os arquivos C gerados e verifica mensagens e códigos de saída. Após alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de usar esse script. Consulte `testes/README.md`.
+O script compila os arquivos C gerados e verifica os 14 arquivos de entrada e
+cinco casos com `--ir`, incluindo o mínimo inteiro e entradas inválidas. Após
+alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de usar esse script.
+Consulte `testes/README.md`.
 
 | Arquivo | Finalidade |
 | --- | --- |

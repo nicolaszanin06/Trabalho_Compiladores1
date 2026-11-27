@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from executor_ir import executar_ir
 
 
 TESTES = Path(__file__).resolve().parent
@@ -66,6 +67,7 @@ class AnalisadorTest(unittest.TestCase):
 
         cls.parser = pasta / ("parser" + sufixo)
         cls.lexer = pasta / ("lexer" + sufixo)
+        cls.alocacao = pasta / ("alocacao" + sufixo)
 
         cc = os.environ.get("CC", "gcc")
 
@@ -89,6 +91,8 @@ class AnalisadorTest(unittest.TestCase):
             str(TESTES / "lexer_driver.c"),
             "lex.yy.c"
         )
+        compilar(cc, "-I", str(pasta), "-o", str(cls.alocacao),
+                 str(TESTES / "alocacao_driver.c"))
 
     def executar(self, executavel, entrada="", argumentos=()):
         return subprocess.run([str(executavel), *map(str, argumentos)], input=entrada,
@@ -639,6 +643,140 @@ class AnalisadorTest(unittest.TestCase):
                 resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
                 self.assertEqual(resultado.returncode, 0, resultado.stderr)
                 self.assertIn("STORE ", resultado.stdout)
+
+    def test_escapes_validos_e_invalidos(self):
+        for escape in (r"\b", r"\t", r"\n", r"\f", r"\r", r'\"', r"\'", r"\\"):
+            with self.subTest(escape=escape):
+                self.conferir_ir(f'''System.out.print("{escape}"); System.out.print('{escape}');''',
+                                 [f'LOAD_CONST "{escape}"', "PRINT",
+                                  f"LOAD_CONST '{escape}'", "PRINT"])
+        for literal in (r'"\q"', r"'\q'", r'"a\qtexto"', r'"\u0041"', r"'\0'"):
+            for argumentos in ((), ("--ir",)):
+                with self.subTest(literal=literal, argumentos=argumentos):
+                    resultado = self.executar_parser(
+                        f"System.out.print({literal});", argumentos=argumentos, debug=False)
+                    self.assertEqual(resultado.returncode, 1)
+                    diagnostico = resultado.stderr if argumentos else resultado.stdout
+                    self.assertIn("Erro lexico", diagnostico)
+                    self.assertIn("Escape invalido", diagnostico)
+                    if argumentos:
+                        self.assertEqual(resultado.stdout, "")
+
+    def test_limites_de_inteiros_em_expressoes_e_cases(self):
+        for literal in ("2147483648", "-2147483649", "9" * 100):
+            for entrada in (f"int x = {literal};", f"switch (0) {{ case {literal}: }}"):
+                for argumentos in ((), ("--ir",)):
+                    with self.subTest(entrada=entrada, argumentos=argumentos):
+                        resultado = self.executar_parser(entrada, argumentos=argumentos, debug=False)
+                        self.assertEqual(resultado.returncode, 1)
+                        self.assertEqual(resultado.stdout, "")
+                        self.assertIn("fora da faixa de 32 bits", resultado.stderr)
+        self.conferir_ir("int x = -2147483648; int y = 2147483647;",
+                         ["LOAD_CONST -2147483648", "STORE x",
+                          "LOAD_CONST 2147483647", "STORE y"])
+        resultado = self.executar_parser(
+            "switch (-2147483648) { case -2147483648: break; }",
+            argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertNotIn("LOAD_CONST 2147483648", resultado.stdout)
+
+    def test_inicializacao_com_comparacoes_constantes(self):
+        for condicao in ("1 == 1", "2 > 1", "1 <= 1", "2 >= 1", "1 != 2",
+                         "1 < 2", "(2 + 3 * 4 == 14) && !(false == true)",
+                         "2147483647 + 1 == -2147483648",
+                         "-2147483648 / -1 == -2147483648"):
+            for comando in (f"if ({condicao}) {{ x = 2; }}",
+                            f"while ({condicao}) {{ x = 2; break; }}"):
+                with self.subTest(comando=comando):
+                    resultado = self.executar_parser(
+                        f"int x; {comando} System.out.print(x);",
+                        argumentos=("--ir",), debug=False)
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        for condicao in ("1 == 2", "1 > 2", "1 / 0 == 1", "b == true"):
+            with self.subTest(condicao=condicao):
+                resultado = self.executar_parser(
+                    f"boolean b = true; int x; if ({condicao}) {{ x = 2; }} x++;",
+                    argumentos=("--ir",), debug=False)
+                self.assertEqual(resultado.returncode, 1)
+                self.assertEqual(resultado.stdout, "")
+                self.assertIn("não inicializada", resultado.stderr)
+        resultado = self.executar_parser(
+            "int x; boolean b = (1 == 2) && (x == 0);",
+            argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+
+    def test_texto_expressao_libera_alocacoes_parciais(self):
+        resultado = self.executar(self.alocacao)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertEqual(resultado.stdout, "")
+        self.assertEqual(resultado.stderr, "")
+
+    def test_executa_ir_aritmetica_tipos_e_matematica(self):
+        casos = (
+            ("System.out.println(2 + 3 * 4); System.out.print(-(2 + 3) * 4);", "14\n-20"),
+            ("int x = 20; x += 2; x -= 3; x *= 2; x /= 4; x++; x--; "
+             "System.out.print(x); System.out.print(-7 % 3);", "9-1"),
+            ("float x = 2; x += 3; System.out.print(x / 2); "
+             "System.out.print(2 + 0.5); System.out.print(0.5 + 2);", "2.52.52.5"),
+            ("System.out.print(Math.pow(2, Math.sqrt(9)));", "8.0"),
+            ("System.out.print(-2147483648); System.out.print(2147483647 + 1); "
+             "System.out.print(-2147483648 / -1);", "-2147483648" * 3),
+            (r'''String s = "a\n%"; char c = '\t'; System.out.print(s);
+                 System.out.print(c); System.out.println(true);''', "a\n%\ttrue\n"),
+            ('String a = "ola"; String b = a; System.out.print(a == b);', "true"),
+            ("System.out.print(007); System.out.print(1 == 1.0);", "7true"),
+        )
+        for entrada, esperado in casos:
+            with self.subTest(entrada=entrada):
+                self.conferir_execucao_ir(entrada, esperado)
+
+    def conferir_execucao_ir(self, entrada, esperado):
+        resultado = self.executar_parser(entrada, argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertEqual(resultado.stderr, "")
+        self.assertEqual(executar_ir(resultado.stdout), esperado)
+
+    def test_executa_ir_curto_circuito_e_condicionais(self):
+        self.conferir_execucao_ir(
+            "int x = 0; System.out.println(x != 0 && 10 / x > 1); "
+            "System.out.println(x == 0 || 10 / x > 1); "
+            "if (x == 0) { System.out.print(1); } else { System.out.print(2); } "
+            "if (false) { System.out.print(3); }", "false\ntrue\n1")
+        self.conferir_execucao_ir(
+            "int x; if (1 == 1) { x = 2; } System.out.print(x); "
+            "int y; while (2 > 1) { y = 3; break; } System.out.print(y);", "23")
+
+    def test_executa_ir_lacos_aninhados_break_e_escopos(self):
+        self.conferir_execucao_ir(
+            "int s = 0; for (int i = 0; i < 3; i++) { int j = 0; "
+            "while (j < 4) { j++; if (j == 3) { break; } s += i + j; }} "
+            "System.out.print(s);", "15")
+        self.conferir_execucao_ir(
+            "int x = 1; { int x = 2; System.out.print(x); } "
+            "{ int x = 3; System.out.print(x); } System.out.print(x);", "231")
+        self.conferir_execucao_ir(
+            "int i = 0; for (;;) { i++; if (i == 3) { break; }} System.out.print(i);", "3")
+
+    def test_executa_ir_switch_fall_through_e_break_aninhado(self):
+        self.conferir_execucao_ir(
+            "switch (2) { default: System.out.print(0); break; "
+            "case 2: System.out.print(2); case 3: System.out.print(3); }", "23")
+        self.conferir_execucao_ir(
+            "for (int i = 0; i < 3; i++) { switch (i) { case 0: break; "
+            "default: System.out.print(i); } if (i == 1) { break; }}", "1")
+        self.conferir_execucao_ir(
+            "switch (1) { case 1: switch (2) { case 2: System.out.print(2); break; "
+            "default: System.out.print(9); } System.out.print(1); break; }", "21")
+
+    def test_executor_ir_limita_passos_e_verifica_pilha(self):
+        resultado = self.executar_parser("for (;;) {}", argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        with self.assertRaisesRegex(RuntimeError, "Limite de passos"):
+            executar_ir(resultado.stdout, limite_passos=20)
+        with self.assertRaisesRegex(ValueError, "Pilha vazia"):
+            executar_ir("PRINT\n")
+        with self.assertRaisesRegex(ValueError, "Pilha nao vazia"):
+            executar_ir("LOAD_CONST 1\n")
 
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(

@@ -11,6 +11,7 @@ typedef struct NoAST {
     int id_escopo;
     size_t id_simbolo;
     int32_t valor_caso;
+    int inteiro_minimo; /* -2147483648 deve ser emitido como uma unica constante. */
     const char *tipo; /* Tipo resolvido pela analise semantica. */
     struct NoAST *filho;
     struct NoAST *irmao;
@@ -27,7 +28,7 @@ NoAST *montar_no(const char *texto, NoAST *a, NoAST *b, NoAST *c);
 void adicionar_filho(NoAST *pai, NoAST *filho);
 void imprimir_ast(const NoAST *no, int nivel, FILE *saida);
 void liberar_ast(NoAST *no);
-/* O chamador deve liberar o texto retornado com free. */
+/* Retorna NULL em falha de alocacao; o chamador libera o resultado com free. */
 char *texto_expressao(NoAST *no);
 
 #endif

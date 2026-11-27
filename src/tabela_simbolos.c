@@ -48,6 +48,11 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
         exit(EXIT_FAILURE);
     }
     novo->simbolo = strdup(nome->texto);
+    if (novo->simbolo == NULL) {
+        free(novo);
+        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
+        exit(EXIT_FAILURE);
+    }
     novo->tipo = tipo->texto;
     nome->tipo = novo->tipo;
     nome->id_escopo = escopo->id;
@@ -57,7 +62,9 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
     novo->escopo = escopo->pai == NULL ? "global" : "local";
     novo->id_escopo = escopo->id;
     novo->proximo = NULL;
-    if (novo->simbolo == NULL || novo->tipo == NULL || novo->valor == NULL) {
+    if (novo->valor == NULL) {
+        free(novo->simbolo);
+        free(novo);
         fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
         exit(EXIT_FAILURE);
     }
@@ -102,6 +109,24 @@ static int tipo_numerico(const char *tipo) {
 
 static const char *inferir_tipo_expressao(NoAST *no, Escopo *escopo);
 
+/* O scanner fornece digitos decimais; o sinal vem do operador unario. */
+static int ler_inteiro(const char *texto, int negativo, int32_t *resultado) {
+    char *fim;
+    errno = 0;
+    long long valor = strtoll(texto, &fim, 10);
+    long long limite = negativo ? -(long long)INT32_MIN : INT32_MAX;
+    if (errno != 0 || fim == texto || *fim != '\0' || valor < 0 || valor > limite)
+        return 0;
+    *resultado = (int32_t)(negativo ? -valor : valor);
+    return 1;
+}
+
+static const char *erro_inteiro(const char *texto) {
+    fprintf(stderr, "Erro semântico: literal inteiro fora da faixa de 32 bits: '%s'.\n", texto);
+    erros_semanticos++;
+    return NULL;
+}
+
 static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
     if (no == NULL) {
         return NULL;
@@ -116,6 +141,17 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
 
         NoAST *esquerda = no->filho;
         NoAST *direita = esquerda->irmao;
+        /* A magnitude 2147483648 so e permitida sob a negacao unaria. */
+        if (strcmp(no->texto, "-") == 0 && direita == NULL
+                && esquerda->filho == NULL && !esquerda->identificador
+                && esquerda->texto[0] >= '0' && esquerda->texto[0] <= '9'
+                && strchr(esquerda->texto, '.') == NULL) {
+            int32_t valor;
+            if (!ler_inteiro(esquerda->texto, 1, &valor)) return erro_inteiro(esquerda->texto);
+            esquerda->tipo = "int";
+            no->inteiro_minimo = valor == INT32_MIN;
+            return "int";
+        }
         const char *tipo_esquerda = inferir_tipo_expressao(esquerda, escopo);
         const char *tipo_direita = inferir_tipo_expressao(direita, escopo);
 
@@ -208,7 +244,8 @@ static const char *calcular_tipo(NoAST *no, Escopo *escopo) {
         if (strchr(texto, '.') != NULL) {
             return "float";
         }
-        return "int";
+        int32_t valor;
+        return ler_inteiro(texto, 0, &valor) ? "int" : erro_inteiro(texto);
     }
 
     return NULL;
@@ -298,27 +335,15 @@ static int32_t inteiro32(int64_t valor) {
 
 static int constante_inteira(const NoAST *no, int32_t *resultado) {
     if (no->tipo == NULL || strcmp(no->tipo, "int") != 0 || no->identificador) return 0;
-    const NoAST *a = no->filho;
-    if (a == NULL) {
-        errno = 0;
-        char *fim;
-        long long valor = strtoll(no->texto, &fim, 10);
-        if (errno != 0 || *fim != '\0' || valor > INT32_MAX) return 0;
-        *resultado = (int32_t)valor;
+    if (no->inteiro_minimo) {
+        *resultado = INT32_MIN;
         return 1;
     }
+    const NoAST *a = no->filho;
+    if (a == NULL) return ler_inteiro(no->texto, 0, resultado);
 
     int32_t esquerda, direita;
     const NoAST *b = a->irmao;
-    if (b == NULL && strcmp(no->texto, "-") == 0 && a->filho == NULL
-            && !a->identificador) {
-        errno = 0;
-        char *fim;
-        long long valor = strtoll(a->texto, &fim, 10);
-        if (errno != 0 || *fim != '\0' || valor > -(int64_t)INT32_MIN) return 0;
-        *resultado = (int32_t)-valor;
-        return 1;
-    }
     if (!constante_inteira(a, &esquerda)) return 0;
     if (b == NULL) {
         if (strcmp(no->texto, "-") != 0) return 0;
@@ -487,7 +512,7 @@ static void unir_fluxos(Fluxo *destino, const Fluxo *origem) {
 
 typedef enum Condicao { DESCONHECIDA, FALSA, VERDADEIRA } Condicao;
 
-/* Reconhece apenas condições que podem ser decididas por literais booleanos. */
+/* Reutiliza a aritmetica int dos cases; variaveis continuam desconhecidas. */
 static Condicao condicao_constante(const NoAST *no) {
     if (no->identificador) return DESCONHECIDA;
     if (strcmp(no->texto, "true") == 0 || strcmp(no->texto, "Vazio") == 0) return VERDADEIRA;
@@ -501,6 +526,29 @@ static Condicao condicao_constante(const NoAST *no) {
         Condicao esquerda = condicao_constante(no->filho);
         if (esquerda == (conjuncao ? FALSA : VERDADEIRA)) return esquerda;
         if (esquerda != DESCONHECIDA) return condicao_constante(no->filho->irmao);
+    }
+    if (operador_relacional(no->texto) || operador_igualdade(no->texto)) {
+        const NoAST *a = no->filho;
+        const NoAST *b = a->irmao;
+        int32_t esquerda, direita;
+        int resultado;
+        if (constante_inteira(a, &esquerda) && constante_inteira(b, &direita)) {
+            if (strcmp(no->texto, "<") == 0) resultado = esquerda < direita;
+            else if (strcmp(no->texto, "<=") == 0) resultado = esquerda <= direita;
+            else if (strcmp(no->texto, ">") == 0) resultado = esquerda > direita;
+            else if (strcmp(no->texto, ">=") == 0) resultado = esquerda >= direita;
+            else if (strcmp(no->texto, "==") == 0) resultado = esquerda == direita;
+            else resultado = esquerda != direita;
+            return resultado ? VERDADEIRA : FALSA;
+        }
+        if (operador_igualdade(no->texto) && strcmp(a->tipo, "boolean") == 0) {
+            Condicao ca = condicao_constante(a);
+            Condicao cb = condicao_constante(b);
+            if (ca != DESCONHECIDA && cb != DESCONHECIDA) {
+                resultado = strcmp(no->texto, "==") == 0 ? ca == cb : ca != cb;
+                return resultado ? VERDADEIRA : FALSA;
+            }
+        }
     }
     return DESCONHECIDA;
 }

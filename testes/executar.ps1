@@ -131,12 +131,13 @@ try {
         & gcc -std=c11 -Wall -Wextra -Wpedantic $arquivoC -o $executavelC -lm
         if ($LASTEXITCODE -eq 0) {
             $saidaC = & $executavelC
+            $retornoC = $LASTEXITCODE
             $saidaCTexto = Normalizar-Saida ($saidaC -join "`n")
-            if ($saidaCTexto -eq "10`n3.000000") {
+            if ($retornoC -eq 0 -and $saidaCTexto -eq "10`n3.000000") {
                 Write-Host 'OK: geracao C, compilacao GCC e execucao'
             } else {
                 $falhas++
-                Write-Host "FALHOU: execucao do C gerado: $saidaCTexto"
+                Write-Host "FALHOU: execucao do C gerado (codigo $retornoC): $saidaCTexto"
             }
         } else {
             $falhas++

@@ -71,3 +71,24 @@ Inclui inteiros de 32 bits e arredondamento de resultados numéricos para
 Esse executor é auxiliar de testes; não oferece um runtime completo de Java,
 nem define tratamento de todos os casos de domínio e valores não finitos de
 ponto flutuante do backend C já implementado.
+
+## Contrato de emissão e exemplo
+
+A saída não inclui declarações de tipos ou cabeçalho de programa; os tipos dos valores decorrem de literais e das conversões emitidas. Os opcodes `AND` e `OR` não existem: a lógica binária é sempre expandida em desvios. Os rótulos `L<n>` e os temporários `@tmp<n>` são internos à emissão e sua numeração reinicia em cada geração.
+
+```java
+float x = 2;
+System.out.println(x + 0.5);
+```
+
+```text
+LOAD_CONST 2
+I2F
+STORE x
+LOAD x
+LOAD_CONST 0.5
+ADD
+PRINTLN
+```
+
+O resultado do executor de testes usa a representação Python dos valores `float` (por exemplo, `2.5`); a impressão do C usa seis casas (`2.500000`). Portanto, as suítes não definem igualdade textual entre as duas saídas para ponto flutuante. Subnormais e limites de literais são validados pela [semântica](analisador-semantico.md), antes de emitir IR. A IR não é consumida pelo backend C; veja [Arquitetura e decisões](arquitetura-decisoes.md).

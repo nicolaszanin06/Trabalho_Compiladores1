@@ -1,6 +1,6 @@
 # Java Procedural — Analisador Léxico e Sintático
 
-Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual analisa a entrada e oferece geração de código intermediário de pilha.
+Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual analisa a entrada e oferece geração de código intermediário de pilha e geração final de C.
 
 ## Compilar e executar no WSL/Linux
 
@@ -14,21 +14,20 @@ sudo apt install build-essential flex bison libfl-dev
 A partir da raiz do repositório:
 
 ```bash
-cd src
-make -B
-./jtoc < ../testes/validos/declaracoes.java
+make -B -C src
+./src/jtoc < testes/validos/declaracoes.java
 ```
 
-O executável não é versionado: compile antes de usar. O Makefile está em `src/`.
-`make -B` regenera os arquivos do Flex/Bison e recompila o executável, inclusive
-quando os arquivos gerados já vieram do Git. Também é possível executar
-`make -B -j4 -C src` a partir da raiz; uma única execução do Bison produz o par
-de arquivos `.tab.c` e `.tab.h`, inclusive em builds paralelos.
+O executável não é versionado: compile antes de usar. `make -B` regenera os
+arquivos do Flex/Bison e recompila o executável, inclusive quando os arquivos
+gerados já vieram do Git. Também é possível executar `make -B -j4 -C src` a
+partir da raiz; uma única execução do Bison produz o par de arquivos `.tab.c`
+e `.tab.h`, inclusive em builds paralelos.
 
 Para demonstrar um erro:
 
 ```bash
-./jtoc < ../testes/invalidos/string_nao_encerrada.java
+./src/jtoc < testes/invalidos/string_nao_encerrada.java
 ```
 
 Dentro de `src/`, `make clean` remove os arquivos gerados e o executável.
@@ -80,8 +79,8 @@ Por padrão, apenas a mensagem de sucesso é impressa. Para exibir também a AST
 a tabela de símbolos com tipo, valor de inicialização e escopo, use `--debug`:
 
 ```bash
-./jtoc --debug < ../testes/validos/declaracoes.java
-./jtoc --debug ../testes/validos/declaracoes.java
+./src/jtoc --debug < testes/validos/declaracoes.java
+./src/jtoc --debug testes/validos/declaracoes.java
 ```
 
 As impressões de inspeção estão reunidas em `debug_compiler()`, chamada somente
@@ -99,7 +98,7 @@ O comando `break` só é permitido dentro de `while`, `for` ou `switch`, inclusi
 Use `--ir` para escrever as instruções em stdout após a validação semântica.
 
 ```bash
-printf 'int x = 3 + 4;\n' | ./jtoc --ir
+printf 'int x = 3 + 4;\n' | ./src/jtoc --ir
 ```
 
 ```text
@@ -113,9 +112,42 @@ Com `--ir --debug`, a AST e a tabela de símbolos saem em stderr. O modo
 `--ir` também verifica inicialização antes da leitura e envia os diagnósticos léxicos a stderr.
 Sem `--ir`, a entrada é analisada e a mensagem de sucesso é impressa, mas não
 há verificação de inicialização antes da leitura. Nenhum dos modos executa a
-entrada ou gera C. A análise de inicialização reconhece comparações entre
+entrada ou gera código C. A análise de inicialização reconhece comparações entre
 expressões constantes inteiras, como `if (1 == 1)` e `while (2 > 1)`.
 As [convenções da IR](docs/codigo-intermediario.md) descrevem os tipos e as instruções.
+
+## Geração final de C
+
+O modo `--c` gera um programa C11 completo diretamente da AST anotada pela
+análise semântica. A geração C também executa a verificação de inicialização
+antes da leitura e não consome nem interpreta a IR textual.
+
+```bash
+# C em stdout
+./src/jtoc --c programa.java
+
+# C em um arquivo novo; destinos existentes são preservados
+./src/jtoc --c -o programa.c programa.java
+
+# -o sozinho também seleciona a geração C
+./src/jtoc -o programa.c programa.java
+
+# stdout contém apenas C; AST/tabela vão para stderr
+./src/jtoc --c --debug programa.java
+```
+
+Compile o arquivo gerado com GCC:
+
+```bash
+gcc -std=c11 -Wall -Wextra -Wpedantic programa.c -o programa
+```
+
+Acrescente `-lm` quando o programa utilizar `Math.sqrt`, `Math.pow` ou resto
+(`%`) entre valores `float`. O backend preserva a aritmética inteira de 32 bits,
+a identidade de referências de `String`, o curto-circuito e o *fall-through*
+do `switch`. A impressão de `float` adota `%f` com seis casas decimais.
+Consulte [Geração final de C](docs/geracao-c.md) para o contrato completo e
+suas limitações.
 
 ## Testes e arquivos
 
@@ -123,34 +155,34 @@ Na raiz, com Python 3 e GCC disponíveis, execute:
 
 ```bash
 python testes/test_analisador.py
+python testes/test_gerador_c.py
 ```
 
-A suíte cobre os 14 arquivos de entrada, o analisador léxico, a AST, a semântica
-e a geração e execução da IR em um interpretador exclusivo dos testes. Inclui
-regressões de faixa de inteiros, escapes, inicialização e falhas de alocação.
-Com Flex e Bison instalados,
-use `python testes/test_analisador.py --regenerate` para regenerar o analisador em
-uma pasta temporária antes de testar. O GitHub Actions executa essa opção em cada
-push e pull request.
+A primeira suíte cobre os 14 arquivos de entrada, o analisador léxico, a AST,
+a semântica e a geração e execução da IR em um interpretador exclusivo dos
+testes. A segunda traduz programas para C, compila o resultado com GCC em C11
+e compara a saída do executável. Com Flex e Bison instalados, use
+`python testes/test_analisador.py --regenerate` para regenerar o analisador em
+uma pasta temporária antes de testar.
 
-No PowerShell, com GCC disponível no Windows, execute na raiz:
+O GitHub Actions executa a regeneração e as duas suítes em cada push e pull
+request. No PowerShell, com GCC disponível no Windows, execute na raiz:
 
 ```powershell
 .\testes\executar.ps1
 ```
 
-O script compila os arquivos C gerados e verifica os 14 arquivos de entrada e
-cinco casos com `--ir`, incluindo o mínimo inteiro e entradas inválidas. Após
-alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de usar esse script.
-Consulte `testes/README.md`.
+Após alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de executar o
+script. Consulte `testes/README.md`.
 
 | Arquivo | Finalidade |
 | --- | --- |
 | `src/jtoc.l` | Regras léxicas do Flex |
-| `src/jtoc.y` | Gramática do Bison, entrada do programa e chamadas dos módulos |
-| `src/ast.h` e `src/ast.c` | Estrutura da AST, criação, impressão, liberação e representação textual de expressões |
-| `src/tabela_simbolos.h` e `src/tabela_simbolos.c` | Tabela de símbolos, escopos, validação semântica, impressão e liberação |
-| `src/gerador_intermediario.h` e `src/gerador_intermediario.c` | Validação estrutural e emissão das instruções de pilha |
+| `src/jtoc.y` | Gramática do Bison, CLI e integração dos módulos |
+| `src/ast.h` e `src/ast.c` | Estrutura, criação, impressão e liberação da AST |
+| `src/tabela_simbolos.h` e `src/tabela_simbolos.c` | Tabela de símbolos, escopos e análise semântica |
+| `src/gerador_intermediario.h` e `src/gerador_intermediario.c` | Emissão de instruções intermediárias de pilha |
+| `src/gerador_c.h` e `src/gerador_c.c` | Geração final de programas C11 a partir da AST |
 | `src/Makefile` | Compilação e limpeza |
-| `testes/` | Entradas e verificador |
+| `testes/` | Entradas e testes automatizados |
 | `docs/` | Documentação do projeto |

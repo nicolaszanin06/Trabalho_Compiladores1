@@ -21,13 +21,13 @@ A mesma rotina de validação atende tanto às expressões gerais quanto às con
 
 ## **Análise de inicialização e fluxo de controle**
 
-Antes da geração de código intermediário, o analisador executa uma verificação de inicialização definitiva nos caminhos de controle do programa:
+Antes da geração de código intermediário (`--ir`) ou código C (`--c` ou `-o`), o analisador executa uma verificação de inicialização definitiva nos caminhos de controle do programa:
 
 * **Junções de fluxo:** em pontos de convergência (como após um `if`/`else`), uma variável só é considerada inicializada se tiver sido escrita em todos os caminhos possíveis que alcançam aquele ponto.
 * **Laços e `switch`:** nos laços, a análise considera tanto a saída pela condição quanto desvios via `break`; no `switch`, considera que cada `case` pode ser alcançado diretamente pelo seu respectivo rótulo.
 * **Avaliação de condições constantes:** condições constantes abrangem literais booleanos, operadores `!`, `&&`, `||`, igualdade booleana e comparações entre expressões constantes inteiras (por exemplo, `int x; if (1 == 1) { x = 2; } System.out.print(x);` é aceito). A avaliação inteira é compartilhada com os rótulos `case` do `switch`, opera em 32 bits com retorno circular no *overflow* e preserva a avaliação em curto-circuito. Expressões com divisão por zero, variáveis ou valores de ponto flutuante permanecem indeterminadas nessa análise.
 
-Essa verificação adicional de inicialização ocorre quando o compilador é executado com a flag `--ir` (independentemente de `--debug`), rejeitando leituras de variáveis não inicializadas antes da emissão da IR. Já no modo padrão de validação do front-end, construções como `int x; System.out.print(x);` continuam sendo aceitas pela checagem básica de escopo e tipos. Consulte a documentação de [Código intermediário](codigo-intermediario.md) para detalhes sobre conversões numéricas e funções nativas.
+Essa verificação adicional de inicialização ocorre quando o compilador é executado com `--ir`, `--c` ou `-o` (independentemente de `--debug`), rejeitando leituras de variáveis não inicializadas antes da emissão de IR ou C. Já no modo padrão de validação do front-end, construções como `int x; System.out.print(x);` continuam sendo aceitas pela checagem básica de escopo e tipos. Consulte a documentação de [Código intermediário](codigo-intermediario.md) para detalhes sobre conversões numéricas e funções nativas.
 
 ## **Histórico de Versões**
 

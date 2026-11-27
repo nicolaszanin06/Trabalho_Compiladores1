@@ -686,6 +686,39 @@ class AnalisadorTest(unittest.TestCase):
         self.assertEqual(resultado.returncode, 0, resultado.stderr)
         self.assertNotIn("LOAD_CONST 2147483648", resultado.stdout)
 
+    def test_rejeita_literais_float_fora_da_faixa_em_todos_os_modos(self):
+        for literal in ("9" * 45 + ".0", "0." + "0" * 60 + "1",
+                        "0." + "0" * 45 + "7"):
+            for sinal in ("", "-"):
+                for argumentos in ((), ("--ir",), ("--c",)):
+                    with self.subTest(literal=literal, sinal=sinal, argumentos=argumentos):
+                        resultado = self.executar_parser(
+                            f"float x = {sinal}{literal};",
+                            argumentos=argumentos, debug=False)
+                        self.assertEqual(resultado.returncode, 1)
+                        self.assertEqual(resultado.stdout, "")
+                        self.assertIn("literal float fora da faixa", resultado.stderr)
+
+    def test_aceita_float_zero_limite_superior_e_subnormais(self):
+        literais = ("0.0", "000.000", "0." + "0" * 60,
+                    "340282346638528859811704183484516925440.0",
+                    "0." + "0" * 39 + "1", "0." + "0" * 44 + "1",
+                    "0." + "0" * 45 + "8")
+        for literal in literais:
+            for argumentos in ((), ("--ir",), ("--c",)):
+                with self.subTest(literal=literal, argumentos=argumentos):
+                    resultado = self.executar_parser(
+                        f"float x = {literal}; System.out.println(x);",
+                        argumentos=argumentos, debug=False)
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                    self.assertEqual(resultado.stderr, "")
+        for literal in literais[-3:]:
+            resultado = self.executar_parser(
+                f"float x = {literal}; System.out.println(x > 0.0);",
+                argumentos=("--ir",), debug=False)
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertEqual(executar_ir(resultado.stdout), "true\n")
+
     def test_inicializacao_com_comparacoes_constantes(self):
         for condicao in ("1 == 1", "2 > 1", "1 <= 1", "2 >= 1", "1 != 2",
                          "1 < 2", "(2 + 3 * 4 == 14) && !(false == true)",

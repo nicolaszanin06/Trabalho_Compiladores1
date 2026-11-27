@@ -17,11 +17,11 @@ A tabela abaixo resume o mapeamento adotado na geração de código C (detalhado
 | Java (Origem) | C (Alvo) |
 | --- | --- |
 | Sequência de comandos na raiz | Envolvida em `int main(void)` |
-| `int`, `float`, `char` | `int32_t`, `float`, `char` |
+| `int`, `float`, `char` | `int`, `float`, `char`; `_Static_assert` exige `int` de 32 bits |
 | `boolean flag = true;` | `bool jtoc_v0 = true;` (`<stdbool.h>`) |
 | `String texto = "ola";` | `const char *jtoc_v1 = jtoc_s0;` (com agrupamento de literais) |
 | `System.out.print` / `println` | `printf` (com formato adequado ao tipo) |
-| `Math.sqrt` / `Math.pow` | `sqrtf` / `powf` (`<math.h>`) |
+| `Math.sqrt` / `Math.pow` | `sqrt` / `pow` (`<math.h>`), com argumentos convertidos para `float` e depois `double`, e resultado convertido para `float` |
 | Estruturas de controle (`if`, `while`, `for`, `switch`) | Tradução direta de blocos, laços e saltos |
 
 ## **Decisões Técnicas**

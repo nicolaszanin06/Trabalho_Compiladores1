@@ -165,16 +165,73 @@ class GeradorCTest(unittest.TestCase):
             self.assertNotEqual(resultado.returncode, 0)
             self.assertEqual(destino.read_text(encoding="utf-8"), "nao sobrescrever")
 
-    def test_opcoes_de_geracao_sao_exclusivas(self):
-        resultado = subprocess.run(
-            [str(COMPILADOR), "--c", "--ir"],
-            input="",
-            text=True,
-            capture_output=True,
-            timeout=10,
+    def test_opcoes_c_em_qualquer_ordem(self):
+        combinacoes = (
+            ("--c", "-o", "{destino}"),
+            ("-o", "{destino}", "--c"),
+            ("-o", "{destino}"),
+            ("--debug", "-o", "{destino}", "--c"),
+            ("--c", "--c", "-o", "{destino}"),
         )
-        self.assertNotEqual(resultado.returncode, 0)
-        self.assertEqual(resultado.stdout, "")
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-") as pasta:
+            codigos = []
+            for indice, combinacao in enumerate(combinacoes):
+                destino = Path(pasta) / f"programa-{indice}.c"
+                argumentos = [arg.format(destino=destino) for arg in combinacao]
+                with self.subTest(argumentos=argumentos):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR), *argumentos],
+                        input="System.out.println(7);", text=True,
+                        capture_output=True, timeout=10,
+                    )
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                    self.assertEqual(resultado.stdout, "")
+                    codigo = destino.read_text(encoding="utf-8")
+                    self.assertIn("int main(void)", codigo)
+                    codigos.append(codigo)
+                    if "--debug" in combinacao:
+                        self.assertIn("AST:", resultado.stderr)
+                        self.assertIn("Tabela de simbolos", resultado.stderr)
+                        self.assertNotIn("AST:", codigo)
+                    else:
+                        self.assertEqual(resultado.stderr, "")
+            self.assertTrue(all(codigo == codigos[0] for codigo in codigos))
+
+    def test_repeticao_do_mesmo_modo_e_idempotente(self):
+        for modo in ("--c", "--ir"):
+            with self.subTest(modo=modo):
+                resultados = [subprocess.run(
+                    [str(COMPILADOR), *([modo] * vezes)],
+                    input="int x = 1;", text=True, capture_output=True, timeout=10,
+                ) for vezes in (1, 2)]
+                for resultado in resultados:
+                    self.assertEqual(resultado.returncode, 0, resultado.stderr)
+                    self.assertEqual(resultado.stderr, "")
+                self.assertEqual(resultados[0].stdout, resultados[1].stdout)
+
+    def test_opcoes_de_geracao_sao_exclusivas(self):
+        combinacoes = (
+            ("--c", "--ir"), ("--ir", "--c"),
+            ("--ir", "-o", "{destino}"),
+            ("-o", "{destino}", "--ir"),
+            ("--c", "-o", "{destino}", "--ir"),
+            ("-o",), ("--c", "-o"),
+            ("-o", "{destino}", "-o", "{destino}"),
+        )
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-invalida-") as pasta:
+            destino = Path(pasta) / "programa.c"
+            for combinacao in combinacoes:
+                argumentos = [arg.format(destino=destino) for arg in combinacao]
+                with self.subTest(argumentos=argumentos):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR), *argumentos],
+                        input="System.out.println(7);", text=True,
+                        capture_output=True, timeout=10,
+                    )
+                    self.assertNotEqual(resultado.returncode, 0)
+                    self.assertEqual(resultado.stdout, "")
+                    self.assertIn("Uso:", resultado.stderr)
+                    self.assertFalse(destino.exists())
 
     def test_debug_nao_contamina_stdout(self):
         resultado = subprocess.run(

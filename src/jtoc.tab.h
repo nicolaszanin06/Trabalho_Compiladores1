@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 20 "jtoc.y"
+#line 23 "jtoc.y"
 
 #include "ast.h"
 
@@ -135,7 +135,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 31 "jtoc.y"
+#line 34 "jtoc.y"
 
     char* stringValue;
     NoAST *no;

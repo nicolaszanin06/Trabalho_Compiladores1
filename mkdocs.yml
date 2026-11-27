@@ -10,7 +10,7 @@ theme:
       primary: deep purple
       accent: purple
       toggle:
-        icon: material/eye 
+        icon: material/eye
         name: Modo escuro
 
     - scheme: slate
@@ -30,6 +30,7 @@ nav:
   - AST e Tabela de Símbolos: ast-tabela.md
   - Analisador Semântico: analisador-semantico.md
   - Código Intermediário: codigo-intermediario.md
+  - Geração final de C: geracao-c.md
   - Testes e Validação: testes.md
 
 extra_css:

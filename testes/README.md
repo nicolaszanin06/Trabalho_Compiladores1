@@ -1,4 +1,4 @@
-# Testes do analisador
+# Testes do analisador e do backend
 
 ## Suíte automatizada (Windows e Linux)
 
@@ -7,19 +7,22 @@ Na raiz do repositório, execute:
 
 ```powershell
 python testes/test_analisador.py
+python testes/test_gerador_c.py
 ```
 
-No Linux, o comando pode ser `python3 testes/test_analisador.py`.
-A suíte compila o analisador e um observador de tokens (`lexer_driver.c`) em uma
-pasta temporária, removida ao terminar. O observador chama `yylex()` diretamente
-e verifica nomes dos tokens, lexemas, linhas e o lexema inteiro armazenado em
-`yylval.stringValue`, incluindo zeros à esquerda.
+No Linux, os comandos podem ser `python3 testes/test_analisador.py` e
+`python3 testes/test_gerador_c.py`.
+
+A suíte do analisador compila o analisador e um observador de tokens
+(`lexer_driver.c`) em uma pasta temporária, removida ao terminar. O observador
+chama `yylex()` diretamente e verifica nomes dos tokens, lexemas, linhas e o
+lexema inteiro armazenado em `yylval.stringValue`, incluindo zeros à esquerda.
 
 Também compila `alocacao_driver.c`, que injeta falhas em cada alocação de
 `texto_expressao()` e verifica se os resultados parciais são liberados.
 Não é necessário um executável pré-compilado em `src/`.
 
-Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
+Os testes existentes cobrem subcasos para os 14 arquivos de entrada e verificam:
 
 - Palavras reservadas, identificadores, operadores, delimitadores e literais.
 - Comentários, espaços, CRLF e linhas dos diagnósticos.
@@ -36,12 +39,8 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Rejeição de `break` fora de laços e `switch`, inclusive depois do fechamento
   dessas estruturas; aceitação dentro de `while`, `for` e `switch`, com blocos,
   condicionais e estruturas aninhadas, com e sem `--debug`.
-- Arquivo inexistente e construções da gramática atual, como `while` e `if/else`.
-- Execução sem dumps por padrão, opção `--debug` e preservação dos diagnósticos
-  quando a impressão de AST e tabela está desativada.
-- Instruções de pilha, rótulos, curto-circuito, preservação de escapes e ausência de IR em entradas inválidas.
 - Execução da IR por `executor_ir.py`: precedência, atualizações, conversões,
-  laços aninhados, escopos, `break`, `switch` com fall-through e matemática.
+  laços aninhados, escopos, `break`, `switch` com *fall-through* e matemática.
 - Limite de passos para laços infinitos e pilha vazia ao final da execução.
 - Rejeição de inteiros fora de 32 bits e emissão direta de `-2147483648`,
   incluindo uso em `case` e overflow de expressões inteiras.
@@ -50,23 +49,38 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Todos os escapes permitidos (`\b`, `\t`, `\n`, `\f`, `\r`, `\"`, `\'`, `\\`)
   e rejeição de escapes inválidos, octais e Unicode neste subconjunto.
 
-Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo os
-módulos da AST (`ast.c` e `ast.h`) e da tabela de símbolos (`tabela_simbolos.c` e
-`tabela_simbolos.h`) e o gerador de IR. Ao alterar
-`jtoc.l` ou `jtoc.y`, instale Flex e Bison e execute:
+Por padrão, a suíte do analisador compila os arquivos C versionados em `src/`,
+incluindo a AST, a tabela de símbolos, o gerador intermediário e o gerador C.
+Ao alterar `jtoc.l` ou `jtoc.y`, instale Flex e Bison e execute:
 
-```powershell
+```bash
 python testes/test_analisador.py --regenerate
 ```
 
 Essa opção regenera os arquivos em uma pasta temporária, sem alterar `src/`.
-O fluxo `.github/workflows/testes.yml` usa essa opção em cada push e pull request.
-Qualquer teste que falhe faz o comando e a verificação no GitHub falharem.
+O fluxo `.github/workflows/testes.yml` regenera e executa as duas suítes em cada
+push e pull request.
 
-O executor de IR é exclusivo dos testes. Ele retorna a impressão do programa,
-usa inteiros e floats de 32 bits e permite até 10000 instruções por execução.
-Os testes não o tratam como runtime completo de Java para todos os casos
-excepcionais de ponto flutuante.
+## Testes da geração final de C
+
+Depois de compilar o compilador com o módulo `gerador_c.c`, execute:
+
+```bash
+python testes/test_gerador_c.py
+```
+
+A suíte chama `jtoc --c`, grava o C emitido em um diretório temporário, compila
+o programa com GCC em C11 e executa o binário. Ela verifica precedência,
+literais decimais, overflow inteiro, os limites `INT32_MIN / -1` e
+`INT32_MIN % -1`, curto-circuito, `for`, `switch` com *fall-through*, identidade
+de strings, `%` em `float`, funções matemáticas, divisão inteira por zero,
+`--debug`, rejeição de leituras não inicializadas e proteção de destinos
+existentes. A compilação e a execução têm timeouts separados.
+
+No PowerShell, `testes/executar.ps1` também compila e executa um programa C que
+combina um `for`, atualização inteira, impressão e `Math.sqrt`. O programa
+fonte gerado é salvo sem BOM UTF-8 em uma pasta temporária, e os artefatos são
+removidos ao final.
 
 ## Arquivos de entrada
 
@@ -112,20 +126,24 @@ com ou sem `--debug`.
 A partir da raiz do projeto:
 
 ```bash
-cd src
-make -B
+make -B -C src
 
 # Dois exemplos corretos
-./jtoc --debug < ../testes/validos/declaracoes.java
-./jtoc --debug < ../testes/validos/ifs_aninhados.java
+./src/jtoc --debug < testes/validos/declaracoes.java
+./src/jtoc --debug < testes/validos/ifs_aninhados.java
 
 # Dois erros sintáticos
-./jtoc < ../testes/invalidos/sem_ponto_e_virgula.java
-./jtoc < ../testes/invalidos/expressao_ausente.java
+./src/jtoc < testes/invalidos/sem_ponto_e_virgula.java
+./src/jtoc < testes/invalidos/expressao_ausente.java
 
 # Dois erros léxicos
-./jtoc < ../testes/invalidos/caractere_invalido.java
-./jtoc < ../testes/invalidos/string_nao_encerrada.java
+./src/jtoc < testes/invalidos/caractere_invalido.java
+./src/jtoc < testes/invalidos/string_nao_encerrada.java
+
+# Gerar C, compilar e executar
+./src/jtoc --c -o /tmp/saida.c testes/validos/declaracoes.java
+gcc -std=c11 -Wall -Wextra -Wpedantic /tmp/saida.c -o /tmp/saida
+/tmp/saida
 ```
 
 ## Verificação automática no Windows
@@ -136,12 +154,8 @@ No PowerShell, com GCC disponível no Windows, execute na raiz:
 .\testes\executar.ps1
 ```
 
-O script executa o analisador com `--debug` e verifica os 14 arquivos, comparando
-as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige
-os cabeçalhos de AST e tabela de símbolos. Acrescenta cinco casos por stdin
-com `--ir`: aritmética, mínimo inteiro, matemática e impressão, overflow de
-literal e escape inválido. São 19 casos ao todo. Ele compila os arquivos C já
-gerados em `src/` e remove o executável de teste ao terminar. Se alterar
-`jtoc.l` ou `jtoc.y`, regenere com Flex/Bison antes de executar o script.
+O script mantém os testes de análise e IR existentes e acrescenta um caso
+end-to-end de geração C, compilação com GCC em C11 e execução. Após alterar
+`jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executá-lo.
 
 “Válido” significa aceito pelas análises léxica, sintática e semântica. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.

@@ -1,9 +1,11 @@
 %{
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "tabela_simbolos.h"
 #include "gerador_intermediario.h"
+#include "gerador_c.h"
 
 extern int yylex();
 extern int yylineno;
@@ -14,6 +16,7 @@ extern FILE *saida_lexica;
 
 int yywrap(void);
 void yyerror(const char *s);
+static int publicar_saida(FILE *temporario, const char *destino);
 %}
 
 /* Compartilha o tipo da AST com o parser e o scanner. */
@@ -46,25 +49,24 @@ NoAST *raiz = NULL;
 %start inicio
 
 /* Tokens do Java Procedural */
-%token PUBLIC CLASS STATIC VOID 
+%token PUBLIC CLASS STATIC VOID
 %token BOOLEAN BYTE CHAR DOUBLE FLOAT INT LONG SHORT STRING_TYPE
 %token IF ELSE SWITCH CASE DEFAULT WHILE DO FOR BREAK CONTINUE RETURN
 %token FINAL TOKEN_TRUE TOKEN_FALSE NULL_LITERAL
 
 /* Tokens de Operadores e Delimitadores */
-%token PLUS MINUS MULT DIV MOD INC DEC 
+%token PLUS MINUS MULT DIV MOD INC DEC
 %token EQ NEQ LT LE GT GE AND OR NOT ASSIGN
 %token ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN
 %token LBRACE RBRACE LPAREN RPAREN LBRACKET RBRACKET SEMI COMMA COLON
 
-    /* Entrada e Saída */
+/* Entrada e Saida */
 %token PRINTLN PRINT
 
-    /* Funções Matemáticas Nativas */
+/* Funcoes Matematicas Nativas */
 %token MATH_SQRT MATH_POW
 
-
-/* A ordem define a precedência (de baixo para cima) */
+/* A ordem define a precedencia (de baixo para cima). */
 %left OR
 %left AND
 %left EQ NEQ
@@ -72,7 +74,6 @@ NoAST *raiz = NULL;
 %left PLUS MINUS
 %left MULT DIV MOD
 %right NOT
-
 
 %%
 
@@ -166,7 +167,6 @@ expressao:
     | expressao MULT expressao { $$ = montar_no("*", $1, $3, NULL); }
     | expressao DIV expressao { $$ = montar_no("/", $1, $3, NULL); }
     | expressao MOD expressao { $$ = montar_no("%", $1, $3, NULL); }
-    
     | expressao AND expressao { $$ = montar_no("&&", $1, $3, NULL); }
     | expressao OR expressao { $$ = montar_no("||", $1, $3, NULL); }
     | MINUS expressao %prec NOT { $$ = montar_no("-", $2, NULL, NULL); }
@@ -177,12 +177,9 @@ expressao:
     | expressao LE expressao { $$ = montar_no("<=", $1, $3, NULL); }
     | expressao GT expressao { $$ = montar_no(">", $1, $3, NULL); }
     | expressao GE expressao { $$ = montar_no(">=", $1, $3, NULL); }
-    
     | LPAREN expressao RPAREN { $$ = $2; }
-    
     | MATH_SQRT LPAREN expressao RPAREN { $$ = montar_no("Math.sqrt", $3, NULL, NULL); }
     | MATH_POW LPAREN expressao COMMA expressao RPAREN { $$ = montar_no("Math.pow", $3, $5, NULL); }
-    
     | IDENTIFIER { $$ = criar_identificador($1); }
     | FLOAT_LITERAL { $$ = criar_folha($1); }
     | INT_LITERAL { $$ = criar_folha($1); }
@@ -222,50 +219,140 @@ int yywrap(void) {
     return 1;
 }
 
+/* Copia a saida ja preparada para stdout ou para um arquivo exclusivo. */
+static int publicar_saida(FILE *temporario, const char *destino) {
+    unsigned char buffer[8192];
+    size_t lidos;
+    FILE *saida = stdout;
+    int arquivo_criado = 0;
+
+    if (fflush(temporario) != 0 || fseek(temporario, 0, SEEK_SET) != 0) {
+        fprintf(stderr, "Erro: nao foi possivel preparar a saida gerada.\n");
+        return 0;
+    }
+
+    if (destino != NULL) {
+        /* O modo x recusa destinos existentes em implementacoes C11 usuais. */
+        saida = fopen(destino, "wbx");
+        if (saida == NULL) {
+            fprintf(stderr, "Erro: nao foi possivel criar '%s' sem sobrescrever. ", destino);
+            perror(destino);
+            return 0;
+        }
+        arquivo_criado = 1;
+    }
+
+    while ((lidos = fread(buffer, 1, sizeof buffer, temporario)) > 0) {
+        if (fwrite(buffer, 1, lidos, saida) != lidos) {
+            fprintf(stderr, "Erro: falha ao escrever a saida gerada.\n");
+            if (arquivo_criado) {
+                fclose(saida);
+                remove(destino);
+            }
+            return 0;
+        }
+    }
+
+    if (ferror(temporario) || fflush(saida) != 0) {
+        fprintf(stderr, "Erro: falha ao finalizar a saida gerada.\n");
+        if (arquivo_criado) {
+            fclose(saida);
+            remove(destino);
+        }
+        return 0;
+    }
+
+    if (arquivo_criado && fclose(saida) != 0) {
+        fprintf(stderr, "Erro: falha ao fechar '%s'.\n", destino);
+        remove(destino);
+        return 0;
+    }
+    return 1;
+}
+
 int main(int argc, char **argv) {
     int imprimir_debug = 0;
     int gerar_ir = 0;
+    int gerar_c = 0;
     const char *arquivo = NULL;
-    int i;
-    for (i = 1; i < argc; i++) {
+    const char *destino = NULL;
+    FILE *saida_temporaria = NULL;
+    int resultado = 0;
+
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--debug") == 0) {
             imprimir_debug = 1;
         } else if (strcmp(argv[i], "--ir") == 0) {
+            if (gerar_ir || gerar_c) goto uso_invalido;
             gerar_ir = 1;
-        } else if (argv[i][0] == '-' || arquivo != NULL) {
-            fprintf(stderr, "Uso: %s [--debug] [--ir] [arquivo.java]\n", argv[0]);
-            return EXIT_FAILURE;
+        } else if (strcmp(argv[i], "--c") == 0) {
+            if (gerar_ir || gerar_c) goto uso_invalido;
+            gerar_c = 1;
+        } else if (strcmp(argv[i], "-o") == 0) {
+            if (destino != NULL || i + 1 >= argc) goto uso_invalido;
+            destino = argv[++i];
+            gerar_c = 1;
+            if (gerar_ir) goto uso_invalido;
+        } else if (argv[i][0] == '-') {
+            goto uso_invalido;
+        } else if (arquivo != NULL) {
+            goto uso_invalido;
         } else {
             arquivo = argv[i];
         }
     }
+
+    if (gerar_ir && destino != NULL) goto uso_invalido;
+
     if (arquivo != NULL) {
         FILE *f = fopen(arquivo, "r");
         if (!f) {
             perror("Erro ao abrir o arquivo");
-            return 1;
+            return EXIT_FAILURE;
         }
         yyin = f;
     }
 
-    saida_lexica = gerar_ir ? stderr : stdout;
-    int resultado = yyparse();
+    /* Nos modos de geracao, stdout fica reservado exclusivamente ao codigo. */
+    saida_lexica = (gerar_ir || gerar_c) ? stderr : stdout;
+    resultado = yyparse();
+
     if (resultado == 0 && erros_lexicos == 0) {
         montar_tabela(raiz, NULL);
-        if (gerar_ir && erros_semanticos == 0) verificar_inicializacao(raiz);
+        if ((gerar_ir || gerar_c) && erros_semanticos == 0)
+            verificar_inicializacao(raiz);
+
         if (erros_semanticos == 0) {
             if (gerar_ir) {
                 if (!imprimir_codigo_intermediario(raiz)) resultado = 1;
+            } else if (gerar_c) {
+                saida_temporaria = tmpfile();
+                if (saida_temporaria == NULL) {
+                    fprintf(stderr, "Erro: nao foi possivel criar arquivo temporario para C.\n");
+                    resultado = 1;
+                } else if (!gerar_codigo_c(raiz, saida_temporaria)) {
+                    resultado = 1;
+                } else if (!publicar_saida(saida_temporaria, destino)) {
+                    resultado = 1;
+                }
             } else {
                 printf("Analise concluida com sucesso! Nenhum erro sintatico encontrado.\n");
             }
-            if (resultado == 0 && imprimir_debug) debug_compiler(gerar_ir ? stderr : stdout);
+
+            if (resultado == 0 && imprimir_debug)
+                debug_compiler((gerar_ir || gerar_c) ? stderr : stdout);
         }
     }
 
+    if (saida_temporaria != NULL) fclose(saida_temporaria);
     liberar_tabela();
     liberar_ast(raiz);
-    if (yyin) fclose(yyin);
+    if (yyin != NULL && yyin != stdin) fclose(yyin);
+
     return (resultado != 0 || erros_lexicos != 0 || erros_semanticos != 0)
         ? EXIT_FAILURE : EXIT_SUCCESS;
+
+uso_invalido:
+    fprintf(stderr, "Uso: %s [--debug] [--ir | --c] [-o arquivo.c] [entrada.java]\n", argv[0]);
+    return EXIT_FAILURE;
 }

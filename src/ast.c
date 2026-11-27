@@ -131,17 +131,22 @@ char *texto_expressao(NoAST *no) {
 
     size_t tamanho;
 
-    if (no == NULL)
-        return strdup("nao inicializado");
-
-    if (no->filho == NULL)
-        return strdup(no->texto);
+    if (no == NULL || no->filho == NULL) {
+        texto = strdup(no == NULL ? "nao inicializado" : no->texto);
+        if (texto == NULL) return NULL;
+        return texto;
+    }
 
     esquerda = texto_expressao(no->filho);
+    if (esquerda == NULL) return NULL;
 
     direita = no->filho->irmao != NULL
         ? texto_expressao(no->filho->irmao)
         : NULL;
+    if (no->filho->irmao != NULL && direita == NULL) {
+        free(esquerda);
+        return NULL;
+    }
 
     tamanho = strlen(no->texto)
             + strlen(esquerda)
@@ -153,13 +158,9 @@ char *texto_expressao(NoAST *no) {
     texto = malloc(tamanho);
 
     if (texto == NULL) {
-        fprintf(
-            stderr,
-            "Memoria insuficiente para a "
-            "tabela de simbolos.\n"
-        );
-
-        exit(EXIT_FAILURE);
+        free(esquerda);
+        free(direita);
+        return NULL;
     }
 
     if (strcmp(no->texto, "Math.pow") == 0) {

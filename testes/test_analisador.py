@@ -640,6 +640,24 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.returncode, 0, resultado.stderr)
                 self.assertIn("STORE ", resultado.stdout)
 
+    def test_escapes_validos_e_invalidos(self):
+        for escape in (r"\b", r"\t", r"\n", r"\f", r"\r", r'\"', r"\'", r"\\"):
+            with self.subTest(escape=escape):
+                self.conferir_ir(f'''System.out.print("{escape}"); System.out.print('{escape}');''',
+                                 [f'LOAD_CONST "{escape}"', "PRINT",
+                                  f"LOAD_CONST '{escape}'", "PRINT"])
+        for literal in (r'"\q"', r"'\q'", r'"a\qtexto"', r'"\u0041"', r"'\0'"):
+            for argumentos in ((), ("--ir",)):
+                with self.subTest(literal=literal, argumentos=argumentos):
+                    resultado = self.executar_parser(
+                        f"System.out.print({literal});", argumentos=argumentos, debug=False)
+                    self.assertEqual(resultado.returncode, 1)
+                    diagnostico = resultado.stderr if argumentos else resultado.stdout
+                    self.assertIn("Erro lexico", diagnostico)
+                    self.assertIn("Escape invalido", diagnostico)
+                    if argumentos:
+                        self.assertEqual(resultado.stdout, "")
+
     def test_limites_de_inteiros_em_expressoes_e_cases(self):
         for literal in ("2147483648", "-2147483649", "9" * 100):
             for entrada in (f"int x = {literal};", f"switch (0) {{ case {literal}: }}"):

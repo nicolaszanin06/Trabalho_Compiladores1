@@ -48,6 +48,11 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
         exit(EXIT_FAILURE);
     }
     novo->simbolo = strdup(nome->texto);
+    if (novo->simbolo == NULL) {
+        free(novo);
+        fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
+        exit(EXIT_FAILURE);
+    }
     novo->tipo = tipo->texto;
     nome->tipo = novo->tipo;
     nome->id_escopo = escopo->id;
@@ -57,7 +62,9 @@ void inserir_simbolo(NoAST *declaracao, Escopo *escopo) {
     novo->escopo = escopo->pai == NULL ? "global" : "local";
     novo->id_escopo = escopo->id;
     novo->proximo = NULL;
-    if (novo->simbolo == NULL || novo->tipo == NULL || novo->valor == NULL) {
+    if (novo->valor == NULL) {
+        free(novo->simbolo);
+        free(novo);
         fprintf(stderr, "Memoria insuficiente para a tabela de simbolos.\n");
         exit(EXIT_FAILURE);
     }

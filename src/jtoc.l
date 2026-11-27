@@ -12,6 +12,15 @@
 int erros_lexicos = 0;
 FILE *saida_lexica;
 int linha_comentario = 1;
+
+static char *copiar_lexema(const char *texto) {
+    char *copia = strdup(texto);
+    if (copia == NULL) {
+        fprintf(stderr, "Memoria insuficiente para o analisador lexico.\n");
+        exit(EXIT_FAILURE);
+    }
+    return copia;
+}
 %}
 
 %option yylineno
@@ -29,8 +38,9 @@ INT_LITERAL     {DIGIT}+
 FLOAT_LITERAL   {DIGIT}+\.{DIGIT}+
 
 /* Regras para Char e String */
-CHAR_LITERAL    '([^'\\\r\n]|\\[^\r\n])'
-STRING_LITERAL  \"([^"\\\r\n]|\\[^\r\n])*\"
+ESCAPE          \\[btnfr\"'\\]
+CHAR_LITERAL    '([^'\\\r\n]|{ESCAPE})'
+STRING_LITERAL  \"([^"\\\r\n]|{ESCAPE})*\"
 
 WHITESPACE      [ \t\r\n]+
 SINGLE_COMMENT  "//".*
@@ -117,11 +127,15 @@ SINGLE_COMMENT  "//".*
 ":"         { return COLON; }
 
     /* Regras com Macros */
-{FLOAT_LITERAL}   { yylval.stringValue = strdup(yytext); return FLOAT_LITERAL; }
-{INT_LITERAL}     { yylval.stringValue = strdup(yytext); return INT_LITERAL; }
-{CHAR_LITERAL}    { yylval.stringValue = strdup(yytext); return CHAR_LITERAL; }
-{STRING_LITERAL}  { yylval.stringValue = strdup(yytext); return STRING_LITERAL; }
-{IDENTIFIER}      { yylval.stringValue = strdup(yytext); return IDENTIFIER; }
+{FLOAT_LITERAL}   { yylval.stringValue = copiar_lexema(yytext); return FLOAT_LITERAL; }
+{INT_LITERAL}     { yylval.stringValue = copiar_lexema(yytext); return INT_LITERAL; }
+{CHAR_LITERAL}    { yylval.stringValue = copiar_lexema(yytext); return CHAR_LITERAL; }
+{STRING_LITERAL}  { yylval.stringValue = copiar_lexema(yytext); return STRING_LITERAL; }
+{IDENTIFIER}      { yylval.stringValue = copiar_lexema(yytext); return IDENTIFIER; }
+
+    /* Literais fechados que nao passaram pelas regras validas acima. */
+\"([^"\\\r\n]|\\[^\r\n])*\" { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Escape invalido em String\n", yylineno); }
+'([^'\\\r\n]|\\[^\r\n])' { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: Escape invalido em char\n", yylineno); }
 
     /* Tratamento de erro para String não fechada */
 \"([^"\\\r\n]|\\[^\r\n])*\\?   { erros_lexicos++; fprintf(saida_lexica ? saida_lexica : stdout, "Erro lexico na linha %d: String nao encerrada\n", yylineno); }

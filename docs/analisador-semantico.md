@@ -1,47 +1,37 @@
-# Analisador Semântico
+# **Analisador Semântico**
 
-Atualmente, o analisador semântico encontra-se em fase de desenvolvimento, com a infraestrutura base ([AST e Tabela de Símbolos](./ast-tabela.md)) já concluída e integrada.
+O analisador semântico está  integrado ao fluxo completo do compilador (`jtoc`), operando diretamente sobre a [AST e a Tabela de Símbolos](./ast-tabela.md) para garantir a validade semântica do programa antes das etapas de [geração de código intermediário](codigo-intermediario.md) e [geração de código C](geracao-c.md).
 
+## **Escopo, resolução de nomes e tipos**
 
-## Resolução de nomes e tipos
+A análise percorre a AST construída pelo Bison, registra declarações na tabela de símbolos e associa cada uso à declaração visível no escopo atual ou em um escopo ancestral. Um mesmo identificador pode ser declarado em escopos distintos, enquanto redeclarações no mesmo escopo e usos de variáveis não declaradas resultam em erro semântico.
 
-A análise percorre a AST construída pelo Bison, registra declarações na tabela
-de símbolos e associa cada uso à declaração visível no escopo atual ou em um
-ancestral. Um nome pode aparecer em escopos diferentes. Redeclarações no mesmo
-escopo e usos sem declaração geram erros.
+Além da resolução de escopos, o analisador realiza as seguintes validações:
 
-A análise atribui tipos às expressões, verifica a compatibilidade de
-inicializadores, atribuições e operandos, e exige condições booleanas no
-`if`, `while` e `for`. O `break` exige um laço ou `switch` envolvente.
-Um `switch` exige seletor `int`, casos constantes inteiros distintos e até um
-`default`.
+* **Compatibilidade de tipos:** atribui tipos às expressões e verifica a compatibilidade entre tipos em inicializadores, atribuições e operandos.
+* **Estruturas de controle:** exige expressões de condição do tipo booleano nas instruções `if`, `while` e `for`.
+* **Contexto de desvio (`break`):** valida que o comando `break` seja utilizado exclusivamente dentro de um laço de repetição (`while`, `for`) ou de uma estrutura `switch`.
+* **Estrutura `switch`:** exige seletor do tipo `int`, rótulos `case` com constantes inteiras distintas entre si e no máximo um bloco `default`.
 
-Literais inteiros são validados em todos os modos na faixa de 32 bits com
-sinal: `-2147483648` a `2147483647`. A conversão decimal verifica erros e
-estouros antes de converter para `int32_t`. A mesma função atende expressões
-gerais e constantes de `case`. A AST marca o mínimo inteiro para que a IR o
-emita como uma constante única.
+## **Validação de literais inteiros**
 
-Antes de emitir IR, a análise também verifica inicialização nos caminhos de
-controle. Em uma junção, uma variável fica inicializada se tiver sido escrita
-em todos os caminhos que chegam ao ponto. Em laços, a análise considera saídas
-pela condição e por `break`. Cada caso de um `switch` pode ser alcançado
-diretamente pelo seu rótulo. A [página da IR](codigo-intermediario.md) descreve
-as conversões numéricas e as funções nativas.
+Literais inteiros são validados em todos os modos de execução dentro da faixa de 32 bits com sinal (`-2147483648` a `2147483647`). A conversão decimal verifica erros de formatação e estouros (*overflow*) antes de converter o valor para `int32_t`.
 
-Essa verificação adicional ocorre somente com `--ir`, independentemente de
-`--debug`. A execução padrão ainda aceita, por exemplo, `int x; System.out.print(x);`;
-com `--ir`, a leitura sem inicialização é rejeitada e stdout fica vazio.
+A mesma rotina de validação atende tanto às expressões gerais quanto às constantes dos rótulos `case`. Além disso, a AST marca explicitamente o valor mínimo inteiro (`-2147483648`) para que as etapas posteriores de geração de código possam emiti-lo corretamente como uma constante única.
 
-Condições constantes incluem literais booleanos, `!`, `&&`, `||`, igualdade
-booleana e comparações de expressões constantes inteiras. Por exemplo,
-`int x; if (1 == 1) { x = 2; } System.out.print(x);` é aceito. A avaliação
-inteira é compartilhada com os casos de `switch`, usa 32 bits com retorno
-circular no overflow e preserva o curto-circuito. Divisão por zero, variáveis
-e condições de ponto flutuante permanecem desconhecidas nessa análise.
+## **Análise de inicialização e fluxo de controle**
+
+Antes da geração de código intermediário, o analisador executa uma verificação de inicialização definitiva nos caminhos de controle do programa:
+
+* **Junções de fluxo:** em pontos de convergência (como após um `if`/`else`), uma variável só é considerada inicializada se tiver sido escrita em todos os caminhos possíveis que alcançam aquele ponto.
+* **Laços e `switch`:** nos laços, a análise considera tanto a saída pela condição quanto desvios via `break`; no `switch`, considera que cada `case` pode ser alcançado diretamente pelo seu respectivo rótulo.
+* **Avaliação de condições constantes:** condições constantes abrangem literais booleanos, operadores `!`, `&&`, `||`, igualdade booleana e comparações entre expressões constantes inteiras (por exemplo, `int x; if (1 == 1) { x = 2; } System.out.print(x);` é aceito). A avaliação inteira é compartilhada com os rótulos `case` do `switch`, opera em 32 bits com retorno circular no *overflow* e preserva a avaliação em curto-circuito. Expressões com divisão por zero, variáveis ou valores de ponto flutuante permanecem indeterminadas nessa análise.
+
+Essa verificação adicional de inicialização ocorre quando o compilador é executado com a flag `--ir` (independentemente de `--debug`), rejeitando leituras de variáveis não inicializadas antes da emissão da IR. Já no modo padrão de validação do front-end, construções como `int x; System.out.print(x);` continuam sendo aceitas pela checagem básica de escopo e tipos. Consulte a documentação de [Código intermediário](codigo-intermediario.md) para detalhes sobre conversões numéricas e funções nativas.
 
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
 | ------ | --------- | ---- | ----- |
 | 1.0 | Criação do documento | 08/11/2026 | [Henrique](https://github.com/henryqma) |
+| 2.0 | Atualização para a entrega final| 27/11/2026 | [Henrique](https://github.com/henryqma) |

@@ -8,7 +8,7 @@ Para o desenvolvimento deste compilador, a equipe optou por uma abordagem altame
 
 ## **Planejamento das Sprints**
 
-O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano de ensino da disciplina. O projeto foi dividido em 11 Sprints principais:
+O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano de ensino da disciplina. O projeto foi dividido em 12 Sprints principais:
 
 | Sprint | Período | Objetivo |
 | ------ | :-----: | -------- |
@@ -22,8 +22,8 @@ O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano
 | [Sprint 8](#sprint-8) | 12/10/2026 - 18/10/2026 | Implementação da Árvore Sintática |
 | [Sprint 9](#sprint-9) | 19/10/2026 - 25/10/2026 | Estruturação da Tabela de Símbolos |
 | [Sprint 10](#sprint-10) | 26/10/2026 - 10/11/2026 | Início da Análise Semântica |
-| Sprint 11 | 16/11/2026 - 22/11/2026 | Conclusão da Análise Semântica |
-| Sprint 12 | 23/11/2026 - 29/11/2026 | Geração de Código |
+| [Sprint 11](#sprint-11) | 16/11/2026 - 22/11/2026 | Conclusão da Análise Semântica |
+| [Sprint 12](#sprint-12) | 23/11/2026 - 27/11/2026 | Geração de Código |
 
 ---
 
@@ -144,12 +144,40 @@ O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano
 
 **Objetivo:** Início da Análise Semântica
 
-**Período:** 26/10/2026 - 10/112026
+**Período:** 26/10/2026 - 10/11/2026
 
 **Descrição:** 
 
 * Integração da Árvore Sintática Abstrata com a Tabela de Símbolos.
 * Início das validações semânticas do compilador, focando na checagem de escopo e validação de tipos.
+
+---
+
+### Sprint 11
+
+**Objetivo:** Conclusão da Análise Semântica
+
+**Período:** 16/11/2026 - 22/11/2026
+
+**Descrição:**
+
+* Finalização das validações semânticas na Árvore Sintática Abstrata e na Tabela de Símbolos, cobrindo detecção de variáveis não declaradas, redeclarações no mesmo escopo e incompatibilidade de tipos em atribuições, expressões e condições.
+* Implementação de verificações adicionais de uso de variáveis (como variáveis não inicializadas) e testes de gerenciamento de memória (`alocacao_driver.c`).
+* Ampliação da suíte de testes automatizados (`test_analisador.py`) para cobrir os cenários semânticos válidos e inválidos, além da documentação do analisador semântico.
+
+---
+
+### Sprint 12
+
+**Objetivo:** Geração de Código
+
+**Período:** 23/11/2026 - 27/11/2026
+
+**Descrição:**
+
+* Implementação do gerador de Código Intermediário (`gerador_intermediario.c` e `gerador_intermediario.h`) com uso de variáveis temporárias, rótulos e desvios para estruturas condicionais e de repetição, acompanhado do simulador `executor_ir.py` para validação.
+* Implementação do gerador de código final em linguagem C (`gerador_c.c` e `gerador_c.h`), traduzindo declarações, expressões, blocos de escopo e estruturas de controle da AST para código C compilável.
+* Criação da suíte de testes de geração de código (`test_gerador_c.py`), automação da execução dos testes (`executar.ps1` e workflows de CI no GitHub Actions) e atualização final da documentação técnica do projeto.
 
 ---
 
@@ -159,3 +187,4 @@ O nosso planejamento foi estruturado para acompanhar as semanas letivas do plano
 | ------ | --------- | ---- | ----- |
 | 1.0 | Documentação do planejamento | 24/09/2026 | [Henrique](https://github.com/henryqma) |
 | 2.0 | Atualização das sprints para o P2 | 06/11/2026 | [Henrique](https://github.com/henryqma) |
+| 3.0 | Atualização das sprints finais para a entrega final | 27/11/2026 | [Henrique](https://github.com/henryqma) |

@@ -1,16 +1,32 @@
-# **Sobre**
+# Java Procedural → C
 
-Este projeto foi desenvolvido no contexto da disciplina de Compiladores, com o objetivo de aplicar, na prática, os principais conceitos envolvidos na construção de um compilador. Ao longo do projeto, foi desenvolvido um compilador capaz de realizar a tradução de programas escritos em Java para a linguagem C, passando pelas diferentes etapas necessárias para analisar, interpretar e transformar o código-fonte. Esta documentação apresenta de forma organizada as etapas de desenvolvimento do projeto, suas especificações, decisões de implementação, estruturas utilizadas e resultados obtidos, servindo como material de apoio para compreender o funcionamento do compilador e registrar o processo de construção da solução.
+**Compiladores 1 (FGA0003 — UnB) — Grupo 7.** Projeto final de um compilador que traduz um subconjunto procedural de Java para C11, com Flex, Bison e módulos em C.
 
----
+**[Documentação publicada no GitHub Pages](https://nicolaszanin06.github.io/Trabalho_Compiladores1/)**
 
-## **Estado atual**
+## Estado final e uso
 
-O compilador (`jtoc`) está concluído e utiliza Flex, Bison e GCC para traduzir um subconjunto procedural de Java para a linguagem C. A versão final realiza todas as etapas do fluxo de compilação: análise léxica e sintática, construção da AST e da tabela de símbolos, análise semântica completa (verificando declarações, escopo e visibilidade de variáveis, compatibilidade de tipos, uso de variáveis não inicializadas e contexto de `break` em laços e `switch`), geração de código intermediário (IR) e geração de código C compilável e executável.
+O `jtoc` realiza análise léxica e sintática, constrói a AST filho-irmão e a tabela de símbolos, valida escopos, tipos, constantes e contexto de `break`. A partir da AST anotada, oferece duas saídas alternativas: IR textual de pilha (`--ir`) e programa C11 (`--c` ou `-o`). A geração C não passa pela IR textual. Nenhum modo executa a entrada automaticamente.
 
-A entrada é uma sequência de comandos, sem classe ou método `main`. A AST e a tabela de símbolos só são impressas com `--debug`, enquanto o código gerado em C pode ser compilado e executado diretamente via GCC. A suíte de testes automatizados em Python valida léxico, sintaxe, escopos, semântica de tipos, contexto de `break`, simulação de código intermediário e compilação/execução ponta a ponta do código C gerado.
+```bash
+make -B -C src
+./src/jtoc --debug testes/validos/declaracoes.java
+./src/jtoc --ir testes/validos/declaracoes.java
+./src/jtoc -o programa.c testes/validos/declaracoes.java
+gcc -std=c11 -Wall -Wextra -Wpedantic programa.c -o programa -lm
+./programa
+```
 
-Consulte [Como rodar](como-rodar.md), [Escopo do projeto](escopo.md), [Analisador sintático](analisador-sintatico.md), [Analisador semântico](analisador-semantico.md), [Código intermediário](codigo-intermediario.md), [Geração de código C](geracao-c.md) e [Testes e validação](testes.md).
+Os comandos pressupõem WSL/Linux e dependências instaladas. A entrada é uma sequência de comandos sem classe ou `main`. O destino de `-o` deve ser novo. O modo padrão valida nomes e tipos, mas **somente os modos de geração verificam inicialização antes da leitura**. `--debug` exibe AST e tabela em stdout no modo padrão e em stderr na geração.
+
+## Guia de leitura
+
+- [Como rodar](como-rodar.md): instalação, compilação, CLI e execução.
+- [Escopo](escopo.md) e [Arquitetura e decisões](arquitetura-decisoes.md): linguagem, pipeline, escolhas e limitações.
+- [Léxico](analisador-lexico.md), [Sintaxe](analisador-sintatico.md), [AST e tabela](ast-tabela.md) e [Semântica](analisador-semantico.md): front-end.
+- [Código intermediário](codigo-intermediario.md) e [Geração final de C](geracao-c.md): contratos das saídas alternativas.
+- [Testes e validação](testes.md): suítes Python, executor de IR e testes com GCC.
+- [Organização, equipe e sprints](organizacao-sprints.md): “Todos fazem tudo”, frentes e marcos 0–13; [Planejamento](planejamento.md) apresenta a síntese.
 
 ## **Integrantes**
 
@@ -24,8 +40,6 @@ Consulte [Como rodar](como-rodar.md), [Escopo do projeto](escopo.md), [Analisado
   </tr> 
 </table>
 
----
-
 ## **Histórico de Versões**
 
 | VERSÃO | DESCRIÇÃO | DATA | AUTOR |
@@ -33,3 +47,4 @@ Consulte [Como rodar](como-rodar.md), [Escopo do projeto](escopo.md), [Analisado
 | 1.0 | Criação da documentação inicial | 22/09/2026 | [Henrique](https://github.com/henryqma) |
 | 2.0 | Atualização do desenvolvimento para o P2 | 06/11/2026 | [Nicolas](https://github.com/nicolaszanin06) |
 | 3.0 | Atualização do estado atual para a entrega final | 27/11/2026 | [Henrique](https://github.com/henryqma) |
+| 4.0 | Auditoria técnica e revisão para a entrega final | 27/11/2026 | Grupo 7 |

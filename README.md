@@ -1,198 +1,99 @@
-# Java Procedural — Analisador Léxico e Sintático
+# Java Procedural → C — Compiladores 1
 
-Projeto em desenvolvimento para Compiladores 1 (UnB), usando Flex, Bison e GCC para analisar um subconjunto procedural de Java. A versão atual analisa a entrada e oferece geração de código intermediário de pilha e geração final de C.
+Projeto final de **Compiladores 1 (FGA0003 — UnB), Grupo 7**. O `jtoc` traduz um subconjunto procedural de Java para C11 usando Flex, Bison, AST e análise semântica. Também oferece uma saída intermediária de pilha para inspeção e testes.
 
-## Compilar e executar no WSL/Linux
+**[Documentação publicada no GitHub Pages](https://nicolaszanin06.github.io/Trabalho_Compiladores1/)**
 
-Dependências: GCC, GNU Make 4.3 ou superior, Flex, Bison e biblioteca do Flex. No Ubuntu:
+## Compilar e usar
+
+No WSL/Ubuntu, instale GCC, GNU Make 4.3 ou superior, Flex, Bison e libfl. Execute na raiz:
 
 ```bash
 sudo apt update
 sudo apt install build-essential flex bison libfl-dev
-```
-
-A partir da raiz do repositório:
-
-```bash
 make -B -C src
 ./src/jtoc < testes/validos/declaracoes.java
+./src/jtoc --debug testes/validos/declaracoes.java
+./src/jtoc --ir testes/validos/declaracoes.java
+./src/jtoc --c testes/validos/declaracoes.java
+./src/jtoc -o programa.c testes/validos/declaracoes.java
+gcc -std=c11 -Wall -Wextra -Wpedantic programa.c -o programa -lm
+./programa
 ```
 
-O executável não é versionado: compile antes de usar. `make -B` regenera os
-arquivos do Flex/Bison e recompila o executável, inclusive quando os arquivos
-gerados já vieram do Git. Também é possível executar `make -B -j4 -C src` a
-partir da raiz; uma única execução do Bison produz o par de arquivos `.tab.c`
-e `.tab.h`, inclusive em builds paralelos.
+`make -B` regenera Flex/Bison mesmo com arquivos gerados versionados; `make -B -j4 -C src` também é suportado. O executável não é versionado. `make -C src clean` remove o executável e os arquivos gerados.
 
-Para demonstrar um erro:
-
-```bash
-./src/jtoc < testes/invalidos/string_nao_encerrada.java
-```
-
-Dentro de `src/`, `make clean` remove os arquivos gerados e o executável.
-
-## Gramática implementada
-
-A entrada é uma sequência de comandos, sem envolver o código em `public class` ou `main`:
+A entrada contém comandos diretamente, sem classe nem método `main`:
 
 ```java
-int x = 0;
-while (x < 3) {
-    System.out.println(x);
-    x++;
+int soma = 0;
+for (int i = 0; i < 5; i++) {
+    soma += i;
 }
+System.out.println(soma);
 ```
 
-O parser aceita:
-
-- Declarações de `int`, `float`, `char`, `boolean` e `String`, com ou sem inicialização.
-- Atribuições simples e compostas (`+=`, `-=`, `*=`, `/=`), incremento e decremento como comandos.
-- `if` com ou sem `else` e `while`, com blocos entre chaves.
-- `for` com inicialização, condição e atualização opcionais, e corpo entre chaves.
-- `switch` com `case`, `default`, queda entre casos e `break`.
-- `System.out.print` e `System.out.println`, com uma expressão.
-- Expressões com identificadores, literais inteiros, decimais, caracteres, strings e booleanos; operadores aritméticos, relacionais e lógicos; parênteses; `Math.sqrt` e `Math.pow`.
-
-O scanner reconhece outros tokens, como `public`, `class`, `static`, `void`, `final`, `byte`, `short`, `long`, `double`, `do`, `continue`, `return` e `null`. Reconhecer um token não significa que o parser já aceite construções que o utilizam. Classes, métodos e esses comandos/tipos adicionais ainda não fazem parte da gramática.
-
-No cabeçalho do `for`, a inicialização aceita uma declaração ou atribuição; a atualização aceita uma atribuição, incremento ou decremento. Listas separadas por vírgulas não estão implementadas. O `switch` usa a forma tradicional com `:`, seletor `int`, casos constantes inteiros distintos e até um `default`.
-
-Espaços e comentários de linha e bloco são ignorados. Strings e caracteres não
-podem conter quebras de linha reais. Os escapes aceitos são `\b`, `\t`, `\n`,
-`\f`, `\r`, `\"`, `\'` e `\\`; outros, como `\q`, causam erro léxico.
-Escapes octais e Unicode não fazem parte deste subconjunto.
-
-Literais inteiros usam base decimal, inclusive com zeros à esquerda, e devem
-caber em 32 bits com sinal. `2147483648` é rejeitado; `-2147483648` é aceito
-como caso especial da negação unária. A mesma validação vale para `case`.
-
-## Resultado e erros
-
-Uma entrada válida imprime:
-
-```text
-Analise concluida com sucesso! Nenhum erro sintatico encontrado.
-```
-
-Por padrão, apenas a mensagem de sucesso é impressa. Para exibir também a AST e
-a tabela de símbolos com tipo, valor de inicialização e escopo, use `--debug`:
-
-```bash
-./src/jtoc --debug < testes/validos/declaracoes.java
-./src/jtoc --debug testes/validos/declaracoes.java
-```
-
-As impressões de inspeção estão reunidas em `debug_compiler()`, chamada somente
-quando `imprimir_debug` está ativo. A construção da tabela e a análise semântica
-são executadas em ambos os modos.
-
-Erros léxicos incluem caracteres inválidos, strings não encerradas e comentários de bloco não encerrados. Erros sintáticos informam a linha e o token próximo da falha. Erros semânticos identificam a variável repetida ou não declarada, ou um `break` fora de laço ou `switch`. A mensagem de sucesso, a AST e a tabela só aparecem quando não há erro léxico, sintático ou semântico. O processo retorna `0` no sucesso e `1` em caso de erro.
-
-A tabela rejeita uma variável já declarada no mesmo escopo e verifica os usos em atribuições, incrementos, condições, expressões e impressões. A busca considera o bloco atual e seus ancestrais, respeitando a ordem das declarações. Blocos irmãos não compartilham variáveis. A declaração no cabeçalho de um `for` só é visível dentro do laço; os rótulos de um `switch` compartilham escopo, a menos que se usem blocos explícitos.
-
-O comando `break` só é permitido dentro de `while`, `for` ou `switch`, inclusive em condicionais e blocos aninhados nessas estruturas. Por exemplo, `while (true) { if (true) { break; } }` é aceito, enquanto `if (true) { break; }` gera `Erro semântico: 'break' fora de laço ou switch.`. A validação também rejeita um `break` depois do fechamento do laço ou `switch`.
-
-## Código intermediário
-
-Use `--ir` para escrever as instruções em stdout após a validação semântica.
-
-```bash
-printf 'int x = 3 + 4;\n' | ./src/jtoc --ir
-```
-
-```text
-LOAD_CONST 3
-LOAD_CONST 4
-ADD
-STORE x
-```
-
-Com `--ir --debug`, a AST e a tabela de símbolos saem em stderr. O modo
-`--ir` também verifica inicialização antes da leitura e envia os diagnósticos léxicos a stderr.
-No modo padrão, sem `--ir`, `--c` ou `-o`, a entrada é analisada e a mensagem
-de sucesso é impressa, mas não há verificação de inicialização antes da leitura.
-Os modos de geração (`--ir`, `--c` ou `-o`) fazem essa verificação adicional;
-`--ir` emite instruções intermediárias e `--c` ou `-o` gera C. Nenhum modo
-executa a entrada. A análise de inicialização reconhece comparações entre
-expressões constantes inteiras, como `if (1 == 1)` e `while (2 > 1)`.
-As [convenções da IR](docs/codigo-intermediario.md) descrevem os tipos e as instruções.
-
-## Geração final de C
-
-O modo `--c` gera um programa C11 completo diretamente da AST anotada pela
-análise semântica. A geração C também executa a verificação de inicialização
-antes da leitura e não consome nem interpreta a IR textual.
-
-```bash
-# C em stdout
-./src/jtoc --c programa.java
-
-# C em um arquivo novo; destinos existentes são preservados
-./src/jtoc --c -o programa.c programa.java
-
-# -o sozinho também seleciona a geração C
-./src/jtoc -o programa.c programa.java
-
-# A ordem de --c e -o não altera o resultado
-./src/jtoc -o programa.c --c programa.java
-
-# stdout contém apenas C; AST/tabela vão para stderr
-./src/jtoc --c --debug programa.java
-```
-
-Repetir o mesmo modo (`--c --c` ou `--ir --ir`) é permitido. Combinar `--ir`
-com `--c` ou `-o` continua sendo um erro, independentemente da ordem. No modo
-padrão, `--debug` acrescenta a AST e a tabela em stdout; nos modos de geração,
-essas informações ficam em stderr.
-
-Compile o arquivo gerado com GCC:
-
-```bash
-gcc -std=c11 -Wall -Wextra -Wpedantic programa.c -o programa
-```
-
-Acrescente `-lm` quando o programa utilizar `Math.sqrt`, `Math.pow` ou resto
-(`%`) entre valores `float`. O backend preserva a aritmética inteira de 32 bits,
-a identidade de referências de `String`, o curto-circuito e o *fall-through*
-do `switch`. A impressão de `float` adota `%f` com seis casas decimais.
-Consulte [Geração final de C](docs/geracao-c.md) para o contrato completo e
-suas limitações.
-
-## Testes e arquivos
-
-Na raiz, com Python 3 e GCC disponíveis, execute:
-
-```bash
-python testes/test_analisador.py
-python testes/test_gerador_c.py
-```
-
-A primeira suíte cobre os 14 arquivos de entrada, o analisador léxico, a AST,
-a semântica e a geração e execução da IR em um interpretador exclusivo dos
-testes. A segunda traduz programas para C, compila o resultado com GCC em C11
-e compara a saída do executável. Com Flex e Bison instalados, use
-`python testes/test_analisador.py --regenerate` para regenerar o analisador em
-uma pasta temporária antes de testar.
-
-O GitHub Actions executa a regeneração e as duas suítes em cada push e pull
-request. No PowerShell, com GCC disponível no Windows, execute na raiz:
-
-```powershell
-.\testes\executar.ps1
-```
-
-Após alterar `.l` ou `.y`, regenere os arquivos em `src/` antes de executar o
-script. Consulte `testes/README.md`.
-
-| Arquivo | Finalidade |
+| Modo | Resultado |
 | --- | --- |
-| `src/jtoc.l` | Regras léxicas do Flex |
-| `src/jtoc.y` | Gramática do Bison, CLI e integração dos módulos |
-| `src/ast.h` e `src/ast.c` | Estrutura, criação, impressão e liberação da AST |
-| `src/tabela_simbolos.h` e `src/tabela_simbolos.c` | Tabela de símbolos, escopos e análise semântica |
-| `src/gerador_intermediario.h` e `src/gerador_intermediario.c` | Emissão de instruções intermediárias de pilha |
-| `src/gerador_c.h` e `src/gerador_c.c` | Geração final de programas C11 a partir da AST |
-| `src/Makefile` | Compilação e limpeza |
-| `testes/` | Entradas e testes automatizados |
-| `docs/` | Documentação do projeto |
+| Sem opção de geração | Valida léxico, sintaxe, escopos e tipos; imprime a mensagem de sucesso. |
+| `--ir` | Verifica também inicialização antes da leitura e emite IR em stdout. |
+| `--c` | Verifica também inicialização e emite um programa C11 em stdout. |
+| `-o arquivo.c` | Seleciona geração C e grava em um arquivo novo; recusa sobrescrever destinos existentes. |
+| `--debug` | Mostra AST e tabela: stdout no modo padrão, stderr nos modos de geração. |
+
+Uso: `jtoc [--debug] [--ir | --c] [-o arquivo.c] [entrada.java]`. Sem arquivo, lê stdin. `--c` e `-o` podem aparecer em qualquer ordem; repetir `--c` ou `--ir` é permitido. Misturar IR com C ou `-o`, repetir `-o`, omitir seu argumento, passar opções desconhecidas ou vários arquivos causa erro. Não há opção `--help` implementada. O compilador não executa o programa de entrada.
+
+O retorno é `0` em sucesso e `1` em erro. No modo padrão, erros léxicos vão para stdout; nos modos de geração, vão para stderr. Erros sintáticos e semânticos vão para stderr. A mensagem de sucesso, AST e tabela só aparecem após validação bem-sucedida. A checagem de inicialização ocorre **somente nos modos de geração**, inclusive quando selecionados por `-o`.
+
+## Linguagem e tradução
+
+São aceitos `int`, `float`, `char`, `boolean`, `String`, declarações, `=`, `+=`, `-=`, `*=`, `/=`, `++`/`--` como comandos, blocos, `if`/`else`, `while`, `for`, `switch` tradicional com fall-through, `break`, impressão, expressões e `Math.sqrt`/`Math.pow`. Corpos de condicionais e laços exigem chaves. Não há listas de declarações ou atualizações separadas por vírgula.
+
+Inteiros decimais usam 32 bits com sinal; `-2147483648` tem tratamento especial. Literais `float` exigem dígitos antes e depois do ponto, sem expoente ou sufixo; overflow e valores não nulos arredondados para zero são rejeitados, mas subnormais representáveis são aceitos. Comentários de linha e bloco são ignorados; os escapes permitidos estão no [Léxico](docs/analisador-lexico.md).
+
+O backend C percorre a AST validada diretamente, preserva wrap-around inteiro, curto-circuito, identidade de literais `String`, nomes únicos por símbolo e fall-through. Divisão/resto inteiro por zero termina o programa gerado com diagnóstico. A impressão de `float` usa seis casas decimais; `char` no alvo C representa um byte. Use `-lm` para `Math.sqrt`, `Math.pow` e resto de `float` (pode ser mantido nos demais exemplos).
+
+Não há otimização, orientação a objetos, funções do usuário, `return`, arrays, leitura de entrada ou concatenação. Tokens reconhecidos pelo scanner, como `class`, `double`, `continue` e `final`, não ampliam a gramática. Consulte [Escopo](docs/escopo.md), [Arquitetura e decisões](docs/arquitetura-decisoes.md), [IR](docs/codigo-intermediario.md) e [Geração C](docs/geracao-c.md).
+
+## Testes
+
+Após compilar, execute na raiz:
+
+```bash
+python3 testes/test_analisador.py --regenerate
+python3 testes/test_gerador_c.py
+```
+
+A suíte do analisador compila cópias temporárias; `--regenerate` requer Flex/Bison e pode ser omitido para usar os arquivos gerados versionados. A suíte C usa `src/jtoc` já compilado, traduz, compila com GCC e compara a execução. Python não requer pacotes adicionais para essas suítes.
+
+No PowerShell com GCC nativo, `python testes/test_analisador.py` executa a suíte do analisador; `.\testes\executar.ps1` compila um verificador próprio e cobre 14 entradas, cinco casos IR e um caso C ponta a ponta. Veja [Como rodar](docs/como-rodar.md) e [Testes e validação](docs/testes.md).
+
+Para visualizar a documentação localmente:
+
+```bash
+python3 -m pip install mkdocs-material
+python3 -m mkdocs build --strict
+python3 -m mkdocs serve
+```
+
+## Equipe e organização
+
+| Integrante | Frente liderada, com apoio mútuo |
+| --- | --- |
+| [Vinicius Gavaldao](https://github.com/ViniGvdo) e [Warlley Medeiros](https://github.com/warlleymedeiros) | Análises léxica, sintática e início da semântica |
+| [Nicolas Zanin](https://github.com/nicolaszanin06) | Testes automatizados e consolidação da semântica |
+| [Henrique Alencar](https://github.com/henryqma) | Documentação e geração final de C |
+| [Tiago Vieira](https://github.com/TiagoVieira-596) | Geração de código intermediário |
+
+“Todos fazem tudo”: aulas e encontros presenciais serviram à discussão conjunta do escopo, das regras e dos problemas. As Sprints 0–13 foram impulsos de implementação, sem duração fixa rígida. O histórico está em [Organização, equipe e sprints](docs/organizacao-sprints.md).
+
+## Estrutura
+
+| Caminho | Responsabilidade |
+| --- | --- |
+| `src/jtoc.l`, `src/jtoc.y` | Scanner, gramática, CLI e integração |
+| `src/ast.*`, `src/tabela_simbolos.*` | AST filho-irmão, símbolos, tipagem e fluxo de inicialização |
+| `src/gerador_intermediario.*`, `src/gerador_c.*` | Saídas alternativas: IR de pilha e C11 |
+| `src/Makefile` | Regeneração, compilação e limpeza |
+| `testes/` | Entradas, suítes, drivers e executor auxiliar da IR |
+| `docs/`, `mkdocs.yml` | Documentação e navegação do site |

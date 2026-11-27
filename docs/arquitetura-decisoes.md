@@ -42,7 +42,7 @@ Traduzir da IR textual exigiria um leitor adicional e reconstruir informações 
 
 ## Delimitações intencionais
 
-**Sem otimização de código.** Conforme a orientação da disciplina, o foco foi correção semântica e tradução fiel para C, sem passes de otimização. Avaliar constantes de `case` e condições para inicialização é uma necessidade da validação; agrupar literais `String` preserva identidade. Essas rotinas não constituem uma etapa geral de otimização.
+**Escopo da tradução.** A equipe priorizou a correção semântica e a tradução para C. O pipeline termina na emissão de C11 e não inclui passes de otimização. A avaliação de constantes de `case` permite validar os rótulos do `switch`. A avaliação de condições constantes ajuda a determinar os caminhos relevantes para a checagem de inicialização. O agrupamento de literais `String` preserva a identidade das referências.
 
 **Subconjunto estritamente procedural.** A entrada dispensa até a classe externa e o `main` de Java. Classes múltiplas, herança, objetos, métodos de instância ou do usuário, sobrecarga e `return` ficam fora do escopo. Essa delimitação permitiu aprofundar escopos aninhados, curto-circuito, `switch` com fall-through e segurança numérica. Também não há arrays, leitura de entrada, casts, concatenação, `continue`, `do` ou `final`. Reconhecer uma palavra no scanner não implica aceitá-la no parser.
 

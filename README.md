@@ -87,6 +87,8 @@ python3 -m mkdocs serve
 
 “Todos fazem tudo”: aulas e encontros presenciais serviram à discussão conjunta do escopo, das regras e dos problemas. As Sprints 0–13 foram impulsos de implementação, sem duração fixa rígida. O histórico está em [Organização, equipe e sprints](docs/organizacao-sprints.md).
 
+O [planejamento](docs/planejamento.md) registra a evolução entre os pontos de controle. As [decisões de arquitetura](docs/arquitetura-decisoes.md) descrevem os problemas técnicos e as soluções adotadas em cada etapa. Esses documentos reúnem as informações pedidas na [proposta de trabalho da disciplina](https://github.com/sergioaafreitas/COMP1/blob/main/semana%2001/docs/Trabalho%20de%20Compiladores.md).
+
 ## Estrutura
 
 | Caminho | Responsabilidade |

@@ -2,14 +2,15 @@
 
 ## Suíte automatizada
 
-Na raiz do repositório, com Python 3 e GCC no `PATH`, execute as suítes de teste:
+Na raiz do repositório, com Python 3, GCC, Make, Flex e Bison disponíveis, compile o executável e execute as suítes nesta ordem:
 
 ```bash
-python testes/test_analisador.py
-python testes/test_gerador_c.py
+make -B -C src
+python3 testes/test_analisador.py --regenerate
+python3 testes/test_gerador_c.py
 ```
 
-No Linux, o comando pode ser `python3`. Os testes compilam o analisador, o observador de tokens (`lexer_driver.c`) e os binários gerados em pastas temporárias, sem alterar os arquivos de `src/`.
+Se necessário, substitua `python3` por `python`. O build prepara `src/jtoc`, usado pela suíte do backend C. A suíte do analisador compila sua própria cópia e o observador de tokens (`lexer_driver.c`) em pastas temporárias; os programas C gerados pelos testes também são compilados em pastas temporárias.
 
 A suíte é dividida em duas frentes principais:
 
@@ -18,14 +19,7 @@ A suíte é dividida em duas frentes principais:
 
 Os testes de `break` verificam a rejeição fora de laços e `switch`, inclusive depois do fechamento dessas estruturas, e a aceitação em `while`, `for` e `switch` com condicionais, blocos e estruturas aninhadas.
 
-Com Flex e Bison instalados, regenere o analisador em uma pasta temporária antes de testar:
-
-```bash
-python testes/test_analisador.py --regenerate
-python testes/test_gerador_c.py --regenerate
-```
-
-Os workflows do GitHub Actions executam as suítes com `--regenerate` a cada push e pull request. A execução padrão sem essa flag utiliza os arquivos C gerados versionados no repositório.
+O workflow de testes do GitHub Actions faz o build e executa as duas suítes a cada push e pull request. Apenas `test_analisador.py` recebe `--regenerate`, para regenerar Flex/Bison em sua pasta temporária; sem essa flag, essa suíte utiliza os arquivos C gerados versionados. `test_gerador_c.py` não aceita `--regenerate` e utiliza o executável preparado pelo build.
 
 ## Arquivos de entrada
 

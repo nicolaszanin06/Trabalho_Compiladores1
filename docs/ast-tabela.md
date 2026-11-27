@@ -17,7 +17,7 @@ Esta estrutura hierárquica facilita muito a travessia do código durante a otim
 A gestão dessa estrutura é feita pelos módulos `src/tabela_simbolos.c` e `src/tabela_simbolos.h`.
 
 ### Atribuições da Tabela de Símbolos:
-1. **Armazenamento de Metadados:** Guarda o nome da variável, seu tipo de dado associado (`int`, `float`, `char`, etc.) e a linha em que foi declarada.
+1. **Armazenamento de Metadados:** Guarda o nome da variável, seu tipo de dado associado (`int`, `float`, `char`, etc.), o texto do inicializador e os identificadores do símbolo e do escopo.
 2. **Gerenciamento de Escopo:** Controla a visibilidade das variáveis. Variáveis declaradas dentro de um bloco `{ ... }` ou de um `if` possuem seu escopo respeitado, sendo removidas ou ocultadas ao fim do bloco.
 3. **Apoio à Análise Semântica:** A Tabela de Símbolos é consultada a todo momento para evitar erros comuns, tais como:
     * Uso de variáveis não declaradas previamente.

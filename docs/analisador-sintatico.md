@@ -26,7 +26,7 @@ Cada bloco abre um escopo. O `for` abre um escopo para o cabeçalho e outro para
 
 O comando `break` só é permitido dentro de `while`, `for` ou `switch`, inclusive em blocos e condicionais aninhados nessas estruturas. Fora desse contexto, a análise emite `Erro semântico: 'break' fora de laço ou switch.`, retorna código 1 e não imprime sucesso, AST ou tabela, com ou sem `--debug`.
 
-Não há avaliação de expressões, validação de tipos ou geração de código nesta etapa. Por exemplo, `int x; x = true + 1;` passa pelas verificações atuais porque `x` está declarada, mas a compatibilidade de tipos ainda não é verificada. A análise também não verifica inicialização antes da leitura nem todas as restrições de nomes e rótulos do Java.
+A análise sintática constrói a AST; a validação de tipos e a geração de código ocorrem nas etapas seguintes. Por exemplo, `int x; x = true + 1;` é sintaticamente aceito, mas rejeitado pela análise semântica porque `+` exige operandos numéricos. A análise semântica também verifica as restrições dos rótulos de `switch` e, nos modos `--ir`, `--c` e `-o`, a inicialização antes da leitura, dentro dos limites do subconjunto documentado.
 
 `yyerror` informa linha e token perto da falha sintática. O programa verifica o resultado de `yyparse` e os contadores de erros léxicos e semânticos antes de imprimir sucesso. Retorna `0` em caso de sucesso e `1` em caso de erro.
 

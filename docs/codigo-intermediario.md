@@ -8,10 +8,11 @@ símbolos e os diagnósticos ficam em stderr.
 
 Compile antes de executar: não há binário pré-compilado versionado. Na raiz,
 use `make -B -C src` (GNU Make 4.3 ou superior), seguido de
-`./src/jtoc --ir arquivo.java`. Sem `--ir`, o programa analisa a entrada e
-imprime a mensagem de sucesso; com a opção, verifica também inicialização
-antes da leitura e emite apenas IR em stdout. Nenhum modo executa a entrada
-ou produz código C.
+`./src/jtoc --ir arquivo.java`. No modo padrão, sem opções de geração, o programa
+analisa a entrada e imprime a mensagem de sucesso. Com `--ir`, verifica também
+inicialização antes da leitura e emite apenas IR em stdout. Os modos `--c` e
+`-o` fazem essa verificação e geram código C diretamente da AST anotada,
+conforme [Geração final de C](geracao-c.md). Nenhum modo executa a entrada.
 
 | Instrução | Efeito |
 | --- | --- |
@@ -55,7 +56,7 @@ Nas operações inteiras, overflow retorna circularmente aos 32 bits. `DIV`
 trunca em direção a zero; `MOD` usa o resto dessa divisão. A divisão de
 `-2147483648` por `-1` resulta em `-2147483648`. Divisão ou resto inteiro por
 zero não são calculados pela análise constante. Essa análise é conservadora
-e não substitui o tratamento de erros pelo futuro backend.
+e não substitui o tratamento de erros em execução pelo backend C já implementado.
 
 Strings e caracteres preservam as aspas e os escapes `\b`, `\t`, `\n`, `\f`,
 `\r`, `\"`, `\'` e `\\`. Outros escapes, inclusive octais e Unicode, são
@@ -69,4 +70,4 @@ Inclui inteiros de 32 bits e arredondamento de resultados numéricos para
 `float` de 32 bits. O limite padrão de 10000 passos interrompe laços infinitos.
 Esse executor é auxiliar de testes; não oferece um runtime completo de Java,
 nem define tratamento de todos os casos de domínio e valores não finitos de
-ponto flutuante para o futuro backend.
+ponto flutuante do backend C já implementado.

@@ -13,8 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Instalar Flex, Bison, GCC e Make
-        run: sudo apt-get update && sudo apt-get install -y flex bison gcc make
+      - name: Instalar Flex, Bison, GCC, Make e libfl
+        run: sudo apt-get update && sudo apt-get install -y flex bison gcc make libfl-dev
       - name: Regenerar e compilar o compilador
         run: make -B -C src
       - name: Testar o analisador e a IR

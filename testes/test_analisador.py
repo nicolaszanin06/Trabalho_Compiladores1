@@ -39,7 +39,9 @@ class AnalisadorTest(unittest.TestCase):
             "tabela_simbolos.c",
             "tabela_simbolos.h",
             "gerador_intermediario.c",
-            "gerador_intermediario.h"
+            "gerador_intermediario.h",
+            "gerador_c.c",
+            "gerador_c.h"
         ):
             shutil.copy2(SRC / nome, pasta / nome)
 
@@ -79,7 +81,8 @@ class AnalisadorTest(unittest.TestCase):
             "lex.yy.c",
             "ast.c",
             "tabela_simbolos.c",
-            "gerador_intermediario.c"
+            "gerador_intermediario.c",
+            "gerador_c.c"
         )
 
         compilar(
@@ -500,7 +503,10 @@ class AnalisadorTest(unittest.TestCase):
                 resultado = self.executar_parser(argumentos=argumentos, debug=False)
                 self.assertEqual(resultado.returncode, 1)
                 self.assertEqual(resultado.stdout, "")
-                self.assertIn("[--debug] [--ir] [arquivo.java]", resultado.stderr)
+                self.assertIn(
+                    "[--debug] [--ir | --c] [-o arquivo.c] [entrada.java]",
+                    resultado.stderr
+                )
 
 
     def conferir_ir(self, entrada, linhas):

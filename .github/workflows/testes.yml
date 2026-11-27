@@ -1,4 +1,4 @@
-name: Testes do analisador
+name: Testes do analisador e do backend C
 
 on: [push, pull_request]
 
@@ -13,7 +13,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Instalar Flex, Bison e GCC
-        run: sudo apt-get update && sudo apt-get install -y flex bison gcc
-      - name: Regenerar e testar o analisador
+      - name: Instalar Flex, Bison, GCC e Make
+        run: sudo apt-get update && sudo apt-get install -y flex bison gcc make
+      - name: Regenerar e compilar o compilador
+        run: make -B -C src
+      - name: Testar o analisador e a IR
         run: python testes/test_analisador.py --regenerate
+      - name: Testar a geração final de C
+        run: python testes/test_gerador_c.py

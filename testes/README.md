@@ -15,6 +15,10 @@ pasta temporária, removida ao terminar. O observador chama `yylex()` diretament
 e verifica nomes dos tokens, lexemas, linhas e o lexema inteiro armazenado em
 `yylval.stringValue`, incluindo zeros à esquerda.
 
+Também compila `alocacao_driver.c`, que injeta falhas em cada alocação de
+`texto_expressao()` e verifica se os resultados parciais são liberados.
+Não é necessário um executável pré-compilado em `src/`.
+
 Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 
 - Palavras reservadas, identificadores, operadores, delimitadores e literais.
@@ -36,6 +40,15 @@ Os testes incluem subcasos para todos os 14 arquivos abaixo e verificam:
 - Execução sem dumps por padrão, opção `--debug` e preservação dos diagnósticos
   quando a impressão de AST e tabela está desativada.
 - Instruções de pilha, rótulos, curto-circuito, preservação de escapes e ausência de IR em entradas inválidas.
+- Execução da IR por `executor_ir.py`: precedência, atualizações, conversões,
+  laços aninhados, escopos, `break`, `switch` com fall-through e matemática.
+- Limite de passos para laços infinitos e pilha vazia ao final da execução.
+- Rejeição de inteiros fora de 32 bits e emissão direta de `-2147483648`,
+  incluindo uso em `case` e overflow de expressões inteiras.
+- Inicialização em `if (1 == 1)` e `while (2 > 1)`, condições desconhecidas
+  envolvendo variáveis e curto-circuito de comparações constantes.
+- Todos os escapes permitidos (`\b`, `\t`, `\n`, `\f`, `\r`, `\"`, `\'`, `\\`)
+  e rejeição de escapes inválidos, octais e Unicode neste subconjunto.
 
 Por padrão, a suíte compila os arquivos C versionados em `src/`, incluindo os
 módulos da AST (`ast.c` e `ast.h`) e da tabela de símbolos (`tabela_simbolos.c` e
@@ -49,6 +62,11 @@ python testes/test_analisador.py --regenerate
 Essa opção regenera os arquivos em uma pasta temporária, sem alterar `src/`.
 O fluxo `.github/workflows/testes.yml` usa essa opção em cada push e pull request.
 Qualquer teste que falhe faz o comando e a verificação no GitHub falharem.
+
+O executor de IR é exclusivo dos testes. Ele retorna a impressão do programa,
+usa inteiros e floats de 32 bits e permite até 10000 instruções por execução.
+Os testes não o tratam como runtime completo de Java para todos os casos
+excepcionais de ponto flutuante.
 
 ## Arquivos de entrada
 
@@ -118,6 +136,12 @@ No PowerShell, com GCC disponível no Windows, execute na raiz:
 .\testes\executar.ps1
 ```
 
-O script executa o analisador com `--debug` e verifica os 14 arquivos, comparando as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige os cabeçalhos de AST e tabela de símbolos. Ele compila os arquivos C já gerados em `src/`. Se alterar `jtoc.l` ou `jtoc.y`, regenere os arquivos com Flex/Bison antes de executar o script.
+O script executa o analisador com `--debug` e verifica os 14 arquivos, comparando
+as mensagens em stdout/stderr e o código de saída. Nos válidos, também exige
+os cabeçalhos de AST e tabela de símbolos. Acrescenta cinco casos por stdin
+com `--ir`: aritmética, mínimo inteiro, matemática e impressão, overflow de
+literal e escape inválido. São 19 casos ao todo. Ele compila os arquivos C já
+gerados em `src/` e remove o executável de teste ao terminar. Se alterar
+`jtoc.l` ou `jtoc.y`, regenere com Flex/Bison antes de executar o script.
 
 “Válido” significa aceito pelas análises léxica, sintática e semântica. As entradas são comandos do subconjunto procedural, sem classe ou método `main`.

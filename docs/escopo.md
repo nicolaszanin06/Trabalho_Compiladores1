@@ -8,11 +8,18 @@ O compilador e analisador léxico estão sendo desenvolvidos para a linguagem **
 
 ### Linguagem Alvo e Tradução
 
-O objetivo futuro é um compilador *source-to-source* (transpiler). A implementação atual realiza análise léxica, sintática e semântica, constrói a AST e a tabela de símbolos, mas ainda não traduz para C nem executa a entrada. A análise semântica verifica redeclarações no mesmo escopo, declaração antes do uso, visibilidade de variáveis e contexto de `break`. Também verifica tipos em inicializadores, atribuições, atualizações e condições de `if`, `while` e `for`.
+O objetivo final é um compilador *source-to-source* (transpiler). A implementação
+atual realiza análise léxica, sintática e semântica, constrói a AST e a tabela de
+símbolos e gera IR de pilha com `--ir`. Ainda não traduz para C nem executa a
+entrada. Verifica nomes, escopos, tipos, contexto de `break`, impressão,
+argumentos de `Math.sqrt`/`Math.pow` e casos constantes e únicos de `switch`.
+Antes de emitir IR, verifica também inicialização antes da leitura.
 
 A entrada atual é uma sequência de comandos, sem classe ou método `main`. São aceitos os tipos `int`, `float`, `char`, `boolean` e `String`, atribuições simples e compostas, incremento e decremento, `if`/`else`, `while`, `for`, `switch`, impressão e expressões. O corpo de `if`, `while` e `for` exige chaves. `break` só é válido dentro de `while`, `for` ou `switch`, inclusive em blocos aninhados.
 
-Como as linguagens compartilham uma sintaxe semelhante no seu núcleo procedural, o mapeamento será feito de forma direta. A tabela abaixo ilustra a nossa estratégia conceitual de tradução para as futuras etapas de geração de código intermediário e final:
+A tabela abaixo ilustra a estratégia conceitual para a futura geração de C.
+As linhas com `main` e `final` representam possibilidades futuras, ainda fora
+da gramática implementada:
 
 | Java (Origem) | C (Alvo) |
 | --- | --- |
@@ -49,7 +56,7 @@ O analisador léxico já reconhece os elementos principais do Java procedural. A
 
 ### 2. Tipos de Dados Suportados
 
-* **Primitivos:** `boolean`, `byte`, `char`, `short`, `int`, `long`, `float`, `double`.
+* **Tipos reconhecidos pelo scanner:** `boolean`, `byte`, `char`, `short`, `int`, `long`, `float`, `double` e `String`. A gramática aceita apenas `boolean`, `char`, `int`, `float` e `String`.
 
 
 
@@ -58,10 +65,10 @@ O analisador léxico já reconhece os elementos principais do Java procedural. A
 * **Identificadores:** Nomes de classes, métodos e variáveis (seguindo o padrão `[a-zA-Z_][a-zA-Z0-9_]*`).
 
 
-* **Numéricos:** Inteiros (`[0-9]+`) e Ponto Flutuante (`[0-9]+\.[0-9]+`).
+* **Numéricos:** Inteiros decimais (`[0-9]+`) de 32 bits com sinal e ponto flutuante (`[0-9]+\.[0-9]+`). O sinal negativo é um operador; a magnitude `2147483648` só é aceita sob negação unária, formando `-2147483648`.
 
 
-* **Texto:** Caracteres (`'c'`) e Strings (`"texto"`).
+* **Texto:** Caracteres (`'c'`) e strings (`"texto"`), sem quebras de linha reais. Escapes aceitos: `\b`, `\t`, `\n`, `\f`, `\r`, `\"`, `\'` e `\\`. Outros escapes são erros léxicos; escapes octais e Unicode estão fora do subconjunto.
 
 
 * **Valores fixos:** `true`, `false`, `null`.
@@ -102,7 +109,8 @@ O analisador foi desenhado para ignorar de forma correta:
 O subconjunto implementado tem os seguintes limites:
 
 * **Tipos:** Inicializadores e atribuições simples aceitam tipos iguais e conversão de `int` para `float`. Atribuições compostas, incremento e decremento operam sobre `int` e `float`. As condições de `if`, `while` e `for` devem ser booleanas quando presentes. A inferência cobre literais, identificadores e operadores aritméticos, relacionais, lógicos e de igualdade nesses contextos.
-* **Validações fora do escopo atual:** Inicialização antes da leitura, verificação de que os rótulos de `switch` são constantes e únicos, inferência dos tipos de `Math.sqrt` e `Math.pow` e checagem de tipos em expressões de impressão e de `switch`. Nomes iguais em escopos diferentes são aceitos.
+* **Inicialização:** É verificada somente com `--ir`. A análise reconhece condições booleanas constantes e comparações de expressões constantes inteiras, compartilhando a aritmética dos casos de `switch`. Condições com variáveis ou cálculos de ponto flutuante permanecem desconhecidas; a análise pode rejeitar programas válidos que dependam de provar essas condições. Nomes iguais em escopos diferentes são aceitos.
+* **Funções e texto:** `Math.sqrt` e `Math.pow` recebem números e retornam `float`. Não há funções do usuário, chamadas gerais ou `return`. Não há concatenação de strings nem promoção numérica de `char`.
 
 * **Limites do `for`:** Inicialização por declaração ou atribuição e atualização por atribuição, incremento ou decremento, com cláusulas opcionais. Listas separadas por vírgulas não estão implementadas.
 

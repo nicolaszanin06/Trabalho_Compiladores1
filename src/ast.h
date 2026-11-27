@@ -11,6 +11,7 @@ typedef struct NoAST {
     int id_escopo;
     size_t id_simbolo;
     int32_t valor_caso;
+    int inteiro_minimo; /* -2147483648 deve ser emitido como uma unica constante. */
     const char *tipo; /* Tipo resolvido pela analise semantica. */
     struct NoAST *filho;
     struct NoAST *irmao;

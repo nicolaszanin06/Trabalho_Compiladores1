@@ -82,6 +82,10 @@ static int gerar_logica(Gerador *g, const NoAST *no, const NoAST *a, const NoAST
 static int gerar_expressao(Gerador *g, const NoAST *no) {
     if (no == NULL || no->tipo == NULL) return 0;
     if (no->identificador) return variavel(g, "LOAD", no);
+    if (no->inteiro_minimo) {
+        constante(g, "-2147483648");
+        return 1;
+    }
 
     const NoAST *a = no->filho;
     const NoAST *b = irmao(a);

@@ -640,6 +640,24 @@ class AnalisadorTest(unittest.TestCase):
                 self.assertEqual(resultado.returncode, 0, resultado.stderr)
                 self.assertIn("STORE ", resultado.stdout)
 
+    def test_limites_de_inteiros_em_expressoes_e_cases(self):
+        for literal in ("2147483648", "-2147483649", "9" * 100):
+            for entrada in (f"int x = {literal};", f"switch (0) {{ case {literal}: }}"):
+                for argumentos in ((), ("--ir",)):
+                    with self.subTest(entrada=entrada, argumentos=argumentos):
+                        resultado = self.executar_parser(entrada, argumentos=argumentos, debug=False)
+                        self.assertEqual(resultado.returncode, 1)
+                        self.assertEqual(resultado.stdout, "")
+                        self.assertIn("fora da faixa de 32 bits", resultado.stderr)
+        self.conferir_ir("int x = -2147483648; int y = 2147483647;",
+                         ["LOAD_CONST -2147483648", "STORE x",
+                          "LOAD_CONST 2147483647", "STORE y"])
+        resultado = self.executar_parser(
+            "switch (-2147483648) { case -2147483648: break; }",
+            argumentos=("--ir",), debug=False)
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertNotIn("LOAD_CONST 2147483648", resultado.stdout)
+
     def test_ir_modulo_declaracao_simples(self):
         resultado = self.executar_parser(
             "int x = 3 + 4;",

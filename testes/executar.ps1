@@ -22,6 +22,14 @@ $casos = @(
     @{ Codigo = 1; Nome = 'comentario nao encerrado'; Arquivo = 'invalidos/comentario_nao_encerrado.java'; Saida = 'Erro lexico na linha 1: Comentario nao encerrado'; Erro = '' }
 )
 
+$casosIR = @(
+    @{ Codigo = 0; Nome = 'IR aritmetica'; Entrada = 'int x = 3 + 4;'; Saida = 'LOAD_CONST 3\nLOAD_CONST 4\nADD\nSTORE x'; Erro = '' },
+    @{ Codigo = 0; Nome = 'IR minimo inteiro'; Entrada = 'int x = -2147483648;'; Saida = 'LOAD_CONST -2147483648\nSTORE x'; Erro = '' },
+    @{ Codigo = 0; Nome = 'IR matematica e impressao'; Entrada = 'System.out.println(Math.sqrt(9));'; Saida = 'LOAD_CONST 9\nI2F\nSQRT\nPRINTLN'; Erro = '' },
+    @{ Codigo = 1; Nome = 'IR overflow inteiro'; Entrada = 'int x = 2147483648;'; Saida = ''; Erro = '[\s\S]*fora da faixa de 32 bits[\s\S]*' },
+    @{ Codigo = 1; Nome = 'IR escape invalido'; Entrada = 'System.out.print("\q");'; Saida = ''; Erro = '[\s\S]*Escape invalido[\s\S]*' }
+)
+
 function Normalizar-Saida([string]$texto) {
     return $texto.Replace("`r`n", "`n").TrimEnd("`n")
 }
@@ -62,7 +70,34 @@ try {
         }
     }
 
-    Write-Host "`n$($casos.Count - $falhas)/$($casos.Count) testes passaram."
+    foreach ($caso in $casosIR) {
+        $processoInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $processoInfo.FileName = $executavel
+        $processoInfo.Arguments = '--ir'
+        $processoInfo.UseShellExecute = $false
+        $processoInfo.RedirectStandardInput = $true
+        $processoInfo.RedirectStandardOutput = $true
+        $processoInfo.RedirectStandardError = $true
+        $processo = [System.Diagnostics.Process]::Start($processoInfo)
+        $processo.StandardInput.Write($caso.Entrada)
+        $processo.StandardInput.Close()
+        $saida = Normalizar-Saida $processo.StandardOutput.ReadToEnd()
+        $erro = Normalizar-Saida $processo.StandardError.ReadToEnd()
+        $processo.WaitForExit()
+        if ($processo.ExitCode -eq $caso.Codigo -and
+            $saida -cmatch "\A(?:$($caso.Saida))\z" -and
+            $erro -cmatch "\A(?:$($caso.Erro))\z") {
+            Write-Host "OK: $($caso.Nome)"
+        } else {
+            $falhas++
+            Write-Host "FALHOU: $($caso.Nome)"
+            Write-Host "  stdout: $saida"
+            Write-Host "  stderr: $erro"
+        }
+        $processo.Dispose()
+    }
+    $total = $casos.Count + $casosIR.Count
+    Write-Host "`n$($total - $falhas)/$total testes passaram."
     if ($falhas -gt 0) { exit 1 }
 } finally {
     if (Test-Path -LiteralPath $executavel) {

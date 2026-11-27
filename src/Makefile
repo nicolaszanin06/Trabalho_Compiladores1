@@ -1,4 +1,4 @@
-# Nome do executável final
+# Nome do executavel final
 EXEC = jtoc
 
 # Arquivos-fonte do Bison e do Flex
@@ -6,48 +6,47 @@ BISON_FILE = jtoc.y
 FLEX_FILE  = jtoc.l
 
 # Arquivos que o Bison vai gerar
-BISON_C   = jtoc.tab.c
-BISON_H   = jtoc.tab.h
+BISON_C = jtoc.tab.c
+BISON_H = jtoc.tab.h
 
 # Arquivo gerado pelo Flex
-FLEX_C    = lex.yy.c
+FLEX_C = lex.yy.c
 
 # Modulo da arvore sintatica abstrata
-AST_C     = ast.c
-AST_H     = ast.h
+AST_C = ast.c
+AST_H = ast.h
 
 # Modulo da tabela de simbolos e analise semantica
-TABELA_C  = tabela_simbolos.c
-TABELA_H  = tabela_simbolos.h
+TABELA_C = tabela_simbolos.c
+TABELA_H = tabela_simbolos.h
 
-GERADOR_C = gerador_intermediario.c
-GERADOR_H = gerador_intermediario.h
+# Geracao de IR e geracao final de C
+GERADOR_IR_C = gerador_intermediario.c
+GERADOR_IR_H = gerador_intermediario.h
+GERADOR_C_C = gerador_c.c
+GERADOR_C_H = gerador_c.h
 
-# Parâmetros opcionais ao Bison e Flex
-BISON_FLAGS = -d # -d gera o arquivo .h (token definitions)
-FLEX_FLAGS  =       # deixe vazio ou acrescente opções se necessário
-
-# Parâmetros de compilação
+BISON_FLAGS = -d
+FLEX_FLAGS =
 CC = gcc
-CFLAGS = -Wall
-LDFLAGS = -lfl     # biblioteca do Flex
+CFLAGS = -Wall -Wextra -Wpedantic
+LDFLAGS = -lfl
 
-# Regra padrão (alvo "all" vai gerar o executável)
 all: $(EXEC)
 
-# Regra para gerar o executável: inclui a AST e a tabela de simbolos
-$(EXEC): $(BISON_C) $(FLEX_C) $(AST_C) $(AST_H) $(TABELA_C) $(TABELA_H) $(GERADOR_C) $(GERADOR_H)
-	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_C) $(TABELA_C) $(GERADOR_C) $(LDFLAGS)
+$(EXEC): $(BISON_C) $(FLEX_C) $(AST_C) $(AST_H) $(TABELA_C) $(TABELA_H) \
+         $(GERADOR_IR_C) $(GERADOR_IR_H) $(GERADOR_C_C) $(GERADOR_C_H)
+	$(CC) $(CFLAGS) -o $@ $(BISON_C) $(FLEX_C) $(AST_C) $(TABELA_C) \
+		$(GERADOR_IR_C) $(GERADOR_C_C) $(LDFLAGS)
 
-# Regra para rodar o Bison: gera exemplo.tab.c e exemplo.tab.h
-# Alvos agrupados: uma unica receita produz os dois arquivos (GNU Make >= 4.3).
+# Uma receita gera simultaneamente os dois arquivos do Bison (GNU Make >= 4.3).
 $(BISON_C) $(BISON_H) &: $(BISON_FILE)
 	bison $(BISON_FLAGS) $(BISON_FILE)
 
-# Regra para rodar o Flex: gera lex.yy.c
 $(FLEX_C): $(FLEX_FILE) $(BISON_H)
 	flex $(FLEX_FLAGS) $(FLEX_FILE)
 
-# Regra de limpeza: remove arquivos gerados
 clean:
 	rm -f $(EXEC) $(BISON_C) $(BISON_H) $(FLEX_C)
+
+.PHONY: all clean

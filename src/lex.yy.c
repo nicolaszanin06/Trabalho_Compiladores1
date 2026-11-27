@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 2 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -632,12 +632,12 @@ static char *copiar_lexema(const char *texto) {
     }
     return copia;
 }
-#line 636 "lex.yy.c"
+#line 635 "lex.yy.c"
 #define YY_NO_INPUT 1
 
 /* Definições de Expressões Regulares */
 /* Regras para Char e String */
-#line 641 "lex.yy.c"
+#line 640 "lex.yy.c"
 
 #define INITIAL 0
 #define COMENTARIO 1
@@ -858,7 +858,7 @@ YY_DECL
 
 #line 51 "jtoc.l"
     /* Estrutura do Arquivo */
-#line 862 "lex.yy.c"
+#line 861 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1332,7 +1332,7 @@ YY_RULE_SETUP
 #line 155 "jtoc.l"
 ECHO;
 	YY_BREAK
-#line 1336 "lex.yy.c"
+#line 1335 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

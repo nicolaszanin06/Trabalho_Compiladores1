@@ -1,0 +1,1218 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://nicolaszanin06.github.io/Trabalho_Compiladores1/escopo/">
+      
+      
+        <link rel="prev" href="../como-rodar/">
+      
+      
+        <link rel="next" href="../analisador-lexico/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Escopo do Projeto - Compiladores 1 - Grupo 7</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#escopo-do-projeto" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="Compiladores 1 - Grupo 7" class="md-header__button md-logo" aria-label="Compiladores 1 - Grupo 7" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Compiladores 1 - Grupo 7
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Escopo do Projeto
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0 9.821 9.821 0 0 0-17.64 0"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/nicolaszanin06/Trabalho_Compiladores1" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Compiladores 1 - Grupo 7" class="md-nav__button md-logo" aria-label="Compiladores 1 - Grupo 7" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Compiladores 1 - Grupo 7
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/nicolaszanin06/Trabalho_Compiladores1" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../planejamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planejamento e Metodologia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../organizacao-sprints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Organização, Equipe e Sprints
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../arquitetura-decisoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura e Decisões
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../como-rodar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Como Rodar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Escopo do Projeto
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Escopo do Projeto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#linguagem-escolhida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linguagem Escolhida
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linguagem Escolhida">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linguagem-alvo-e-traducao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linguagem Alvo e Tradução
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisoes-tecnicas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisões Técnicas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossario-de-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossário de Tokens
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Glossário de Tokens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-palavras-chave-e-modificadores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Palavras-Chave e Modificadores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-tipos-de-dados-suportados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tipos de Dados Suportados
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-literais-e-identificadores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Literais e Identificadores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-operadores-e-pontuacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Operadores e Pontuação
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-tratamento-de-espacos-e-comentarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tratamento de Espaços e Comentários
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitações
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delimitacoes-da-entrega" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delimitações da entrega
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historico-de-versoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histórico de Versões
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analisador-lexico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analisador Léxico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analisador-sintatico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analisador Sintático
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ast-tabela/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AST e Tabela de Símbolos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analisador-semantico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analisador Semântico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../codigo-intermediario/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Código Intermediário
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geracao-c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geração final de C
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testes e Validação
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#linguagem-escolhida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linguagem Escolhida
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linguagem Escolhida">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linguagem-alvo-e-traducao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linguagem Alvo e Tradução
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisoes-tecnicas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisões Técnicas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossario-de-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossário de Tokens
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Glossário de Tokens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-palavras-chave-e-modificadores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Palavras-Chave e Modificadores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-tipos-de-dados-suportados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tipos de Dados Suportados
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-literais-e-identificadores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Literais e Identificadores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-operadores-e-pontuacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Operadores e Pontuação
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-tratamento-de-espacos-e-comentarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tratamento de Espaços e Comentários
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitações
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delimitacoes-da-entrega" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delimitações da entrega
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historico-de-versoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histórico de Versões
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="escopo-do-projeto"><strong>Escopo do Projeto</strong></h1>
+<p>Esta página detalha os limites e as características da linguagem que o nosso compilador se propõe a processar, bem como as principais decisões de arquitetura e design da equipe.</p>
+<h2 id="linguagem-escolhida"><strong>Linguagem Escolhida</strong></h2>
+<p>O compilador e analisador léxico foram desenvolvidos para a linguagem <strong>Java</strong>. Contudo, o projeto tem como foco principal trabalhar estritamente com um <strong>subconjunto procedural</strong> desta linguagem.</p>
+<h3 id="linguagem-alvo-e-traducao">Linguagem Alvo e Tradução</h3>
+<p>O projeto implementa um compilador <em>source-to-source</em> (transpiler) completo. O <code>jtoc</code> realiza análise léxica, sintática e semântica, constrói a AST e a tabela de símbolos, gera código intermediário (IR) de pilha com <code>--ir</code> e traduz o programa para código C compilável com <code>--c</code> ou <code>-o</code>. Verifica nomes, escopos, tipos, contexto de <code>break</code>, impressão, argumentos de <code>Math.sqrt</code>/<code>Math.pow</code> e casos constantes e únicos de <code>switch</code>. Antes de emitir IR ou código C, verifica também inicialização antes da leitura.</p>
+<p>A entrada é uma sequência de comandos, sem classe ou método <code>main</code>. São aceitos os tipos <code>int</code>, <code>float</code>, <code>char</code>, <code>boolean</code> e <code>String</code>, atribuições simples e compostas, incremento e decremento, <code>if</code>/<code>else</code>, <code>while</code>, <code>for</code>, <code>switch</code>, impressão e expressões. O corpo de <code>if</code>, <code>while</code> e <code>for</code> exige chaves. <code>break</code> só é válido dentro de <code>while</code>, <code>for</code> ou <code>switch</code>, inclusive em blocos aninhados.</p>
+<p>A tabela abaixo resume o mapeamento adotado na geração de código C (detalhado em <a href="../geracao-c/">Geração de código C</a>). Identificadores declarados recebem nomes únicos (<code>jtoc_v&lt;id&gt;</code>) para evitar conflitos de escopo e colisões com palavras reservadas do C:</p>
+<table>
+<thead>
+<tr>
+<th>Java (Origem)</th>
+<th>C (Alvo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sequência de comandos na raiz</td>
+<td>Envolvida em <code>int main(void)</code></td>
+</tr>
+<tr>
+<td><code>int</code>, <code>float</code>, <code>char</code></td>
+<td><code>int</code>, <code>float</code>, <code>char</code>; <code>_Static_assert</code> exige <code>int</code> de 32 bits</td>
+</tr>
+<tr>
+<td><code>boolean flag = true;</code></td>
+<td><code>bool jtoc_v0 = true;</code> (<code>&lt;stdbool.h&gt;</code>)</td>
+</tr>
+<tr>
+<td><code>String texto = "ola";</code></td>
+<td><code>const char *jtoc_v1 = &amp;jtoc_s0[0];</code> (com agrupamento de literais)</td>
+</tr>
+<tr>
+<td><code>System.out.print</code> / <code>println</code></td>
+<td><code>printf</code> (com formato adequado ao tipo)</td>
+</tr>
+<tr>
+<td><code>Math.sqrt</code> / <code>Math.pow</code></td>
+<td><code>sqrt</code> / <code>pow</code> (<code>&lt;math.h&gt;</code>), com argumentos convertidos para <code>float</code> e depois <code>double</code>, e resultado convertido para <code>float</code></td>
+</tr>
+<tr>
+<td>Estruturas de controle (<code>if</code>, <code>while</code>, <code>for</code>, <code>switch</code>)</td>
+<td>Tradução direta de blocos, laços e saltos</td>
+</tr>
+</tbody>
+</table>
+<h2 id="decisoes-tecnicas"><strong>Decisões Técnicas</strong></h2>
+<ul>
+<li>
+<p><strong>Foco no Essencial:</strong> O projeto foca em criar uma base sólida para as fases de compilação (análise léxica, sintática e semântica), deixando de fora recursos complexos e "pesados" da Orientação a Objetos, como herança ou a diretiva <code>new</code>.</p>
+</li>
+<li>
+<p><strong>Ferramentas Clássicas:</strong> Utilização do <strong>Flex</strong> para a geração do <em>scanner</em> léxico e do <strong>Bison</strong> para o <em>parser</em> sintático, integrados de forma automatizada em um <em>pipeline</em> de compilação em C.</p>
+</li>
+</ul>
+<hr />
+<h2 id="glossario-de-tokens"><strong>Glossário de Tokens</strong></h2>
+<p>O analisador léxico reconhece os elementos principais do Java procedural. A lista abaixo descreve os <em>tokens</em> reconhecidos; isso não significa que todos sejam aceitos pelo parser. Por exemplo, classes, métodos, <code>do</code>, <code>continue</code>, <code>return</code>, <code>final</code>, <code>null</code> e tipos adicionais não fazem parte da gramática.</p>
+<h3 id="1-palavras-chave-e-modificadores">1. Palavras-Chave e Modificadores</h3>
+<ul>
+<li>
+<p><strong>Estrutura:</strong> <code>public</code>, <code>class</code>, <code>static</code>, <code>void</code>, <code>final</code>.</p>
+</li>
+<li>
+<p><strong>Controle de Fluxo:</strong> <code>if</code>, <code>else</code>, <code>switch</code>, <code>case</code>, <code>default</code>, <code>while</code>, <code>do</code>, <code>for</code>, <code>break</code>, <code>continue</code>, <code>return</code>.</p>
+</li>
+</ul>
+<h3 id="2-tipos-de-dados-suportados">2. Tipos de Dados Suportados</h3>
+<ul>
+<li><strong>Tipos reconhecidos pelo scanner:</strong> <code>boolean</code>, <code>byte</code>, <code>char</code>, <code>short</code>, <code>int</code>, <code>long</code>, <code>float</code>, <code>double</code> e <code>String</code>. A gramática aceita apenas <code>boolean</code>, <code>char</code>, <code>int</code>, <code>float</code> e <code>String</code>.</li>
+</ul>
+<h3 id="3-literais-e-identificadores">3. Literais e Identificadores</h3>
+<ul>
+<li>
+<p><strong>Identificadores:</strong> Nomes de variáveis no subconjunto (seguindo o padrão <code>[a-zA-Z_][a-zA-Z0-9_]*</code>).</p>
+</li>
+<li>
+<p><strong>Numéricos:</strong> Inteiros decimais (<code>[0-9]+</code>) de 32 bits com sinal e ponto flutuante (<code>[0-9]+\.[0-9]+</code>). O sinal negativo é um operador; a magnitude <code>2147483648</code> só é aceita sob negação unária, formando <code>-2147483648</code>.</p>
+</li>
+<li>
+<p><strong>Texto:</strong> Caracteres (<code>'c'</code>) e strings (<code>"texto"</code>), sem quebras de linha reais. Escapes aceitos: <code>\b</code>, <code>\t</code>, <code>\n</code>, <code>\f</code>, <code>\r</code>, <code>\"</code>, <code>\'</code> e <code>\\</code>. Outros escapes são erros léxicos; escapes octais e Unicode estão fora do subconjunto.</p>
+</li>
+<li>
+<p><strong>Valores fixos:</strong> <code>true</code>, <code>false</code>, <code>null</code>.</p>
+</li>
+</ul>
+<h3 id="4-operadores-e-pontuacao">4. Operadores e Pontuação</h3>
+<ul>
+<li>
+<p><strong>Aritméticos:</strong> <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>.</p>
+</li>
+<li>
+<p><strong>Relacionais e Lógicos:</strong> <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>!</code>.</p>
+</li>
+<li>
+<p><strong>Atribuição:</strong> <code>=</code>, <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>.</p>
+</li>
+<li>
+<p><strong>Incremento e decremento:</strong> <code>++</code>, <code>--</code>.</p>
+</li>
+<li>
+<p><strong>Delimitadores:</strong> <code>;</code>, <code>,</code>, <code>:</code>, <code>(</code>, <code>)</code>, <code>{</code>, <code>}</code>, <code>[</code>, <code>]</code>. O ponto aparece nas chamadas reconhecidas como tokens completos (<code>System.out.print</code>, <code>System.out.println</code>, <code>Math.sqrt</code> e <code>Math.pow</code>); um ponto isolado é inválido.</p>
+</li>
+</ul>
+<h3 id="5-tratamento-de-espacos-e-comentarios">5. Tratamento de Espaços e Comentários</h3>
+<p>O analisador foi desenhado para ignorar de forma correta:</p>
+<ul>
+<li>
+<p>Espaços em branco, quebras de linha (<code>\n</code>), tabulações (<code>\t</code>) e retorno de carro (<code>\r</code>).</p>
+</li>
+<li>
+<p>Comentários de linha única (<code>// ...</code>) e de múltiplas linhas/bloco (<code>/* ... */</code>).</p>
+</li>
+</ul>
+<hr />
+<h2 id="limitacoes"><strong>Limitações</strong></h2>
+<p>O subconjunto implementado tem os seguintes limites:</p>
+<ul>
+<li><strong>Tipos:</strong> Inicializadores e atribuições simples aceitam tipos iguais e conversão de <code>int</code> para <code>float</code>. Atribuições compostas, incremento e decremento operam sobre <code>int</code> e <code>float</code>. As condições de <code>if</code>, <code>while</code> e <code>for</code> devem ser booleanas quando presentes. A inferência cobre literais, identificadores e operadores aritméticos, relacionais, lógicos e de igualdade nesses contextos.</li>
+<li><strong>Inicialização:</strong> É verificada nos modos de geração de código (<code>--ir</code>, <code>--c</code> e <code>-o</code>). A análise reconhece condições booleanas constantes e comparações de expressões constantes inteiras, compartilhando a aritmética dos casos de <code>switch</code>. Condições com variáveis ou cálculos de ponto flutuante permanecem desconhecidas; a análise pode rejeitar programas válidos que dependam de provar essas condições. Nomes iguais em escopos diferentes são aceitos.</li>
+<li>
+<p><strong>Funções e texto:</strong> <code>Math.sqrt</code> e <code>Math.pow</code> recebem números e retornam <code>float</code>. Não há funções do usuário, chamadas gerais ou <code>return</code>. Não há concatenação de strings nem promoção numérica de <code>char</code>.</p>
+</li>
+<li>
+<p><strong>Limites do <code>for</code>:</strong> Inicialização por declaração ou atribuição e atualização por atribuição, incremento ou decremento, com cláusulas opcionais. Listas separadas por vírgulas não estão implementadas.</p>
+</li>
+<li>
+<p><strong>Orientação a Objetos:</strong> Diretiva <code>new</code>, herança, polimorfismo e classes aninhadas.</p>
+</li>
+<li>
+<p><strong>Tratamento de Exceções:</strong> Palavras-chave como <code>try</code>, <code>catch</code>, <code>finally</code>, <code>throw</code> e <code>throws</code>.</p>
+</li>
+<li>
+<p><strong>Recursos Modernos e Dinâmicos:</strong> Generics, Lambdas, Streams, Reflection e Threads.</p>
+</li>
+</ul>
+<hr />
+<h2 id="delimitacoes-da-entrega">Delimitações da entrega</h2>
+<p>O projeto está concluído dentro deste subconjunto. Não há passes de otimização, conforme a orientação da disciplina; a avaliação de constantes serve à validação de <code>case</code> e da inicialização. A entrada é estritamente procedural: até a classe externa e o <code>main</code> de Java são omitidos. Classes múltiplas, herança, métodos de instância ou do usuário, sobrecarga e <code>return</code> foram excluídos intencionalmente.</p>
+<p>Os literais <code>float</code> são validados por <code>strtof</code>: overflow e underflow para zero de valores não nulos são rejeitados em todos os modos; subnormais representáveis e zero são aceitos. A sintaxe não inclui expoentes, sufixos, casts, hexadecimal ou separadores numéricos. Inteiros usam wrap-around de 32 bits nas operações, mas literais fora da faixa são erros.</p>
+<p>Arrays, <code>do</code>, <code>continue</code>, <code>final</code>, <code>null</code>, operador ternário, concatenação e leitura de entrada não fazem parte da gramática. <code>++</code>/<code>--</code> são comandos pós-fixados, não expressões; <code>print</code>/<code>println</code> exigem um argumento. O alvo C usa <code>char</code> de um byte e <code>%f</code> com seis casas para impressão de <code>float</code>, sem reproduzir toda a plataforma Java.</p>
+<p>A escolha de gerar C diretamente da AST, a ausência de otimização e as garantias numéricas estão detalhadas em <a href="../arquitetura-decisoes/">Arquitetura e decisões</a>. A organização da equipe está em <a href="../organizacao-sprints/">Organização e sprints</a>.</p>
+<h2 id="historico-de-versoes"><strong>Histórico de Versões</strong></h2>
+<table>
+<thead>
+<tr>
+<th>VERSÃO</th>
+<th>DESCRIÇÃO</th>
+<th>DATA</th>
+<th>AUTOR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>Criação da documentação inicial</td>
+<td>22/09/2026</td>
+<td><a href="https://github.com/henryqma">Henrique</a></td>
+</tr>
+<tr>
+<td>2.0</td>
+<td>Atualização do desenvolvimento para o P2</td>
+<td>06/11/2026</td>
+<td><a href="https://github.com/nicolaszanin06">Nicolas</a></td>
+</tr>
+<tr>
+<td>3.0</td>
+<td>Atualização para a entrega final</td>
+<td>27/11/2026</td>
+<td><a href="https://github.com/henryqma">Henrique</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

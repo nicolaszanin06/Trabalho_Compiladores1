@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 
 
@@ -13,8 +14,8 @@ CC = os.environ.get("CC", "gcc")
 
 
 class GeradorCTest(unittest.TestCase):
-    def traduz_e_executa(self, fonte, saida_esperada, retorno_esperado=0,
-                        exigir_sem_warnings=False):
+    def traduz_e_executa(self, fonte, saida_esperada, *,
+                         exigir_sem_warnings=False, erro_esperado=""):
         traducao = subprocess.run(
             [str(COMPILADOR), "--c"],
             input=fonte,
@@ -28,25 +29,29 @@ class GeradorCTest(unittest.TestCase):
         self.assertEqual(traducao.stderr, "")
 
         with tempfile.TemporaryDirectory(prefix="jtoc-c-") as pasta:
-            pasta = Path(pasta)
-            arquivo_c = pasta / "programa.c"
-            executavel = pasta / ("programa.exe" if os.name == "nt" else "programa")
+            arquivo_c = Path(pasta) / "programa.c"
             arquivo_c.write_text(traducao.stdout, encoding="utf-8")
+            self.compila_e_executa(arquivo_c, saida_esperada,
+                                  exigir_sem_warnings=exigir_sem_warnings,
+                                  erro_esperado=erro_esperado)
 
-            compilacao = subprocess.run(
-                [CC, "-std=c11", "-Wall", "-Wextra", "-Wpedantic",
-                 str(arquivo_c), "-o", str(executavel), "-lm"],
-                text=True,
-                encoding="utf-8",
-                capture_output=True,
-                timeout=30,
-            )
-            self.assertEqual(compilacao.returncode, 0,
-                             compilacao.stdout + compilacao.stderr)
-            self.assertNotIn("-Warray-compare", compilacao.stderr)
-            if exigir_sem_warnings:
-                self.assertEqual(compilacao.stderr, "")
+    def compila_e_executa(self, arquivo_c, saida_esperada, *,
+                          exigir_sem_warnings=False, erro_esperado=""):
+        executavel = arquivo_c.with_name("programa.exe" if os.name == "nt" else "programa")
+        compilacao = subprocess.run(
+            [CC, "-std=c11", "-Wall", "-Wextra", "-Wpedantic",
+             str(arquivo_c), "-o", str(executavel), "-lm"],
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            timeout=30,
+        )
+        self.assertEqual(compilacao.returncode, 0, compilacao.stdout + compilacao.stderr)
+        self.assertNotIn("-Warray-compare", compilacao.stderr)
+        if exigir_sem_warnings:
+            self.assertEqual(compilacao.stderr, "")
 
+        try:
             execucao = subprocess.run(
                 [str(executavel)],
                 text=True,
@@ -54,11 +59,22 @@ class GeradorCTest(unittest.TestCase):
                 capture_output=True,
                 timeout=5,
             )
-            self.assertEqual(execucao.stdout, saida_esperada)
-            self.assertEqual(execucao.returncode, retorno_esperado, execucao.stderr)
-            if retorno_esperado == 0:
-                self.assertEqual(execucao.stderr, "")
-            return execucao
+        finally:
+            # No Windows, o executavel pode ficar bloqueado logo apos terminar.
+            for tentativa in range(6):
+                try:
+                    executavel.unlink(missing_ok=True)
+                    break
+                except PermissionError as erro:
+                    if getattr(erro, "winerror", None) != 32 or tentativa == 5:
+                        raise
+                    time.sleep(0.1)
+        self.assertEqual(execucao.stdout, saida_esperada)
+        self.assertEqual(execucao.stderr, erro_esperado)
+        if erro_esperado:
+            self.assertNotEqual(execucao.returncode, 0)
+        else:
+            self.assertEqual(execucao.returncode, 0)
 
     def test_precedencia_e_println(self):
         self.traduz_e_executa(
@@ -81,6 +97,24 @@ class GeradorCTest(unittest.TestCase):
             "System.out.println(minimo / -1); "
             "System.out.println(minimo % -1);",
             "-2147483648\n0\n",
+        )
+
+    def test_divisao_trunca_e_resto_preserva_sinal_do_dividendo(self):
+        casos = ((-7, 3, "-2\n-1\n"), (7, -3, "-2\n1\n"), (-7, -3, "2\n-1\n"))
+        for dividendo, divisor, esperado in casos:
+            with self.subTest(dividendo=dividendo, divisor=divisor):
+                self.traduz_e_executa(
+                    f"int a = {dividendo}; int b = {divisor}; "
+                    "System.out.println(a / b); System.out.println(a % b);",
+                    esperado,
+                )
+
+    def test_overflow_em_subtracao_multiplicacao_e_negacao(self):
+        self.traduz_e_executa(
+            "int minimo = -2147483648; int maximo = 2147483647; "
+            "System.out.println(minimo - 1); System.out.println(maximo * 2); "
+            "System.out.println(-minimo); minimo--; System.out.println(minimo);",
+            "2147483647\n-2\n-2147483648\n2147483647\n",
         )
 
     def test_curto_circuito(self):
@@ -124,6 +158,15 @@ class GeradorCTest(unittest.TestCase):
             "System.out.println(Math.sqrt(9));",
             "1.500000\n3.000000\n",
             exigir_sem_warnings=True,
+        )
+
+    def test_divisao_mista_e_promocao_para_float(self):
+        self.traduz_e_executa(
+            "int total = 7; int divisor = 2; float fracao = 2.0; "
+            "float inteira = total / divisor; "
+            "System.out.println(inteira); System.out.println(total / fracao); "
+            "fracao += total; System.out.println(fracao);",
+            "3.000000\n3.500000\n9.000000\n",
         )
 
     def test_comparacao_de_literais_string_sem_warning_de_arrays(self):
@@ -272,32 +315,54 @@ class GeradorCTest(unittest.TestCase):
         self.assertEqual(resultado.stdout, "")
         self.assertIn("inicializada", resultado.stderr)
 
+    def test_divisao_e_resto_por_zero_interrompem_execucao(self):
+        for comando in ("System.out.println(x / zero);", "System.out.println(x % zero);",
+                        "x /= zero;"):
+            with self.subTest(comando=comando):
+                self.traduz_e_executa(
+                    "int x = 10; int zero = 0; System.out.println(x); "
+                    f"{comando} System.out.println(99);",
+                    "10\n",
+                    erro_esperado="Erro de execucao: divisao inteira por zero.\n",
+                )
 
-    def test_divisao_inteira_por_zero_termina_com_erro(self):
-        traducao = subprocess.run(
-            [str(COMPILADOR), "--c"],
-            input="int zero = 0; System.out.println(10 / zero);",
-            text=True,
-            capture_output=True,
-            timeout=10,
+    def test_falha_com_debug_nao_publica_codigo_ou_destino(self):
+        casos = (
+            (r'System.out.print("\q");', "Escape invalido"),
+            ("int x = ;", "Erro sintatico"),
+            ("int x; System.out.println(x);", "inicializada"),
         )
-        self.assertEqual(traducao.returncode, 0, traducao.stderr)
-        with tempfile.TemporaryDirectory(prefix="jtoc-divzero-") as pasta:
-            arquivo_c = Path(pasta) / "programa.c"
-            executavel = Path(pasta) / ("programa.exe" if os.name == "nt" else "programa")
-            arquivo_c.write_text(traducao.stdout, encoding="utf-8")
-            compilacao = subprocess.run(
-                [CC, "-std=c11", str(arquivo_c), "-o", str(executavel)],
-                text=True,
-                capture_output=True,
-                timeout=30,
+        with tempfile.TemporaryDirectory(prefix="jtoc-c-invalido-") as pasta:
+            destino = Path(pasta) / "programa.c"
+            for fonte, diagnostico in casos:
+                for argumentos in (("--c",), ("-o", str(destino))):
+                    with self.subTest(fonte=fonte, argumentos=argumentos):
+                        resultado = subprocess.run(
+                            [str(COMPILADOR), "--debug", *argumentos],
+                            input="System.out.println(7); " + fonte,
+                            text=True, encoding="utf-8", capture_output=True, timeout=10,
+                        )
+                        self.assertEqual(resultado.returncode, 1)
+                        self.assertEqual(resultado.stdout, "")
+                        self.assertIn(diagnostico, resultado.stderr)
+                        self.assertNotIn("AST:", resultado.stderr)
+                        self.assertFalse(destino.exists())
+
+    def test_arquivo_de_entrada_e_destino_com_espacos(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-arquivos-") as pasta:
+            entrada = Path(pasta) / "codigo fonte.java"
+            destino = Path(pasta) / "codigo gerado.c"
+            entrada.write_text('System.out.println("100% pronto");', encoding="utf-8")
+            resultado = subprocess.run(
+                [str(COMPILADOR), str(entrada), "--debug", "-o", str(destino)],
+                stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
+                capture_output=True, timeout=10,
             )
-            self.assertEqual(compilacao.returncode, 0, compilacao.stderr)
-            execucao = subprocess.run(
-                [str(executavel)], text=True, capture_output=True, timeout=5
-            )
-            self.assertNotEqual(execucao.returncode, 0)
-            self.assertIn("divisao inteira por zero", execucao.stderr)
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertEqual(resultado.stdout, "")
+            self.assertIn("AST:", resultado.stderr)
+            self.assertIn("Tabela de simbolos", resultado.stderr)
+            self.compila_e_executa(destino, "100% pronto\n", exigir_sem_warnings=True)
 
     def test_destino_existente_nao_e_sobrescrito(self):
         with tempfile.TemporaryDirectory(prefix="jtoc-destino-") as pasta:
@@ -310,7 +375,9 @@ class GeradorCTest(unittest.TestCase):
                 capture_output=True,
                 timeout=10,
             )
-            self.assertNotEqual(resultado.returncode, 0)
+            self.assertEqual(resultado.returncode, 1)
+            self.assertEqual(resultado.stdout, "")
+            self.assertIn("sem sobrescrever", resultado.stderr)
             self.assertEqual(destino.read_text(encoding="utf-8"), "nao sobrescrever")
 
     def test_opcoes_c_em_qualquer_ordem(self):
@@ -380,6 +447,33 @@ class GeradorCTest(unittest.TestCase):
                     self.assertEqual(resultado.stdout, "")
                     self.assertIn("Uso:", resultado.stderr)
                     self.assertFalse(destino.exists())
+
+    def test_o_rejeita_opcao_no_lugar_do_destino(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-destino-ausente-") as pasta:
+            for opcao in ("--ir", "--c", "--debug", "-o", "--desconhecida"):
+                with self.subTest(opcao=opcao):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR.resolve()), "-o", opcao],
+                        cwd=pasta, input="System.out.println(7);",
+                        text=True, encoding="utf-8", capture_output=True, timeout=10,
+                    )
+                    self.assertEqual(resultado.returncode, 1, resultado.stderr)
+                    self.assertEqual(resultado.stdout, "")
+                    self.assertIn("Uso:", resultado.stderr)
+                    self.assertEqual(list(Path(pasta).iterdir()), [])
+
+    def test_o_aceita_caminho_explicito_para_nome_com_hifen(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-destino-hifen-") as pasta:
+            resultado = subprocess.run(
+                [str(COMPILADOR.resolve()), "-o", "./--ir"],
+                cwd=pasta, input="System.out.println(7);",
+                text=True, encoding="utf-8", capture_output=True, timeout=10,
+            )
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertEqual(resultado.stdout, "")
+            self.assertEqual(resultado.stderr, "")
+            codigo = (Path(pasta) / "--ir").read_text(encoding="utf-8")
+            self.assertIn("int main(void)", codigo)
 
     def test_debug_nao_contamina_stdout(self):
         resultado = subprocess.run(

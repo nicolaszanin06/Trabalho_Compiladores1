@@ -26,7 +26,9 @@ mutuamente exclusivos. O comando `--ir -o ...` é recusado.
 A ordem de `--c` e `-o` é livre: `./src/jtoc -o programa.c --c programa.java`
 equivale a `./src/jtoc --c -o programa.c programa.java`. Repetir `--c` ou
 `--ir` não muda o modo selecionado. Misturar C e IR, repetir `-o` ou omitir
-seu argumento resulta em erro de uso antes de criar qualquer saída.
+seu argumento resulta em erro de uso antes de criar qualquer saída. Uma opção
+logo após `-o` também é erro de uso. Para um nome de arquivo que começa com
+hífen, passe um caminho como `./-programa.c`.
 
 ## Compilar o C gerado
 

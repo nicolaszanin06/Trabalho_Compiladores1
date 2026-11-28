@@ -84,7 +84,9 @@ A validação dos literais `float` ocorre em todos os modos: overflow e underflo
 
 ## Suíte C no Windows e documentação local
 
-`test_gerador_c.py` requer um compilador `jtoc` preparado previamente; o script PowerShell não o instala em `src/`. Para prepará-lo com GCC nativo, usando os arquivos Flex/Bison já gerados, execute na raiz:
+`test_gerador_c.py` requer um compilador `jtoc` preparado previamente. Para a suíte completa no Windows, use GCC/MinGW-w64 com UCRT. Os testes de `-o` exigem que a biblioteca C aceite o modo de abertura exclusiva `wbx`; o MinGW.org GCC 6.3 pode retornar `Invalid argument` ao criar o destino. O script PowerShell usa seu próprio executável temporário.
+
+Com GCC/MinGW-w64 no `PATH` e os arquivos Flex/Bison já gerados, execute na raiz:
 
 ```powershell
 gcc -o src/jtoc.exe src/jtoc.tab.c src/lex.yy.c src/ast.c src/tabela_simbolos.c src/gerador_intermediario.c src/gerador_c.c

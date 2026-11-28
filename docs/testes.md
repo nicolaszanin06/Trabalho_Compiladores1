@@ -71,6 +71,8 @@ O driver `alocacao_driver.c` injeta falhas de alocação em `texto_expressao` e 
 
 A suíte C inclui overflow com wrap-around, divisão e resto especiais do mínimo inteiro, diagnóstico de divisão por zero em execução, limites e subnormais de `float`, strings UTF-8 e identidade de literais, escopos com nomes conflitantes em C, matemática aninhada, laços e `switch` com fall-through. Verifica também stdout separado de debug, arquivo existente preservado, ordem das flags, repetição do mesmo modo, exclusão IR/C, `-o` ausente ou repetido e ausência de destino após erro semântico. Os testes selecionados que exigem ausência de warnings não implicam que todo programa válido seja compilado sem avisos (variáveis não utilizadas podem gerar warnings).
 
+Os testes de execução verificam o sinal do resto inteiro, o truncamento da divisão, o overflow em subtração, multiplicação e negação e a promoção de `int` para `float`. Divisão, resto e atribuição `/=` com divisor zero devem interromper a execução com diagnóstico em stderr e código diferente de zero. A suíte também compila e executa o arquivo produzido por `-o` com espaços nos caminhos de entrada e saída. Erros léxicos, sintáticos e de inicialização devem impedir a publicação de C em stdout ou em arquivo, mesmo com `--debug`.
+
 `test_analisador.py` compila seus próprios executáveis temporários com `CC` (padrão `gcc`), independentemente de `src/jtoc`. A suíte C usa `JTOC` para selecionar outro executável de tradução e `CC` para compilar o C. No Windows, o padrão é `src/jtoc.exe`; o script `executar.ps1` compila e remove seu próprio verificador, sem preparar esse executável para a suíte Python C. Veja [Como rodar](como-rodar.md).
 
 ## Reprodução e alcance da validação

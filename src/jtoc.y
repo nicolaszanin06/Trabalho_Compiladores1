@@ -287,7 +287,8 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "--c") == 0) {
             gerar_c = 1;
         } else if (strcmp(argv[i], "-o") == 0) {
-            if (destino != NULL || i + 1 >= argc) goto uso_invalido;
+            if (destino != NULL || i + 1 >= argc || argv[i + 1][0] == '-')
+                goto uso_invalido;
             destino = argv[++i];
         } else if (argv[i][0] == '-') {
             goto uso_invalido;

@@ -448,6 +448,33 @@ class GeradorCTest(unittest.TestCase):
                     self.assertIn("Uso:", resultado.stderr)
                     self.assertFalse(destino.exists())
 
+    def test_o_rejeita_opcao_no_lugar_do_destino(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-destino-ausente-") as pasta:
+            for opcao in ("--ir", "--c", "--debug", "-o", "--desconhecida"):
+                with self.subTest(opcao=opcao):
+                    resultado = subprocess.run(
+                        [str(COMPILADOR.resolve()), "-o", opcao],
+                        cwd=pasta, input="System.out.println(7);",
+                        text=True, encoding="utf-8", capture_output=True, timeout=10,
+                    )
+                    self.assertEqual(resultado.returncode, 1, resultado.stderr)
+                    self.assertEqual(resultado.stdout, "")
+                    self.assertIn("Uso:", resultado.stderr)
+                    self.assertEqual(list(Path(pasta).iterdir()), [])
+
+    def test_o_aceita_caminho_explicito_para_nome_com_hifen(self):
+        with tempfile.TemporaryDirectory(prefix="jtoc-cli-destino-hifen-") as pasta:
+            resultado = subprocess.run(
+                [str(COMPILADOR.resolve()), "-o", "./--ir"],
+                cwd=pasta, input="System.out.println(7);",
+                text=True, encoding="utf-8", capture_output=True, timeout=10,
+            )
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertEqual(resultado.stdout, "")
+            self.assertEqual(resultado.stderr, "")
+            codigo = (Path(pasta) / "--ir").read_text(encoding="utf-8")
+            self.assertIn("int main(void)", codigo)
+
     def test_debug_nao_contamina_stdout(self):
         resultado = subprocess.run(
             [str(COMPILADOR), "--c", "--debug"],
